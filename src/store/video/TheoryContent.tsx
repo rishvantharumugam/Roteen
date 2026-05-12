@@ -1,0 +1,167 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import { supabase } from "@/lib/supabaseClient";
+import { videoStyles } from "@/styles/video";
+import styles from "./TheoryContent.module.css";
+
+interface TheoryContentProps {
+  questionId: string | null;
+  language: "English" | "Tamil";
+  fullScreen?: boolean;
+  type?: "theory" | "quick_revision";
+}
+
+export default function TheoryContent({ questionId, language, fullScreen, type = "theory" }: TheoryContentProps) {
+  const currentCacheKey = questionId ? `roteen_${type}_${questionId}_${language}` : null;
+
+  const cachedContent = typeof window !== "undefined" && currentCacheKey ? localStorage.getItem(currentCacheKey) : null;
+
+  const [content, setContent] = useState<string>(cachedContent || "");
+  const [loading, setLoading] = useState<boolean>(!cachedContent);
+  const [error, setError] = useState<string | null>(null);
+  const [transitioning, setTransitioning] = useState<boolean>(!cachedContent);
+  const [contentVersion, setContentVersion] = useState<number>(0);
+
+
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchTheory = async () => {
+      if (questionId === null) {
+         if (mounted) {
+           setContent("");
+           setError(null);
+           setLoading(false);
+           setTransitioning(false);
+         }
+         return;
+      }
+
+      if (!currentCacheKey) return;
+      const cached = localStorage.getItem(currentCacheKey);
+
+      if (cached) {
+        if (mounted) {
+          setContent(cached);
+          setContentVersion((v) => v + 1);
+          setLoading(false);
+          setTransitioning(false);
+        }
+        return; // Already have cached content, no need to fetch again in this session
+      }
+
+      setLoading(true);
+      setError(null);
+      setTransitioning(true);
+
+      try {
+        const { data: notesData, error: dbError } = await supabase
+          .from("admin_notes")
+          .select("note_url, path, answer_type")
+          .eq("question_id", questionId);
+
+        if (dbError) throw dbError;
+        if (!notesData || notesData.length === 0) {
+          throw new Error(`No ${type === "quick_revision" ? "quick revision" : "theory"} available`);
+        }
+
+        let matchedNote;
+        if (type === "quick_revision") {
+          const targetAnswerType = language === "English" ? "Eng quick_recall" : "Tam quick_recall";
+          matchedNote = notesData.find(note => note.answer_type === targetAnswerType);
+        } else {
+          const prefix = language === "English" ? "/E_" : "/T_";
+          matchedNote = notesData.find(note => 
+            note.path && note.path.includes(prefix)
+          );
+        }
+
+        if (!matchedNote) {
+          throw new Error(`No ${type === "quick_revision" ? "quick revision" : "theory"} available in ${language}`);
+        }
+
+        const rawUrl = matchedNote.note_url.replace("github.com", "raw.githubusercontent.com");
+        const finalUrl = rawUrl.replace("/blob/", "/");
+
+        const response = await fetch(finalUrl);
+        if (!response.ok) {
+           throw new Error("Failed to load content");
+        }
+        
+        const text = await response.text();
+        
+        localStorage.setItem(currentCacheKey, text);
+
+        if (mounted) {
+          setContent(text);
+          setContentVersion((previous) => previous + 1);
+          setTransitioning(false);
+        }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to load content";
+        if (mounted) {
+          setError(
+            message.includes("No")
+              ? message
+              : "Failed to load content"
+          );
+          setTransitioning(false);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchTheory();
+
+    return () => { mounted = false; };
+  }, [questionId, language, type, currentCacheKey]);
+
+  if (questionId === null) {
+    return (
+      <div className={videoStyles.style_ec24cbcd3ec1b}>
+        Select a question to view its {type === "quick_revision" ? "quick revision" : "theory"}.
+      </div>
+    );
+  }
+
+  if (loading && !content) {
+    return (
+      <div className={videoStyles.style_194c5e6315ec8d}>
+        <div className={videoStyles.style_10809d4415ee08} />
+        <div className={videoStyles.style_19aced8ce887e0} />
+        <div className={videoStyles.style_70ffbe1832273} />
+        <div className={videoStyles.style_19aced8ce887e0} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={videoStyles.style_ec24cbcd3ec1b}>
+        {error}
+      </div>
+    );
+  }
+
+  const markdownClasses = [
+    styles.markdown,
+    fullScreen ? styles.fullScreen : "",
+    transitioning ? styles.entering : styles.entered,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <div
+      key={`${questionId}-${language}-${contentVersion}`}
+      className={markdownClasses}
+    >
+      <ReactMarkdown rehypePlugins={[rehypeRaw]}>{content}</ReactMarkdown>
+    </div>
+  );
+}
