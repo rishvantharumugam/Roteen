@@ -140,7 +140,6 @@ export function getVideoData(): VideoData {
       { id: "notes", label: "Notes" },
       { id: "revision", label: "Revision" },
       { id: "sessions-link", label: "Sessions" },
-      { id: "videos", label: "Videos" },
       { id: "news", label: "News" },
       { id: "profile", label: "Profile" },
     ],

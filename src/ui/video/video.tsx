@@ -4,10 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, ThumbsDown, Bug } from "lucide-react";
+import { ChevronLeft, ChevronRight, ThumbsDown, Bug, Bookmark } from "lucide-react";
 import type { VideoData, VideoState } from "@/service/video";
+import type { VideoSubjectFilter } from "@/service/videoSubjectService";
 import { videoStyles } from "@/styles/video";
 import SubjectBar from "@/store/video/SubjectBar";
+import PlaylistSidebar from "@/store/video/PlaylistSidebar";
 import { HeaderSettingsMenu } from "@/store/shared/HeaderSettingsMenu";
 import { supabase } from "@/lib/supabaseClient";
 import { applyRouteThemeClass } from "@/lib/RouteThemeScope";
@@ -15,11 +17,21 @@ import dynamic from "next/dynamic";
 const TheoryContent = dynamic(() => import("@/store/video/TheoryContent"), { ssr: false });
 import DiscussionContent from "@/store/video/DiscussionContent";
 import RichTextEditor from "@/store/video/RichTextEditor";
+import BookmarkPlaylistModal from "@/store/video/BookmarkPlaylistModal";
 import CustomVideoPlayer from "./CustomVideoPlayer";
 
 interface VideoPageUIProps {
   data: VideoData;
   state: VideoState;
+  subjectFilter?: VideoSubjectFilter;
+  playlistQuestionIds?: string[] | null;
+  playlistId?: string | null;
+  playlistTitle?: string;
+  isPlaylistMode?: boolean;
+  selectedSubjectId?: string | null;
+  isSubjectFiltered?: boolean;
+  pageHeading?: string | null;
+  onSubjectResolved?: (subject: { id: string; name: string; standard: string | null }) => void;
   theoryFullScreen: boolean;
   onChapterSelect: (chapterId: string) => void;
   onQuestionSelect: (questionId: string) => void;
@@ -30,14 +42,146 @@ interface VideoPageUIProps {
   onRightTabChange: (tab: "theory" | "discussion" | "quick_revision") => void;
   onPreviousQuestion: () => void;
   onNextQuestion: () => void;
-  onQuestionsLoaded: (questions: { chapterId: string; questionId: string }[]) => void;
+  onQuestionsLoaded: (questions: { chapterId: string; questionId: string; questionTitle: string }[]) => void;
   onOpenTheoryView: () => void;
   onCloseTheoryView: () => void;
+  noteLoading: boolean;
+  autoSaveEnabled: boolean;
+  onAutoSaveEnabledChange: (enabled: boolean) => void;
+  isBookmarked: boolean;
+  onBookmarkClick: () => void;
+  isBookmarkModalOpen: boolean;
+  bookmarkPlaylists: { id: string; title: string; pinned: boolean; containsCurrentQuestion?: boolean }[];
+  isBookmarkLoading: boolean;
+  isBookmarkSubmitting: boolean;
+  bookmarkError: string | null;
+  newPlaylistName: string;
+  bookmarkQuestionTitle: string;
+  onBookmarkClose: () => void;
+  onNewPlaylistNameChange: (value: string) => void;
+  onSelectExistingPlaylist: (playlistId: string) => void;
+  onCreateAndAddToPlaylist: () => void;
+  currentUser?: { id: string; name: string } | null;
+}
+
+function normalizeVideoUrl(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function getQuestionIdCandidates(questionId: string): Array<string | number> {
+  const normalized = questionId.trim();
+  if (!normalized) {
+    return [];
+  }
+
+  if (/^\d+$/.test(normalized)) {
+    return [normalized, Number(normalized)];
+  }
+
+  return [normalized];
+}
+
+type ResolvedVideo = {
+  url: string | null;
+  videoId: string | null;
+};
+
+async function fetchVideoUrlFromSupabase(
+  questionId: string,
+  subjectId: string | null,
+): Promise<ResolvedVideo> {
+  const candidates = getQuestionIdCandidates(questionId);
+  if (candidates.length === 0) {
+    return { url: null, videoId: null };
+  }
+
+  for (const candidate of candidates) {
+    let query = supabase
+      .from("videos")
+      .select("id, video_url")
+      .eq("question_id", candidate)
+      .limit(1);
+
+    if (subjectId) {
+      query = query.eq("subject_id", subjectId);
+    }
+
+    let { data, error } = await query;
+
+    if (error && subjectId && (error.code === "PGRST204" || error.code === "42703")) {
+      const fallbackResult = await supabase
+        .from("videos")
+        .select("id, video_url")
+        .eq("question_id", candidate)
+        .limit(1);
+      data = fallbackResult.data;
+      error = fallbackResult.error;
+    }
+
+    if (error) {
+      console.warn("Could not fetch video from videos table:", error);
+    } else {
+      const resolved = normalizeVideoUrl(data?.[0]?.video_url);
+      if (resolved) {
+        return { url: resolved, videoId: data?.[0]?.id ? String(data[0].id) : null };
+      }
+    }
+  }
+
+  // Fallback: some schemas keep the link directly in questions.video_url.
+  for (const candidate of candidates) {
+    let query = supabase
+      .from("questions")
+      .select("video_url")
+      .eq("id", candidate)
+      .limit(1);
+
+    if (subjectId) {
+      query = query.eq("subject_id", subjectId);
+    }
+
+    let { data, error } = await query;
+
+    if (error && subjectId && (error.code === "PGRST204" || error.code === "42703")) {
+      const fallbackResult = await supabase
+        .from("questions")
+        .select("video_url")
+        .eq("id", candidate)
+        .limit(1);
+      data = fallbackResult.data;
+      error = fallbackResult.error;
+    }
+
+    if (error) {
+      console.warn("Could not fetch video from questions table:", error);
+    } else {
+      const resolved = normalizeVideoUrl(data?.[0]?.video_url);
+      if (resolved) {
+        return { url: resolved, videoId: null };
+      }
+    }
+  }
+
+  return { url: null, videoId: null };
 }
 
 export default function VideoPageUI({
   data,
   state,
+  subjectFilter,
+  playlistQuestionIds = null,
+  playlistId = null,
+  playlistTitle,
+  isPlaylistMode = false,
+  selectedSubjectId = null,
+  isSubjectFiltered = false,
+  pageHeading = null,
+  onSubjectResolved,
   onChapterSelect,
   onQuestionSelect,
   onDislike,
@@ -50,13 +194,30 @@ export default function VideoPageUI({
   onQuestionsLoaded,
   onOpenTheoryView,
   onCloseTheoryView,
+  noteLoading,
+  autoSaveEnabled,
+  onAutoSaveEnabledChange,
+  isBookmarked,
+  onBookmarkClick,
+  isBookmarkModalOpen,
+  bookmarkPlaylists,
+  isBookmarkLoading,
+  isBookmarkSubmitting,
+  bookmarkError,
+  newPlaylistName,
+  bookmarkQuestionTitle,
+  onBookmarkClose,
+  onNewPlaylistNameChange,
+  onSelectExistingPlaylist,
+  onCreateAndAddToPlaylist,
+  currentUser = null,
 }: VideoPageUIProps) {
   const { theme, resolvedTheme } = useTheme();
   const [theoryViewEnabled, setTheoryViewEnabled] = useState(false);
   const [theoryLanguage, setTheoryLanguage] = useState<"English" | "Tamil">("English");
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const theoryScrollRef = useRef<HTMLDivElement>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
 
   // Fetch video URL for the selected question
@@ -66,33 +227,28 @@ export default function VideoPageUI({
       if (!state.selectedQuestionId) {
         if (isMounted) {
           setVideoUrl(null);
+          setSelectedVideoId(null);
           setIsVideoLoading(false);
         }
         return;
       }
 
       setIsVideoLoading(true);
+      setVideoUrl(null);
+      setSelectedVideoId(null);
       try {
-        const { data, error } = await supabase
-          .from("videos")
-          .select("video_url")
-          .eq("question_id", state.selectedQuestionId)
-          .maybeSingle();
-
-        if (error && error.code !== "PGRST116") {
-          console.warn("Could not fetch video:", error);
-        }
+        const resolvedVideo = await fetchVideoUrlFromSupabase(state.selectedQuestionId, selectedSubjectId);
 
         if (isMounted) {
-          if (data?.video_url) {
-            setVideoUrl(data.video_url);
-          } else {
-            setVideoUrl(null);
-          }
+          setVideoUrl(resolvedVideo.url);
+          setSelectedVideoId(resolvedVideo.videoId);
         }
       } catch (err) {
         console.warn("Error fetching video:", err);
-        if (isMounted) setVideoUrl(null);
+        if (isMounted) {
+          setVideoUrl(null);
+          setSelectedVideoId(null);
+        }
       } finally {
         if (isMounted) setIsVideoLoading(false);
       }
@@ -100,118 +256,13 @@ export default function VideoPageUI({
 
     fetchVideo();
     return () => { isMounted = false; };
-  }, [state.selectedQuestionId]);
+  }, [selectedSubjectId, state.selectedQuestionId]);
 
   useEffect(() => {
     if (theoryScrollRef.current) {
       theoryScrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [state.selectedQuestionId, theoryLanguage]);
-
-  // Track the last loaded note to prevent unnecessary saves
-  const lastLoadedNotesRef = useRef<string>("");
-
-  // Load notes for the selected question
-  useEffect(() => {
-    if (!state.selectedQuestionId) {
-      onNotesChange("");
-      lastLoadedNotesRef.current = "";
-      return;
-    }
-
-    const cacheKey = `roteen_note_${state.selectedQuestionId}`;
-    
-    // INSTANT LOAD from localStorage
-    const cachedNote = localStorage.getItem(cacheKey);
-    if (cachedNote) {
-      onNotesChange(cachedNote);
-      lastLoadedNotesRef.current = cachedNote;
-    } else {
-      onNotesChange("");
-      lastLoadedNotesRef.current = "";
-    }
-
-    let isMounted = true;
-    const loadNotes = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("user_notes")
-          .select("content")
-          .eq("user_id", "46898cdf-5efd-41dd-b04b-0de8f268090f")
-          .eq("question_id", state.selectedQuestionId)
-          .maybeSingle();
-
-        if (error && error.code !== "PGRST116") {
-          console.warn("Could not fetch notes:", error);
-        }
-
-        if (isMounted) {
-          const loadedContent = data?.content || "";
-          
-          // Only update UI if the database content differs from the cached content.
-          // This prevents cursor jumps if the user started typing instantly.
-          if (loadedContent !== lastLoadedNotesRef.current) {
-            lastLoadedNotesRef.current = loadedContent;
-            onNotesChange(loadedContent);
-            localStorage.setItem(cacheKey, loadedContent);
-          }
-        }
-      } catch (err) {
-        console.warn("Error fetching notes:", err);
-      }
-    };
-
-    loadNotes();
-    return () => { isMounted = false; };
-  }, [onNotesChange, state.selectedQuestionId]);
-
-  // Auto-save notes
-  useEffect(() => {
-    if (!state.selectedQuestionId || !autoSaveEnabled) return;
-    
-    // Only save if the note is different from the last loaded one
-    if (state.notes === lastLoadedNotesRef.current) return;
-
-    const saveNotes = async () => {
-      const cacheKey = `roteen_note_${state.selectedQuestionId}`;
-      
-      // Update cache immediately to guarantee instant reloads
-      localStorage.setItem(cacheKey, state.notes);
-
-      try {
-        const { data: existing } = await supabase
-          .from("user_notes")
-          .select("id")
-          .eq("user_id", "46898cdf-5efd-41dd-b04b-0de8f268090f")
-          .eq("question_id", state.selectedQuestionId)
-          .maybeSingle();
-
-        if (existing) {
-          await supabase
-            .from("user_notes")
-            .update({ content: state.notes, title: `Notes for ${state.selectedQuestionId}` })
-            .eq("id", existing.id);
-        } else {
-          await supabase
-            .from("user_notes")
-            .insert({
-              user_id: "46898cdf-5efd-41dd-b04b-0de8f268090f",
-              question_id: state.selectedQuestionId,
-              title: `Notes for ${state.selectedQuestionId}`,
-              content: state.notes,
-            });
-        }
-        
-        // Update the last loaded ref to prevent looping
-        lastLoadedNotesRef.current = state.notes;
-      } catch (err) {
-        console.warn("Failed to save notes:", err);
-      }
-    };
-
-    const timeoutId = setTimeout(saveNotes, 1500);
-    return () => clearTimeout(timeoutId);
-  }, [autoSaveEnabled, state.notes, state.selectedQuestionId]);
 
   const activeTheme = theme === "system" ? resolvedTheme : theme;
   const isDark = activeTheme !== "light";
@@ -233,9 +284,12 @@ export default function VideoPageUI({
   const navRouteMap: Record<string, string> = {
     home: "/landingpage",
     dashboard: "/dashboardpage",
+    notes: "/notes",
+    revision: "/notes/revision",
     videos: "/video",
     news: "/news",
   };
+  const leftPanelWidthClass = "w-[20%]";
 
   return (
     <main className={`video-smooth dark ${videoStyles.container} box-border flex h-screen flex-col overflow-hidden`}>
@@ -253,7 +307,7 @@ export default function VideoPageUI({
                 href={navRouteMap[item.id]}
                 prefetch
                 onClick={() => applyRouteThemeClass(navRouteMap[item.id])}
-                className={item.label === "Videos" ? videoStyles.navItemActive : videoStyles.navItem}
+                className={videoStyles.navItem}
               >
                 {item.label}
               </Link>
@@ -300,19 +354,38 @@ export default function VideoPageUI({
         </div>
       </header>
 
-      <div className={videoStyles.style_cd75d51f47d37}>
-        {/* Subject Panel */}
-        <div className={`transition-all duration-300 ease-in-out flex shrink-0 ${theoryViewEnabled ? "w-0 opacity-0 -translate-x-8 overflow-hidden pointer-events-none" : "w-[20%] opacity-100 translate-x-0 pr-4"}`}>
-          <div className={videoStyles.style_10bb6f80e7bd7e}>
-            <SubjectBar
-              activeChapterId={state.activeChapterId}
+      
+
+      <motion.div className={videoStyles.style_cd75d51f47d37}>
+        {/* Subject Panel / Playlist Panel */}
+        <div className={`transition-all duration-300 ease-in-out flex shrink-0 ${theoryViewEnabled ? "w-0 opacity-0 -translate-x-8 overflow-hidden pointer-events-none" : `${leftPanelWidthClass} opacity-100 translate-x-0 pr-4`}`}>
+          {isPlaylistMode && playlistId ? (
+            <PlaylistSidebar
+              playlistId={playlistId}
+              playlistTitle={playlistTitle}
+              playlistQuestionIds={playlistQuestionIds}
               selectedQuestionId={state.selectedQuestionId}
               completedQuestions={state.completedQuestions}
-              onChapterSelect={onChapterSelect}
               onQuestionSelect={onQuestionSelect}
               onQuestionsLoaded={onQuestionsLoaded}
             />
-          </div>
+          ) : (
+            <div className={videoStyles.style_10bb6f80e7bd7e}>
+              <SubjectBar
+                subjectFilter={subjectFilter}
+                playlistQuestionIds={playlistQuestionIds}
+                isSubjectFiltered={isSubjectFiltered}
+                isPlaylistMode={isPlaylistMode}
+                activeChapterId={state.activeChapterId}
+                selectedQuestionId={state.selectedQuestionId}
+                completedQuestions={state.completedQuestions}
+                onChapterSelect={onChapterSelect}
+                onQuestionSelect={onQuestionSelect}
+                onQuestionsLoaded={onQuestionsLoaded}
+                onSubjectResolved={onSubjectResolved}
+              />
+            </div>
+          )}
         </div>
 
         {/* Center Panel (Video/Notes) */}
@@ -326,7 +399,7 @@ export default function VideoPageUI({
                       <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div>
                     </div>
                   ) : videoUrl ? (
-                    <CustomVideoPlayer url={videoUrl} />
+                    <CustomVideoPlayer key={videoUrl} url={videoUrl} />
                   ) : (
                     <>
                       <div className={videoStyles.style_132fe1ccbf2c8f}>?</div>
@@ -337,11 +410,11 @@ export default function VideoPageUI({
                 </div>
                 <div className={videoStyles.style_1ab00e6ac524d3}>
                   <div className={videoStyles.style_d56f606dc1f0e}>
-                    <div className={`${videoStyles.style_1cea2ccf6d3c49} translate-x-[2px]`}>
+                    <div className={videoStyles.style_1cea2ccf6d3c49}>
                       <button
                         type="button"
                         onClick={onDislike}
-                        className={`flex w-11 justify-start translate-x-1 items-center gap-1 transition hover:text-red-400 ${state.disliked ? "text-purple-500" : "text-zinc-400"}`}
+                        className={`flex items-center justify-center gap-1 transition hover:text-red-400 ${state.disliked ? "text-purple-500" : "text-zinc-400"}`}
                       >
                         <ThumbsDown className={`h-5 w-5 shrink-0 ${state.disliked ? "fill-purple-500 text-purple-500" : "fill-transparent text-zinc-400"}`} />
                         <span className={`${videoStyles.style_19808e2d8b6019} tabular-nums truncate`}>{state.dislikes}</span>
@@ -353,10 +426,27 @@ export default function VideoPageUI({
                         onClick={() => applyRouteThemeClass("/bug")}
                         title="Report a bug"
                         aria-label="Report a bug"
-                        className={videoStyles.style_182869673902cd}
+                        className={`${videoStyles.style_182869673902cd} translate-x-0`}
                       >
                         <Bug className={videoStyles.style_a80622bed5fb7} />
                       </Link>
+                      <span className={videoStyles.style_111fbfd125d08} />
+                      <button
+                        type="button"
+                        title={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+                        aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+                        onClick={onBookmarkClick}
+                        className={`flex items-center justify-center transition ${
+                          isBookmarked ? "text-purple-400" : "text-zinc-400 hover:text-purple-400"
+                        }`}
+                      >
+                        <Bookmark
+                          className={`${videoStyles.style_a80622bed5fb7} ${
+                            isBookmarked ? "fill-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.45)]" : "fill-transparent"
+                          }`}
+                          strokeWidth={2}
+                        />
+                      </button>
                     </div>
                     <div className={videoStyles.style_1cea2ccf6d3c49}>
                       <label className={videoStyles.style_96ebe9a0013e2}>
@@ -419,7 +509,7 @@ export default function VideoPageUI({
                     {state.activeCenterTab === "notes" && (
                       <button
                         type="button"
-                        onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
+                        onClick={() => onAutoSaveEnabledChange(!autoSaveEnabled)}
                         className={videoStyles.style_1341d866ba8c15}
                       >
                         <span className={`h-1.5 w-1.5 rounded-full ${autoSaveEnabled ? "animate-pulse bg-emerald-500" : "bg-zinc-500"}`}></span>
@@ -433,6 +523,9 @@ export default function VideoPageUI({
 
                 {state.activeCenterTab === "notes" ? (
                   <div className={videoStyles.style_13c2d6075b9e0c}>
+                    {noteLoading ? (
+                      <div className="mb-2 text-xs text-zinc-500">Loading your note...</div>
+                    ) : null}
                     <RichTextEditor value={state.notes} onChange={onNotesChange} />
                   </div>
                 ) : (
@@ -553,17 +646,36 @@ export default function VideoPageUI({
             <div ref={theoryScrollRef} className={`custom-scrollbar min-h-0 flex-1 overflow-y-scroll transition-all duration-300 ${theoryViewEnabled ? "bg-[radial-gradient(circle_at_0%_0%,rgba(168,85,247,0.05),transparent_50%)]" : ""}`}>
               <div className={`transition-all duration-300 w-full max-w-none px-4 pt-2 pb-8 lg:px-6`}>
                 {state.activeRightTab === "theory" ? (
-                  <TheoryContent key={`${state.selectedQuestionId}-${theoryLanguage}-theory`} questionId={state.selectedQuestionId} language={theoryLanguage} fullScreen={theoryViewEnabled} type="theory" />
+                  <TheoryContent key={`${selectedSubjectId}-${state.selectedQuestionId}-${theoryLanguage}-theory`} questionId={state.selectedQuestionId} subjectId={selectedSubjectId} language={theoryLanguage} fullScreen={theoryViewEnabled} type="theory" />
                 ) : state.activeRightTab === "quick_revision" ? (
-                  <TheoryContent key={`${state.selectedQuestionId}-${theoryLanguage}-qr`} questionId={state.selectedQuestionId} language={theoryLanguage} fullScreen={theoryViewEnabled} type="quick_revision" />
+                  <TheoryContent key={`${selectedSubjectId}-${state.selectedQuestionId}-${theoryLanguage}-qr`} questionId={state.selectedQuestionId} subjectId={selectedSubjectId} language={theoryLanguage} fullScreen={theoryViewEnabled} type="quick_revision" />
                 ) : (
-                  <DiscussionContent questionId={state.selectedQuestionId} />
+                  <DiscussionContent
+                    questionId={state.selectedQuestionId}
+                    videoId={selectedVideoId}
+                    subjectId={selectedSubjectId}
+                    currentUser={currentUser ?? undefined}
+                  />
                 )}
               </div>
             </div>
           </aside>
         </div>
-      </div>
+      </motion.div>
+
+      <BookmarkPlaylistModal
+        isOpen={isBookmarkModalOpen}
+        playlists={bookmarkPlaylists}
+        isLoading={isBookmarkLoading}
+        isSubmitting={isBookmarkSubmitting}
+        errorMessage={bookmarkError}
+        newPlaylistName={newPlaylistName}
+        questionTitle={bookmarkQuestionTitle}
+        onClose={onBookmarkClose}
+        onNewPlaylistNameChange={onNewPlaylistNameChange}
+        onSelectExistingPlaylist={onSelectExistingPlaylist}
+        onCreateAndAdd={onCreateAndAddToPlaylist}
+      />
     </main>
   );
 }

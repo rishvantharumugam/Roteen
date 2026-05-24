@@ -9,13 +9,20 @@ import styles from "./TheoryContent.module.css";
 
 interface TheoryContentProps {
   questionId: string | null;
+  subjectId?: string | null;
   language: "English" | "Tamil";
   fullScreen?: boolean;
   type?: "theory" | "quick_revision";
 }
 
-export default function TheoryContent({ questionId, language, fullScreen, type = "theory" }: TheoryContentProps) {
-  const currentCacheKey = questionId ? `roteen_${type}_${questionId}_${language}` : null;
+export default function TheoryContent({
+  questionId,
+  subjectId = null,
+  language,
+  fullScreen,
+  type = "theory",
+}: TheoryContentProps) {
+  const currentCacheKey = questionId ? `roteen_${type}_${subjectId ?? "unknown"}_${questionId}_${language}` : null;
 
   const cachedContent = typeof window !== "undefined" && currentCacheKey ? localStorage.getItem(currentCacheKey) : null;
 
@@ -59,10 +66,25 @@ export default function TheoryContent({ questionId, language, fullScreen, type =
       setTransitioning(true);
 
       try {
-        const { data: notesData, error: dbError } = await supabase
+        let notesQuery = supabase
           .from("admin_notes")
           .select("note_url, path, answer_type")
           .eq("question_id", questionId);
+
+        if (subjectId) {
+          notesQuery = notesQuery.eq("subject_id", subjectId);
+        }
+
+        let { data: notesData, error: dbError } = await notesQuery;
+
+        if (dbError && subjectId && (dbError.code === "PGRST204" || dbError.code === "42703")) {
+          const fallbackResult = await supabase
+            .from("admin_notes")
+            .select("note_url, path, answer_type")
+            .eq("question_id", questionId);
+          notesData = fallbackResult.data;
+          dbError = fallbackResult.error;
+        }
 
         if (dbError) throw dbError;
         if (!notesData || notesData.length === 0) {
@@ -119,7 +141,7 @@ export default function TheoryContent({ questionId, language, fullScreen, type =
     fetchTheory();
 
     return () => { mounted = false; };
-  }, [questionId, language, type, currentCacheKey]);
+  }, [currentCacheKey, language, questionId, subjectId, type]);
 
   if (questionId === null) {
     return (

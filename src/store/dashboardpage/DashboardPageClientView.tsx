@@ -2,103 +2,142 @@
 
 import { useDashboardPageController } from "@/controller/DashboardPageClientController";
 import { dashboardPageStyles } from "@/styles/DashboardPageStyles";
-import { type DashboardSubjectCard, type DashboardSubjectRecord, mapSubjectToExploreCard } from "@/service/DashboardPageService";
+import { type DashboardSubjectRecord, mapSubjectToExploreCard } from "@/service/DashboardPageService";
 import { DashboardHeader } from "@/store/dashboardpage/DashboardHeader";
 import { ExploreCourseCard } from "@/store/dashboardpage/ExploreCourseCard";
+import { OngoingVideoCard, OngoingVideo } from "@/store/dashboardpage/OngoingVideoCard";
 import { RevealBlock } from "@/store/dashboardpage/RevealBlock";
 import { SearchIcon } from "@/store/dashboardpage/SearchIcon";
+import { Atom, ChevronRight, Code2, Database, LayoutTemplate, Box } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef } from "react";
+import { prefetchVideoSubjectRoute } from "@/navigation/videoSubjectNavigation";
 
 type DashboardPageClientViewProps = {
-  ongoingCourses: DashboardSubjectCard[];
   initialExploreSubjects: DashboardSubjectRecord[];
 };
+
+const MOCK_ONGOING_VIDEOS: OngoingVideo[] = [
+  { id: "1", title: "Binary Search Masterclass", timeRemaining: "12 min left", progressPercent: 65, icon: <Code2 size={120} />, bgGradient: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)" },
+  { id: "2", title: "React Interview Questions", timeRemaining: "28 min left", progressPercent: 30, icon: <Atom size={120} />, bgGradient: "linear-gradient(135deg, #082f49 0%, #0f172a 100%)" },
+  { id: "3", title: "JavaScript ES6+ Features", timeRemaining: "8 min left", progressPercent: 80, icon: <Box size={120} color="#FACC15" />, bgGradient: "linear-gradient(135deg, #422006 0%, #0f172a 100%)" },
+  { id: "4", title: "System Design Basics", timeRemaining: "18 min left", progressPercent: 45, icon: <LayoutTemplate size={120} color="#C084FC" />, bgGradient: "linear-gradient(135deg, #3b0764 0%, #0f172a 100%)" },
+  { id: "5", title: "SQL for Interviews", timeRemaining: "35 min left", progressPercent: 20, icon: <Database size={120} color="#38BDF8" />, bgGradient: "linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%)" },
+];
 
 export function DashboardPageClientView({
   initialExploreSubjects,
 }: DashboardPageClientViewProps) {
+  const router = useRouter();
   const { exploreSubjects, isSearching, searchTerm, setSearchTerm } =
     useDashboardPageController(initialExploreSubjects);
+
+  const videoScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    router.prefetch("/video");
+
+    exploreSubjects.forEach((subject) => {
+      prefetchVideoSubjectRoute(router, {
+        subjectId: subject.id,
+        subjectTitle: subject.subject_name?.trim() || "Subject",
+        subjectStandard: subject.standard,
+      });
+    });
+  }, [exploreSubjects, router]);
+  const exploreScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollRight = useCallback((ref: React.RefObject<HTMLDivElement | null>) => {
+    if (ref.current) {
+      ref.current.scrollBy({ left: 340, behavior: "smooth" });
+    }
+  }, []);
 
   return (
     <main className={dashboardPageStyles.page}>
       <DashboardHeader activeLabel="Dashboard" />
 
       <div className={dashboardPageStyles.container}>
-        <RevealBlock>
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h1 className="font-heading text-3xl font-semibold tracking-tight text-slate-950 md:text-4xl dark:text-slate-100">
-                Ongoing Courses
-              </h1>
-              <p className="mt-1.5 text-lg text-slate-600 md:text-xl dark:text-slate-400">Pick up where you left off</p>
+        {/* Ongoing Courses */}
+        <RevealBlock delayMs={120}>
+          <div className={dashboardPageStyles.sectionHeader}>
+            <div className={dashboardPageStyles.sectionTitleWrap}>
+              <h2 className={dashboardPageStyles.sectionTitle}>Ongoing Courses</h2>
+              <p className={dashboardPageStyles.sectionSubtitle}>
+                Continue watching where you left off
+              </p>
             </div>
+            <Link href="/video" prefetch className={dashboardPageStyles.sectionLink}>
+              View all courses →
+            </Link>
+          </div>
+
+          <div className={dashboardPageStyles.carouselWrap}>
+            <div className={dashboardPageStyles.carouselScroll} ref={videoScrollRef}>
+              {MOCK_ONGOING_VIDEOS.map((video) => (
+                <OngoingVideoCard key={video.id} video={video} />
+              ))}
+              <div className="pointer-events-none sticky right-0 top-0 bottom-0 z-10 w-16 bg-gradient-to-l from-[#0B0B15] to-transparent" />
+            </div>
+            <button
+              type="button"
+              className={dashboardPageStyles.navButtonRight}
+              onClick={() => scrollRight(videoScrollRef)}
+            >
+              <ChevronRight size={24} />
+            </button>
           </div>
         </RevealBlock>
 
-        <RevealBlock
-          className="mt-8 rounded-[1.5rem] border border-blue-100 bg-[#eaf2ff] px-5 py-5 shadow-[0_10px_24px_rgba(148,163,184,0.12)] transition-colors md:px-6 md:py-6 dark:border-[#333] dark:bg-[#1a1a1a] dark:shadow-none"
-          delayMs={120}
-        >
-          <div className="grid gap-6 xl:grid-cols-[1.5fr_180px] xl:items-center">
-            <div>
-              <div className="flex flex-wrap items-center gap-3 text-blue-700 dark:text-orange-500">
-                <span className="text-lg">[]</span>
-                <h2 className="font-heading text-2xl font-semibold md:text-3xl">Today&apos;s Learning Progress</h2>
-              </div>
-
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
-                <p className="text-lg font-semibold text-slate-700 md:text-xl dark:text-slate-300">Daily Goal Reached</p>
-                <div className="flex items-center gap-4 text-sm font-semibold text-blue-700 md:text-base dark:text-orange-500">
-                  <span>46min / 60min</span>
-                  <a href="#" className="transition hover:text-blue-800">
-                    View Activity &gt;
-                  </a>
-                </div>
-              </div>
-
-              <div className="mt-4 h-3 rounded-full bg-slate-200 dark:bg-[#333]">
-                <div className="h-full w-[76%] rounded-full bg-blue-700 dark:bg-orange-500" />
-              </div>
+        {/* Explore Courses */}
+        <RevealBlock delayMs={160}>
+          <div className={dashboardPageStyles.sectionHeader}>
+            <div className={dashboardPageStyles.sectionTitleWrap}>
+              <h2 className={dashboardPageStyles.sectionTitle}>Explore Courses</h2>
+              <p className={dashboardPageStyles.sectionSubtitle}>
+                Discover and continue learning
+              </p>
             </div>
 
-            <div className="border-l border-blue-100 pl-6 text-center dark:border-[#333]">
-              <p className="font-heading text-4xl font-semibold text-blue-700 md:text-5xl dark:text-orange-500">14</p>
-              <p className="mt-1.5 text-xs uppercase tracking-[0.24em] text-slate-700 dark:text-slate-400">Mins to Goal</p>
-            </div>
-          </div>
-        </RevealBlock>
-
-        <RevealBlock className="mt-8" delayMs={180}>
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <h2 className="font-heading text-3xl font-semibold tracking-tight text-slate-950 md:text-4xl dark:text-slate-100">
-              Explore Courses
-            </h2>
-
-            <label className="flex w-full max-w-md items-center gap-3 rounded-[1rem] border border-slate-200 bg-white px-4 py-3 shadow-[0_8px_20px_rgba(148,163,184,0.1)] transition-colors dark:border-[#333] dark:bg-[#1a1a1a] dark:shadow-none">
+            <label className={dashboardPageStyles.searchInputWrap}>
               <SearchIcon />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search by subject..."
-                className="w-full border-0 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 md:text-base dark:text-slate-200 dark:placeholder:text-slate-500"
+                className={dashboardPageStyles.searchInput}
               />
             </label>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div className={dashboardPageStyles.carouselWrap}>
             {exploreSubjects.length > 0 ? (
-              exploreSubjects.map((subject, index) => (
-                <ExploreCourseCard
-                  key={`${subject.id}-${searchTerm || "all"}`}
-                  card={mapSubjectToExploreCard(subject, index)}
-                  animationDelayMs={index * 90}
-                />
-              ))
+              <div className={dashboardPageStyles.carouselScroll} ref={exploreScrollRef}>
+                {exploreSubjects.map((subject, index) => (
+                  <ExploreCourseCard
+                    key={`${subject.id}-${searchTerm || "all"}`}
+                    card={mapSubjectToExploreCard(subject, index)}
+                    animationDelayMs={index * 50}
+                  />
+                ))}
+                <div className="pointer-events-none sticky right-0 top-0 bottom-0 z-10 w-16 bg-gradient-to-l from-[#0B0B15] to-transparent" />
+              </div>
             ) : (
-              <div className="md:col-span-2 rounded-[1.25rem] border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-slate-500 dark:border-[#333] dark:bg-[#1a1a1a] dark:text-slate-400 xl:col-span-4">
+              <div className="w-full rounded-2xl border border-dashed border-white/10 bg-[#121221] px-6 py-10 text-center text-gray-500">
                 {isSearching ? "Searching subjects..." : "No matching subjects found in Supabase."}
               </div>
+            )}
+
+            {exploreSubjects.length > 0 && (
+              <button
+                type="button"
+                className={dashboardPageStyles.navButtonRight}
+                onClick={() => scrollRight(exploreScrollRef)}
+              >
+                <ChevronRight size={24} />
+              </button>
             )}
           </div>
         </RevealBlock>

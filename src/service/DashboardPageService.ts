@@ -23,6 +23,7 @@ export type ExploreSubjectCard = {
   id: string;
   badge: string;
   title: string;
+  standard: string | null;
   chapterCount: number;
   totalQuestions: number;
   totalQuizzes: number;
@@ -73,6 +74,7 @@ export function mapSubjectToExploreCard(subject: DashboardSubjectRecord, index: 
     id: subject.id,
     badge: `Standard ${subject.standard ?? "N/A"}`,
     title,
+    standard: subject.standard ?? null,
     chapterCount,
     totalQuestions: subject.questionCount ?? 0,
     totalQuizzes: subject.quizCount ?? 0,

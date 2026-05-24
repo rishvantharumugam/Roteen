@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { applyRouteThemeClass } from "@/lib/RouteThemeScope";
+import { appRoutes } from "@/navigation/AppRoutes";
+import { prefetchCoreRoutes } from "@/navigation/prefetch";
 import { HeaderSettingsMenu } from "@/store/shared/HeaderSettingsMenu";
 
 type DashboardHeaderProps = {
@@ -10,18 +13,22 @@ type DashboardHeaderProps = {
 };
 
 const headerNavItems = [
-  { label: "Home", href: "/landingpage" },
-  { label: "Dashboard", href: "/dashboardpage" },
-  { label: "Notes", href: "/notes" },
-  { label: "Revision", href: "/revision" },
-  { label: "Sessions", href: "/sessions" },
-  { label: "Videos", href: "/video" },
-  { label: "News", href: "/news" },
+  { label: "Home", href: appRoutes.home },
+  { label: "Dashboard", href: appRoutes.dashboard },
+  { label: "Notes", href: appRoutes.notes },
+  { label: "Revision", href: appRoutes.revision },
+  { label: "Sessions", href: appRoutes.sessions },
+  { label: "News", href: appRoutes.news },
 ] as const;
 
 export function DashboardHeader({ activeLabel }: DashboardHeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const normalizedActiveLabel = activeLabel?.trim().toLowerCase();
+
+  useEffect(() => {
+    prefetchCoreRoutes(router);
+  }, [router]);
 
   const isItemActive = (label: string, href: string) => {
     if (normalizedActiveLabel) {

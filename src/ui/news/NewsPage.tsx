@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Newspaper, Search } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getAllNews } from "@/navigation/newsNavigation";
+import { appRoutes } from "@/navigation/AppRoutes";
+import { prefetchCoreRoutes } from "@/navigation/prefetch";
 import type { NewsItem } from "@/service/newsService";
 import NewsList from "@/store/news/NewsList";
 import NewsModal from "@/store/news/NewsModal";
@@ -17,7 +20,6 @@ const menuItems = [
   "Notes",
   "Revision",
   "Sessions",
-  "Videos",
   "News",
 ];
 const newsCacheKey = "roteen_news_cache";
@@ -25,10 +27,12 @@ const newsMemoryCache: { items: NewsItem[]; expiresAt: number } = { items: [], e
 const NEWS_CACHE_TTL_MS = 60_000;
 
 const menuRouteMap: Record<string, string> = {
-  Home: "/landingpage",
-  Dashboard: "/dashboardpage",
-  Videos: "/video",
-  News: "/news",
+  Home: appRoutes.home,
+  Dashboard: appRoutes.dashboard,
+  Notes: appRoutes.notes,
+  Revision: appRoutes.revision,
+  Sessions: appRoutes.sessions,
+  News: appRoutes.news,
 };
 
 function readNewsCacheFromLocalStorage() {
@@ -50,10 +54,15 @@ function readNewsCacheFromLocalStorage() {
 }
 
 export default function NewsPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState<NewsItem[]>([]);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    prefetchCoreRoutes(router);
+  }, [router]);
 
   useEffect(() => {
     let isActive = true;

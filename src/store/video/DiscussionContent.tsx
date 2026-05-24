@@ -7,6 +7,8 @@ import { videoStyles } from "@/styles/video";
 
 interface DiscussionContentProps {
   questionId: string | null;
+  videoId?: string | null;
+  subjectId?: string | null;
   currentUser?: { id: string; name: string };
 }
 
@@ -14,6 +16,7 @@ interface Discussion {
   id: string;
   user_id: string;
   question_id: string;
+  video_id?: string | null;
   content: string;
   parent_id: string | null;
   created_at: string;
@@ -38,7 +41,9 @@ function timeAgo(dateString: string) {
 
 export default function DiscussionContent({
   questionId,
-  currentUser = { id: "46898cdf-5efd-41dd-b04b-0de8f268090f", name: "Sarath T S" },
+  videoId = null,
+  subjectId = null,
+  currentUser = { id: "", name: "Guest" },
 }: DiscussionContentProps) {
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +61,8 @@ export default function DiscussionContent({
     if (!questionId) return;
 
     let mounted = true;
-    const cacheKey = `roteen_discussion_${questionId}`;
+    const discussionContextKey = videoId ?? questionId;
+    const cacheKey = `roteen_discussion_${subjectId ?? "unknown"}_${discussionContextKey}`;
 
     // INSTANT LOAD from localStorage
     const cachedData = localStorage.getItem(cacheKey);
@@ -74,11 +80,27 @@ export default function DiscussionContent({
 
     const fetchDiscussions = async () => {
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from("discussion")
           .select("*")
-          .eq("question_id", questionId)
+          .eq(videoId ? "video_id" : "question_id", videoId ?? questionId)
           .order("created_at", { ascending: true });
+
+        if (subjectId) {
+          query = query.eq("subject_id", subjectId);
+        }
+
+        let { data, error } = await query;
+
+        if (error && subjectId && (error.code === "PGRST204" || error.code === "42703")) {
+          const fallbackResult = await supabase
+            .from("discussion")
+            .select("*")
+            .eq(videoId ? "video_id" : "question_id", videoId ?? questionId)
+            .order("created_at", { ascending: true });
+          data = fallbackResult.data;
+          error = fallbackResult.error;
+        }
 
         if (error) {
           // If the table doesn't exist or there's an RLS error, we just ignore it and show an empty list
@@ -118,17 +140,18 @@ export default function DiscussionContent({
     return () => {
       mounted = false;
     };
-  }, [questionId, currentUser.id, currentUser.name]);
+  }, [questionId, videoId, subjectId, currentUser.id, currentUser.name]);
 
   // Keep localStorage perfectly synced with the state
   useEffect(() => {
     if (questionId && !loading) {
-      localStorage.setItem(`roteen_discussion_${questionId}`, JSON.stringify(discussions));
+      const discussionContextKey = videoId ?? questionId;
+      localStorage.setItem(`roteen_discussion_${subjectId ?? "unknown"}_${discussionContextKey}`, JSON.stringify(discussions));
     }
-  }, [discussions, questionId, loading]);
+  }, [discussions, questionId, videoId, subjectId, loading]);
 
   const handlePostComment = async () => {
-    if (!newComment.trim() || !questionId) return;
+    if (!newComment.trim() || !questionId || !currentUser.id) return;
     setPosting(true);
 
     const tempId = `temp-${Date.now()}`;
@@ -136,6 +159,7 @@ export default function DiscussionContent({
       id: tempId,
       user_id: currentUser.id,
       question_id: questionId,
+      video_id: videoId ?? null,
       content: newComment.trim(),
       parent_id: null,
       created_at: new Date().toISOString(),
@@ -155,16 +179,34 @@ export default function DiscussionContent({
     }, 100);
 
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("discussion")
         .insert({
           user_id: newDiscussion.user_id,
           question_id: newDiscussion.question_id,
+          video_id: newDiscussion.video_id,
+          subject_id: subjectId,
           content: newDiscussion.content,
           parent_id: newDiscussion.parent_id,
         })
         .select()
         .single();
+
+      if (error && (error.code === "PGRST204" || error.code === "42703")) {
+        const fallbackResult = await supabase
+          .from("discussion")
+          .insert({
+            user_id: newDiscussion.user_id,
+            question_id: newDiscussion.question_id,
+            video_id: newDiscussion.video_id,
+            content: newDiscussion.content,
+            parent_id: newDiscussion.parent_id,
+          })
+          .select()
+          .single();
+        data = fallbackResult.data;
+        error = fallbackResult.error;
+      }
 
       if (error) throw error;
 
@@ -185,7 +227,7 @@ export default function DiscussionContent({
   };
 
   const handlePostReply = async (parentId: string) => {
-    if (!replyContent.trim() || !questionId) return;
+    if (!replyContent.trim() || !questionId || !currentUser.id) return;
     setPostingReply(parentId);
 
     const tempId = `temp-${Date.now()}`;
@@ -193,6 +235,7 @@ export default function DiscussionContent({
       id: tempId,
       user_id: currentUser.id,
       question_id: questionId,
+      video_id: videoId ?? null,
       content: replyContent.trim(),
       parent_id: parentId,
       created_at: new Date().toISOString(),
@@ -219,16 +262,34 @@ export default function DiscussionContent({
     });
 
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("discussion")
         .insert({
           user_id: newReply.user_id,
           question_id: newReply.question_id,
+          video_id: newReply.video_id,
+          subject_id: subjectId,
           content: newReply.content,
           parent_id: newReply.parent_id,
         })
         .select()
         .single();
+
+      if (error && (error.code === "PGRST204" || error.code === "42703")) {
+        const fallbackResult = await supabase
+          .from("discussion")
+          .insert({
+            user_id: newReply.user_id,
+            question_id: newReply.question_id,
+            video_id: newReply.video_id,
+            content: newReply.content,
+            parent_id: newReply.parent_id,
+          })
+          .select()
+          .single();
+        data = fallbackResult.data;
+        error = fallbackResult.error;
+      }
 
       if (error) throw error;
 
@@ -305,7 +366,7 @@ export default function DiscussionContent({
               </span>
               <button
                 onClick={handlePostComment}
-                disabled={!newComment.trim() || posting}
+                disabled={!currentUser.id || !newComment.trim() || posting}
                 className={videoStyles.style_263124afdc91c}
               >
                 {posting ? (
@@ -417,7 +478,7 @@ export default function DiscussionContent({
                             </button>
                             <button
                               onClick={() => handlePostReply(comment.id)}
-                              disabled={!replyContent.trim() || postingReply === comment.id}
+                              disabled={!currentUser.id || !replyContent.trim() || postingReply === comment.id}
                               className={videoStyles.style_13568374bf03f0}
                             >
                               {postingReply === comment.id ? (

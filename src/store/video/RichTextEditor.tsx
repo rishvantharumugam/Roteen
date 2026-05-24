@@ -8,7 +8,7 @@ interface RichTextEditorProps {
 }
 
 const COLORS = ["#ededed", "#a855f7", "#3b82f6", "#ef4444", "#22c55e", "#f59e0b"];
-const BOX_COLORS = ["#18181b", "#0f172a", "#1e1e2e", "#171717", "#2e1065", "#064e3b", "#4c0519", "#713f12"];
+const BOX_COLORS = ["#18181b", "#C7D2FE", "#5EEAD4", "#93C5FD", "#F9A8D4", "#FDBA74", "#C4B5FD"];
 const SIZES = [
   { label: "S", value: "2" },
   { label: "M", value: "3" },

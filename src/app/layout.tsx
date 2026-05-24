@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { ThemeSync } from "@/lib/ThemeSync";
 import { RouteThemeScope } from "@/lib/RouteThemeScope";
+import Providers from "@/app/providers";
 
 export const metadata: Metadata = {
   title: "Roteen",
@@ -25,7 +26,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `(() => {
   const pathname = window.location.pathname || "";
-  const darkRoutes = ["/", "/video", "/news", "/dashboardpage", "/bug"];
+  const darkRoutes = ["/", "/video", "/news", "/dashboardpage", "/bug", "/notes", "/session"];
   const shouldUseLegacyDark = darkRoutes.some((route) => pathname === route || pathname.startsWith(route + "/"));
   document.body.classList.toggle("legacy-dark-route", shouldUseLegacyDark);
   document.documentElement.classList.toggle("dark", shouldUseLegacyDark);
@@ -34,12 +35,14 @@ export default async function RootLayout({
         />
         <ThemeSync />
         <RouteThemeScope />
-        <AuthProvider
-          initialSession={sessionData.session}
-          initialUser={sessionData.session?.user ?? null}
-        >
-          {children}
-        </AuthProvider>
+        <Providers>
+          <AuthProvider
+            initialSession={sessionData.session}
+            initialUser={sessionData.session?.user ?? null}
+          >
+            {children}
+          </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

@@ -932,3 +932,167 @@ main.bug-report-theme article [class*="grid-cols-3"] > div {
 main.bug-report-theme article [class*="grid-cols-3"] p:last-child {
   color: var(--bug-text) !important;
 }
+
+.note-editor-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #6f7a97 #0a1536;
+}
+
+.note-editor-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.note-editor-scroll::-webkit-scrollbar-track {
+  background: #0a1536;
+}
+
+.note-editor-scroll::-webkit-scrollbar-thumb {
+  background-color: #6f7a97;
+  border-radius: 9999px;
+  border: 2px solid #0a1536;
+}
+
+.note-rich-editor-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+.note-rich-editor-wrap::-webkit-scrollbar {
+  width: 8px;
+}
+
+.note-rich-editor-wrap::-webkit-scrollbar-thumb {
+  background: #5f6f98;
+  border-radius: 9999px;
+}
+
+.note-rich-editor .ProseMirror {
+  min-height: 100%;
+  outline: none;
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+  word-break: break-word;
+  padding-bottom: 8px;
+}
+
+.note-rich-editor .ProseMirror p,
+.note-rich-editor .ProseMirror li,
+.note-rich-editor .ProseMirror span {
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+}
+
+.note-rich-editor .ProseMirror h1,
+.note-rich-editor .ProseMirror h2,
+.note-rich-editor .ProseMirror h3,
+.note-rich-editor .ProseMirror h4,
+.note-rich-editor .ProseMirror h5,
+.note-rich-editor .ProseMirror h6 {
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+  font-weight: 600;
+  margin: 0;
+}
+
+.note-rich-editor .ProseMirror p {
+  margin: 0;
+}
+
+.note-rich-editor .ProseMirror ul,
+.note-rich-editor .ProseMirror ol {
+  padding-left: 1.2rem;
+  margin: 0.4rem 0;
+  list-style-position: inside;
+}
+
+.note-rich-editor .ProseMirror li > p {
+  display: inline;
+  margin: 0;
+}
+
+.note-rich-editor .ProseMirror ul[style*="text-align: center"],
+.note-rich-editor .ProseMirror ol[style*="text-align: center"],
+.note-rich-editor .ProseMirror ul[style*="text-align: right"],
+.note-rich-editor .ProseMirror ol[style*="text-align: right"] {
+  padding-left: 0;
+}
+
+.note-rich-editor .ProseMirror li[style*="text-align: center"],
+.note-rich-editor .ProseMirror li:has(> p[style*="text-align: center"]) {
+  text-align: center;
+  list-style-position: inside;
+}
+
+.note-rich-editor .ProseMirror li[style*="text-align: right"],
+.note-rich-editor .ProseMirror li:has(> p[style*="text-align: right"]) {
+  text-align: right;
+  list-style-position: inside;
+}
+
+.note-rich-editor .ProseMirror li[style*="text-align: left"],
+.note-rich-editor .ProseMirror li:has(> p[style*="text-align: left"]) {
+  text-align: left;
+  list-style-position: inside;
+}
+
+.note-rich-editor .ProseMirror ul {
+  list-style: disc;
+}
+
+.note-rich-editor .ProseMirror ol {
+  list-style: decimal;
+}
+
+.note-rich-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #9aa9c8;
+  float: left;
+  pointer-events: none;
+}
+
+.note-rich-editor .ProseMirror mark {
+  color: #111a34;
+  padding: 0 0.2em;
+  border-radius: 4px;
+}
+
+.note-preview-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #5f6f98 #07142f;
+}
+
+.note-preview-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.note-preview-scroll::-webkit-scrollbar-thumb {
+  background: #5f6f98;
+  border-radius: 9999px;
+}
+
+.note-preview-content {
+  font-size: 15px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.note-preview-content p {
+  margin: 0 0 0.5rem 0;
+}
+
+.note-preview-content ul,
+.note-preview-content ol {
+  margin: 0.5rem 0;
+  padding-left: 1.2rem;
+}
+
+.note-preview-content ul {
+  list-style: disc;
+}
+
+.note-preview-content ol {
+  list-style: decimal;
+}
