@@ -1,5 +1,5 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import { supabase } from '@/lib/supabase/client';
+import { supabase, getSiteUrl } from '@/lib/supabase/client';
 import { appRoutes } from "@/constants/AppRoutes";
 
 const DUPLICATE_EMAIL_MESSAGE =
@@ -290,16 +290,16 @@ function mapSignUpErrorMessage(message: string | undefined) {
   return message ?? "Unable to create your account right now.";
 }
 
-export async function signInWithGoogle(redirectTo: string) {
+export async function signInWithGoogle(redirectTo?: string) {
   return supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo,
+      redirectTo: redirectTo || `${getSiteUrl()}${appRoutes.authCallback}`,
     },
   });
 }
 
-export async function sendEmailVerificationOtp(email: string, redirectTo: string) {
+export async function sendEmailVerificationOtp(email: string, redirectTo?: string) {
   const normalizedEmail = email.trim().toLowerCase();
 
   if (!normalizedEmail) {
@@ -310,14 +310,14 @@ export async function sendEmailVerificationOtp(email: string, redirectTo: string
     email: normalizedEmail,
     options: {
       shouldCreateUser: true,
-      emailRedirectTo: redirectTo,
+      emailRedirectTo: redirectTo || `${getSiteUrl()}${appRoutes.authCallback}`,
     },
   });
 
   return { error };
 }
 
-export async function sendExistingUserLoginOtp(email: string, redirectTo: string) {
+export async function sendExistingUserLoginOtp(email: string, redirectTo?: string) {
   const normalizedEmail = email.trim().toLowerCase();
 
   if (!normalizedEmail) {
@@ -338,7 +338,7 @@ export async function sendExistingUserLoginOtp(email: string, redirectTo: string
     email: normalizedEmail,
     options: {
       shouldCreateUser: false,
-      emailRedirectTo: redirectTo,
+      emailRedirectTo: redirectTo || `${getSiteUrl()}${appRoutes.dashboard}`,
     },
   });
 
@@ -450,6 +450,7 @@ export async function signUpWithProfile({
     email: normalizedEmail,
     options: {
       shouldCreateUser: true,
+      emailRedirectTo: `${getSiteUrl()}${appRoutes.authCallback}`,
       data: {
         full_name: normalizeOptionalText(fullName),
         phone_number: normalizePhoneNumber(phone),
