@@ -268,10 +268,10 @@ export async function fetchSubjectPanelData(
       .eq("subject_id", subjectId)
       .order("chapter_no", { ascending: true });
 
-    const buildQuestionQuery = (selectClause: string) => {
+    const buildQuestionQuery = () => {
       const query = supabase
         .from("questions")
-        .select(selectClause)
+        .select("*")
         .eq("subject_id", subjectId)
         .order("chapter_id", { ascending: true })
         .order("id", { ascending: true });
@@ -281,7 +281,7 @@ export async function fetchSubjectPanelData(
 
     const [chapterResult, initialQuestionResult] = await Promise.all([
       chapterQuery,
-      buildQuestionQuery("id, chapter_id, question_name, mode, standard, question_marks, questions_marks"),
+      buildQuestionQuery(),
     ]);
 
     console.log("=== CHAPTER RESULT ===", chapterResult);
@@ -290,19 +290,7 @@ export async function fetchSubjectPanelData(
     let chapterRows = chapterResult.data;
     const chapterError = chapterResult.error;
     let questionRows = initialQuestionResult.data;
-    let questionError = initialQuestionResult.error;
-
-    if (questionError && (questionError.code === "PGRST204" || questionError.code === "42703")) {
-      const fallbackQuestionMarks = await buildQuestionQuery("id, chapter_id, question_name, mode, standard, question_marks");
-      questionRows = fallbackQuestionMarks.data;
-      questionError = fallbackQuestionMarks.error;
-
-      if (questionError && (questionError.code === "PGRST204" || questionError.code === "42703")) {
-        const fallbackQuestionsMarks = await buildQuestionQuery("id, chapter_id, question_name, mode, standard, questions_marks");
-        questionRows = fallbackQuestionsMarks.data;
-        questionError = fallbackQuestionsMarks.error;
-      }
-    }
+    const questionError = initialQuestionResult.error;
 
     if (chapterError) {
       console.error("CHAPTER ERROR", chapterError);
@@ -317,7 +305,10 @@ export async function fetchSubjectPanelData(
     // Some questions can reference chapter ids that are not returned by the strict
     // subject_id chapter query (data mismatch or delayed sync). Pull those chapter
     // rows by id so the UI can render real chapter names instead of synthetic labels.
-    const normalizedQuestionRows = (questionRows ?? []) as unknown as SubjectPanelCacheData["questions"];
+    const normalizedQuestionRows = (questionRows ?? []).map((row: any) => ({
+      ...row,
+      question_name: row.question_name || row.title || row.question || row.question_text || row.name || row.text || `Question ${row.id}`,
+    })) as unknown as SubjectPanelCacheData["questions"];
     const existingChapterIds = new Set((chapterRows ?? []).map((chapter: any) => String(chapter.id)));
     const referencedChapterIds = Array.from(
       new Set(

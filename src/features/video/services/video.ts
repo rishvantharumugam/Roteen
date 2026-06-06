@@ -256,7 +256,7 @@ export async function fetchSubjectChaptersQuestionsByMode(
 
   const { data: questionRows, error: questionError } = await supabase
     .from("questions")
-    .select("id, chapter_id, question_name, mode, standard")
+    .select("*")
     .eq("subject_id", subjectId)
     .order("chapter_id", { ascending: true })
     .order("id", { ascending: true });
@@ -286,9 +286,16 @@ export async function fetchSubjectChaptersQuestionsByMode(
 
       const nextQuestions = accumulator.get(chapterId) ?? [];
       const normalizedMode: QuestionMode = rowMode === "interior" ? "Interior" : "Bookback";
+      
+      // Handle varied schema columns for question text
+      const rawRow = row as any;
+      const questionNameStr = String(
+        rawRow.question_name || rawRow.title || rawRow.question || rawRow.question_text || rawRow.name || rawRow.text || ""
+      );
+
       nextQuestions.push({
         id: String(row.id),
-        question_name: String(row.question_name ?? ""),
+        question_name: questionNameStr,
         mode: normalizedMode,
       });
       accumulator.set(chapterId, nextQuestions);
