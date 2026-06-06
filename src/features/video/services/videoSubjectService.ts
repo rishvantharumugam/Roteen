@@ -250,7 +250,11 @@ export async function fetchSubjectPanelData(
   }
 
   const fetchPromise = (async () => {
+    console.log("=== FILTER ===", filter);
+
     const subject = await fetchSubjectRow(filter);
+
+    console.log("=== SUBJECT ===", subject);
     if (!subject) {
       throw new Error("Subject not found.");
     }
@@ -280,6 +284,9 @@ export async function fetchSubjectPanelData(
       buildQuestionQuery("id, chapter_id, question_name, mode, standard, question_marks, questions_marks"),
     ]);
 
+    console.log("=== CHAPTER RESULT ===", chapterResult);
+    console.log("=== QUESTION RESULT ===", initialQuestionResult);
+
     let chapterRows = chapterResult.data;
     const chapterError = chapterResult.error;
     let questionRows = initialQuestionResult.data;
@@ -298,10 +305,12 @@ export async function fetchSubjectPanelData(
     }
 
     if (chapterError) {
+      console.error("CHAPTER ERROR", chapterError);
       throw chapterError;
     }
 
     if (questionError) {
+      console.error("QUESTION ERROR", questionError);
       throw questionError;
     }
 
@@ -339,6 +348,13 @@ export async function fetchSubjectPanelData(
     };
 
     writeSubjectPanelCache(cacheKey, payload);
+
+    console.log("=== PAYLOAD ===", {
+      subjectId,
+      chapters: chapterRows?.length,
+      questions: questionRows?.length,
+    });
+
     return payload;
   })();
 
