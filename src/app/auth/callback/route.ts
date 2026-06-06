@@ -5,9 +5,22 @@ import { resolveAuthenticatedUser } from "@/features/auth/services/AuthService";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const isLocalEnv = process.env.NODE_ENV === 'development';
+
+  const getRedirectUrl = (path: string) => {
+    if (isLocalEnv) {
+      return `${origin}${path}`;
+    } else if (forwardedHost) {
+      return `https://${forwardedHost}${path}`;
+    } else {
+      return `${origin}${path}`;
+    }
+  };
+
   if (!code) {
     return NextResponse.redirect(
-      `${origin}/auth/auth-code-error?message=${encodeURIComponent("Missing OAuth code from provider.")}`,
+      getRedirectUrl(`/auth/auth-code-error?message=${encodeURIComponent("Missing OAuth code from provider.")}`)
     );
   }
 
@@ -16,7 +29,7 @@ export async function GET(request: Request) {
 
   if (error) {
     return NextResponse.redirect(
-      `${origin}/auth/auth-code-error?message=${encodeURIComponent(error.message)}`,
+      getRedirectUrl(`/auth/auth-code-error?message=${encodeURIComponent(error.message)}`)
     );
   }
 
@@ -27,9 +40,9 @@ export async function GET(request: Request) {
 
   if (userError || !user) {
     return NextResponse.redirect(
-      `${origin}/auth/auth-code-error?message=${encodeURIComponent(
-        userError?.message ?? "Google sign-in did not return a user.",
-      )}`,
+      getRedirectUrl(`/auth/auth-code-error?message=${encodeURIComponent(
+        userError?.message ?? "Google sign-in did not return a user."
+      )}`)
     );
   }
 
@@ -40,10 +53,10 @@ export async function GET(request: Request) {
 
   if (profileError || !resolution) {
     return NextResponse.redirect(
-      `${origin}/auth/auth-code-error?message=${encodeURIComponent(profileError?.message ?? "Unable to resolve your account.")}`,
+      getRedirectUrl(`/auth/auth-code-error?message=${encodeURIComponent(profileError?.message ?? "Unable to resolve your account.")}`)
     );
   }
 
-  return NextResponse.redirect(`${origin}${resolution.route}`);
+  return NextResponse.redirect(getRedirectUrl(resolution.route));
 }
 

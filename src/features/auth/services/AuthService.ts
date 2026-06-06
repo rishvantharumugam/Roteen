@@ -295,6 +295,10 @@ export async function signInWithGoogle(redirectTo?: string) {
     provider: "google",
     options: {
       redirectTo: redirectTo || `${getSiteUrl()}${appRoutes.authCallback}`,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
     },
   });
 }

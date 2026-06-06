@@ -568,6 +568,26 @@ export function AuthModal({
                 </button>
               </>
             ) : null}
+
+            {signInStep === 1 ? (
+              <>
+                <div className="flex items-center gap-3 py-0.5 text-xs text-slate-400">
+                  <span className="h-px flex-1 bg-slate-200" />
+                  Or
+                  <span className="h-px flex-1 bg-slate-200" />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  disabled={isSubmitting || isGoogleSubmitting}
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.06)] transition hover:border-violet-200 hover:bg-violet-50/45 disabled:cursor-not-allowed disabled:text-slate-400"
+                >
+                  <GoogleIcon />
+                  {isGoogleSubmitting ? "Redirecting to Google..." : "Continue with Google"}
+                </button>
+              </>
+            ) : null}
           </form>
         ) : (
           <form className="no-scrollbar min-h-0 overflow-y-auto space-y-3 px-4 py-3.5 sm:px-4.5" onSubmit={handleSignUp}>
