@@ -423,8 +423,8 @@ export async function getSubjectsAndChapters(
     .select("*")
     .eq("subject_id", subjectId)
     .eq("mode", mode)
-    .order("chapter_no", { ascending: true })
-    .order("question_no", { ascending: true });
+    .order("chapter_id", { ascending: true })
+    .order("id", { ascending: true });
 
   if (questionError) {
     throw new Error(`Failed to fetch questions: ${questionError.message}`);
