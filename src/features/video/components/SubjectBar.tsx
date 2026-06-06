@@ -136,7 +136,15 @@ export default function SubjectBar(props: SubjectBarProps) {
         }
 
         if (!readSubjectPanelCache(cacheKey)) {
-          setError(err instanceof Error ? err.message : "Unable to load data.");
+          let errorMsg = "Unable to load data.";
+          if (err instanceof Error) {
+            errorMsg = err.message;
+          } else if (err && typeof err === "object" && "message" in err) {
+            errorMsg = (err as any).message;
+          } else {
+            errorMsg = JSON.stringify(err);
+          }
+          setError(errorMsg);
         }
       } finally {
         if (mounted && !readSubjectPanelCache(cacheKey)) {
