@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { AuthProvider } from "@/providers/AuthProvider";
 import { ThemeSync } from "@/lib/ThemeSync";
 import { RouteThemeScope } from "@/lib/RouteThemeScope";
@@ -20,13 +23,13 @@ export default async function RootLayout({
   const { data: sessionData } = await supabase.auth.getSession();
 
   return (
-    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
-      <body suppressHydrationWarning className="min-h-full flex flex-col bg-white text-slate-950 dark:bg-[#111111] dark:text-slate-100">
+    <html lang="en" className={`h-full antialiased ${inter.variable}`} suppressHydrationWarning>
+      <body suppressHydrationWarning className="min-h-full flex flex-col bg-white text-slate-950 dark:bg-black dark:text-slate-100 font-sans">
         <script
           dangerouslySetInnerHTML={{
             __html: `(() => {
   const pathname = window.location.pathname || "";
-  const darkRoutes = ["/", "/video", "/news", "/dashboardpage", "/bug", "/notes", "/session"];
+  const darkRoutes = ["/", "/video", "/news", "/dashboard", "/bug", "/notes", "/revision", "/session", "/profile", "/feedback", "/notification", "/notifications", "/terms", "/tutorial"];
   const shouldUseLegacyDark = darkRoutes.some((route) => pathname === route || pathname.startsWith(route + "/"));
   document.body.classList.toggle("legacy-dark-route", shouldUseLegacyDark);
   document.documentElement.classList.toggle("dark", shouldUseLegacyDark);
@@ -47,4 +50,3 @@ export default async function RootLayout({
     </html>
   );
 }
-

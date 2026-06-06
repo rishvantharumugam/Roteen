@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from '@/lib/supabase/client';
 
 const USER_CACHE_TTL_MS = 60_000;
 
@@ -19,10 +19,16 @@ function initAuthCacheSubscription() {
   }
 
   authSubscriptionInitialized = true;
-  supabase.auth.onAuthStateChange((_event, session) => {
-    cachedUserId = session?.user?.id ?? null;
-    cacheExpiresAt = Date.now() + USER_CACHE_TTL_MS;
-    inFlightUserIdPromise = null;
+  supabase.auth.onAuthStateChange((event: any, session: any) => {
+    if (event === "SIGNED_OUT" || !session) {
+      // Fully clear the cache when the user signs out
+      clearUserCache();
+    } else {
+      // Update to the new user's ID on SIGNED_IN / TOKEN_REFRESHED / USER_UPDATED
+      cachedUserId = session?.user?.id ?? null;
+      cacheExpiresAt = Date.now() + USER_CACHE_TTL_MS;
+      inFlightUserIdPromise = null;
+    }
   });
 }
 

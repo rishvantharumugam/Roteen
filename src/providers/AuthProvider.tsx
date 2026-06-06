@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { supabase } from '@/lib/supabase/client';
 
 type AuthContextValue = {
   isLoading: boolean;
@@ -36,6 +36,7 @@ export function AuthProvider({
 
   useEffect(() => {
     let isActive = true;
+    let previousUserId: string | null = initialUser?.id ?? null;
 
     const syncAuthState = async () => {
       setIsLoading(true);
@@ -60,9 +61,20 @@ export function AuthProvider({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((_event: any, nextSession: any) => {
       if (!isActive) {
         return;
+      }
+
+      const nextUserId = nextSession?.user?.id ?? null;
+
+      // If the user changed (sign-out, sign-in as different user, token switch)
+      // dispatch a custom event so the QueryClient wrapper can clear all cached data.
+      if (nextUserId !== previousUserId) {
+        previousUserId = nextUserId;
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("auth-user-changed"));
+        }
       }
 
       setSession(nextSession);
@@ -76,7 +88,7 @@ export function AuthProvider({
       isActive = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [initialUser?.id]);
 
   const signOut = async () => {
     setIsLoading(true);

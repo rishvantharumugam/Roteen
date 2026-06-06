@@ -1,4 +1,4 @@
-import { SessionPage } from "@/ui/session/SessionPage";
+import { SessionPage } from "@/features/session/components/SessionPage";
 
 export default function SessionPageRoute() {
   return <SessionPage />;

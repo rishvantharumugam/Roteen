@@ -1,4 +1,4 @@
-import BugPageUI from "@/ui/bug/BugPageUI";
+import BugPageUI from "@/features/bug/components/BugPageUI";
 
 export default function Page() {
   return <BugPageUI />;

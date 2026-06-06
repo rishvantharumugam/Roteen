@@ -1,4 +1,4 @@
-import { SessionVideoPage } from "@/ui/session/SessionVideoPage";
+import { SessionVideoPage } from "@/features/session/components/SessionVideoPage";
 
 type SessionVideoPageProps = {
   params: Promise<{

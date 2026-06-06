@@ -1,0 +1,1002 @@
+[
+  {
+    "from": "D:/Roteen/website/src/feedback.ts",
+    "to": "features/feedback/types/feedback.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/notifications.ts",
+    "to": "features/notification/types/notifications.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/terms.ts",
+    "to": "features/terms/types/terms.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/tutorial.ts",
+    "to": "features/tutorial/types/tutorial.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/BugPageController.ts",
+    "to": "features/bug/actions/BugPageController.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/DashboardPageClientController.ts",
+    "to": "features/dashboard/actions/DashboardPageClientController.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/DashboardPageController.ts",
+    "to": "features/dashboard/actions/DashboardPageController.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/feedbackController.ts",
+    "to": "features/feedback/actions/feedbackController.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/LandingPageController.ts",
+    "to": "features/auth/actions/LandingPageController.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/newsController.ts",
+    "to": "features/news/actions/newsController.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/notesController.ts",
+    "to": "features/notes/actions/notesController.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/notificationController.ts",
+    "to": "features/notification/actions/notificationController.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/profile.controller.ts",
+    "to": "features/profile/actions/profile.controller.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/revisionController.ts",
+    "to": "features/revision/actions/revisionController.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/session.ts",
+    "to": "features/session/actions/session.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/termsController.ts",
+    "to": "features/terms/actions/termsController.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/tutorialController.ts",
+    "to": "features/tutorial/actions/tutorialController.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/video.ts",
+    "to": "features/video/actions/video.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/videoBookmarkController.ts",
+    "to": "features/video/actions/videoBookmarkController.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/controller/videoSubjectController.ts",
+    "to": "features/video/actions/videoSubjectController.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/AppRoutes.ts",
+    "to": "constants/AppRoutes.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/BugPageNavigation.ts",
+    "to": "features/bug/constants/BugPageNavigation.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/CoreRoutePrefetcher.tsx",
+    "to": "constants/CoreRoutePrefetcher.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/DashboardPageNavigation.ts",
+    "to": "features/dashboard/constants/DashboardPageNavigation.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/feedbackNavigation.ts",
+    "to": "features/feedback/constants/feedbackNavigation.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/LandingPageNavigation.ts",
+    "to": "features/auth/constants/LandingPageNavigation.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/newsNavigation.ts",
+    "to": "features/news/constants/newsNavigation.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/notesNavigation.tsx",
+    "to": "features/notes/constants/notesNavigation.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/notificationNavigation.ts",
+    "to": "features/notification/constants/notificationNavigation.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/prefetch.ts",
+    "to": "constants/prefetch.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/profile.navigation.ts",
+    "to": "features/profile/constants/profile.navigation.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/revisionNavigation.tsx",
+    "to": "features/revision/constants/revisionNavigation.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/session.ts",
+    "to": "features/session/constants/session.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/termsNavigation.ts",
+    "to": "features/terms/constants/termsNavigation.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/tutorialNavigation.ts",
+    "to": "features/tutorial/constants/tutorialNavigation.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/video.ts",
+    "to": "features/video/constants/video.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/videoBookmarkNavigation.ts",
+    "to": "features/video/constants/videoBookmarkNavigation.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/navigation/videoSubjectNavigation.ts",
+    "to": "features/video/constants/videoSubjectNavigation.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/AuthService.ts",
+    "to": "features/auth/services/AuthService.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/BugPageService.ts",
+    "to": "features/bug/services/BugPageService.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/DashboardPageService.ts",
+    "to": "features/dashboard/services/DashboardPageService.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/feedbackService.ts",
+    "to": "features/feedback/services/feedbackService.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/LandingPageService.ts",
+    "to": "features/auth/services/LandingPageService.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/newsService.ts",
+    "to": "features/news/services/newsService.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/notesService.ts",
+    "to": "features/notes/services/notesService.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/notificationService.ts",
+    "to": "features/notification/services/notificationService.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/profile.service.ts",
+    "to": "features/profile/services/profile.service.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/revisionService.ts",
+    "to": "features/revision/services/revisionService.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/session.ts",
+    "to": "features/session/services/session.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/supabaseClient.ts",
+    "to": "services/supabaseClient.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/termsService.ts",
+    "to": "features/terms/services/termsService.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/tutorialService.ts",
+    "to": "features/tutorial/services/tutorialService.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/video.ts",
+    "to": "features/video/services/video.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/videoBookmarkService.ts",
+    "to": "features/video/services/videoBookmarkService.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/service/videoSubjectService.ts",
+    "to": "features/video/services/videoSubjectService.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/style/session.ts",
+    "to": "features/session/components/session.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/styles/BugPageStyles.ts",
+    "to": "features/bug/components/BugPageStyles.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/styles/DashboardPageStyles.ts",
+    "to": "features/dashboard/components/DashboardPageStyles.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/styles/feedbackStyles.ts",
+    "to": "features/feedback/components/feedbackStyles.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/styles/LandingPageStyles.ts",
+    "to": "features/auth/components/LandingPageStyles.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/styles/newsStyles.ts",
+    "to": "features/news/components/newsStyles.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/styles/notesStyles.ts",
+    "to": "features/notes/components/notesStyles.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/styles/notificationStyles.ts",
+    "to": "features/notification/components/notificationStyles.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/styles/profile.ts",
+    "to": "features/profile/components/profile.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/styles/revisionStyles.ts",
+    "to": "features/revision/components/revisionStyles.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/styles/termsStyles.ts",
+    "to": "features/terms/components/termsStyles.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/styles/tutorialStyles.ts",
+    "to": "features/tutorial/components/tutorialStyles.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/styles/video.ts",
+    "to": "features/video/components/video.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/bug/BugWorkspace.tsx",
+    "to": "features/bug/components/BugWorkspace.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/dashboardpage/DashboardHeader.tsx",
+    "to": "features/dashboard/components/DashboardHeader.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/dashboardpage/DashboardPageClientView.tsx",
+    "to": "features/dashboard/components/DashboardPageClientView.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/dashboardpage/ExploreCourseCard.tsx",
+    "to": "features/dashboard/components/ExploreCourseCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/dashboardpage/LearningProgressCard.tsx",
+    "to": "features/dashboard/components/LearningProgressCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/dashboardpage/OngoingVideoCard.tsx",
+    "to": "features/dashboard/components/OngoingVideoCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/dashboardpage/RevealBlock.tsx",
+    "to": "features/dashboard/components/RevealBlock.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/dashboardpage/SearchIcon.tsx",
+    "to": "features/dashboard/components/SearchIcon.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/EmptyState.tsx",
+    "to": "features/feedback/components/EmptyState.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/ErrorModal.tsx",
+    "to": "features/feedback/components/ErrorModal.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/FeedbackButton.tsx",
+    "to": "features/feedback/components/FeedbackButton.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/FeedbackCard.tsx",
+    "to": "features/feedback/components/FeedbackCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/FeedbackForm.tsx",
+    "to": "features/feedback/components/FeedbackForm.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/FeedbackHeaderStore.tsx",
+    "to": "features/feedback/components/FeedbackHeaderStore.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/FeedbackInput.tsx",
+    "to": "features/feedback/components/FeedbackInput.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/FeedbackStore.tsx",
+    "to": "features/feedback/components/FeedbackStore.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/FeedbackTextarea.tsx",
+    "to": "features/feedback/components/FeedbackTextarea.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/index.ts",
+    "to": "features/feedback/components/storeIndex.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/LoadingSkeleton.tsx",
+    "to": "features/feedback/components/LoadingSkeleton.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/RatingStars.tsx",
+    "to": "features/feedback/components/RatingStars.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/SubmitButton.tsx",
+    "to": "features/feedback/components/SubmitButton.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/feedback/SuccessModal.tsx",
+    "to": "features/feedback/components/SuccessModal.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/landingpage/AuthModal.tsx",
+    "to": "features/auth/components/AuthModal.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/landingpage/CtaSection.tsx",
+    "to": "features/auth/components/CtaSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/landingpage/HeroSection.tsx",
+    "to": "features/auth/components/HeroSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/landingpage/LandingHeader.tsx",
+    "to": "features/auth/components/LandingHeader.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/landingpage/SectionHeading.tsx",
+    "to": "features/auth/components/SectionHeading.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/landingpage/SiteFooter.tsx",
+    "to": "features/auth/components/SiteFooter.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/landingpage/StatsSection.tsx",
+    "to": "features/auth/components/StatsSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/landingpage/UserMenu.tsx",
+    "to": "features/auth/components/UserMenu.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/news/NewsCard.tsx",
+    "to": "features/news/components/NewsCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/news/NewsList.tsx",
+    "to": "features/news/components/NewsList.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/news/NewsModal.tsx",
+    "to": "features/news/components/NewsModal.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notes/notesStore.tsx",
+    "to": "features/notes/components/notesStore.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/EmptyNotification.tsx",
+    "to": "features/notification/components/EmptyNotification.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/index.ts",
+    "to": "features/notification/components/storeIndex.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/LoadingSkeleton.tsx",
+    "to": "features/notification/components/LoadingSkeleton.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/NotificationBadge.tsx",
+    "to": "features/notification/components/NotificationBadge.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/NotificationButton.tsx",
+    "to": "features/notification/components/NotificationButton.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/NotificationCard.tsx",
+    "to": "features/notification/components/NotificationCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/NotificationDetailBox.tsx",
+    "to": "features/notification/components/NotificationDetailBox.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/NotificationDot.tsx",
+    "to": "features/notification/components/NotificationDot.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/NotificationHeader.tsx",
+    "to": "features/notification/components/NotificationHeader.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/NotificationIcon.tsx",
+    "to": "features/notification/components/NotificationIcon.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/NotificationList.tsx",
+    "to": "features/notification/components/NotificationList.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/NotificationsHeaderStore.tsx",
+    "to": "features/notification/components/NotificationsHeaderStore.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/NotificationsStore.tsx",
+    "to": "features/notification/components/NotificationsStore.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/notification/NotificationTime.tsx",
+    "to": "features/notification/components/NotificationTime.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/profile/EmptyState.tsx",
+    "to": "features/profile/components/EmptyState.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/profile/LoadingSkeleton.tsx",
+    "to": "features/profile/components/LoadingSkeleton.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/profile/ProfileAvatar.tsx",
+    "to": "features/profile/components/ProfileAvatar.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/profile/ProfileButton.tsx",
+    "to": "features/profile/components/ProfileButton.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/profile/ProfileCard.tsx",
+    "to": "features/profile/components/ProfileCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/profile/ProfileInfoItem.tsx",
+    "to": "features/profile/components/ProfileInfoItem.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/profile/ProfileStore.tsx",
+    "to": "features/profile/components/ProfileStore.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/profile/ReferralCard.tsx",
+    "to": "features/profile/components/ReferralCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/profile/UpdateButton.tsx",
+    "to": "features/profile/components/UpdateButton.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/profile/UserBadge.tsx",
+    "to": "features/profile/components/UserBadge.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/revision/AddPlaylistButton.tsx",
+    "to": "features/revision/components/AddPlaylistButton.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/revision/NewPlaylistModal.tsx",
+    "to": "features/revision/components/NewPlaylistModal.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/revision/PlaylistCard.tsx",
+    "to": "features/revision/components/PlaylistCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/revision/PlaylistGrid.tsx",
+    "to": "features/revision/components/PlaylistGrid.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/revision/RevisionHeader.tsx",
+    "to": "features/revision/components/RevisionHeader.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/revision/RevisionSearch.tsx",
+    "to": "features/revision/components/RevisionSearch.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/revision/revisionTypes.ts",
+    "to": "features/revision/components/revisionTypes.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/session/SessionActivity.tsx",
+    "to": "features/session/components/SessionActivity.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/session/SessionDataTable.tsx",
+    "to": "features/session/components/SessionDataTable.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/session/SessionFooter.tsx",
+    "to": "features/session/components/SessionFooter.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/session/SessionHeader.tsx",
+    "to": "features/session/components/SessionHeader.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/session/SessionQuickActions.tsx",
+    "to": "features/session/components/SessionQuickActions.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/session/SessionStatsCard.tsx",
+    "to": "features/session/components/SessionStatsCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/session/sessionStore.ts",
+    "to": "features/session/components/sessionStore.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/session/SessionTimeline.tsx",
+    "to": "features/session/components/SessionTimeline.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/session/sessionUtils.ts",
+    "to": "features/session/components/sessionUtils.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/shared/HeaderSettingsMenu.tsx",
+    "to": "components/layout/HeaderSettingsMenu.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/shared/VideoStyleHeader.tsx",
+    "to": "features/video/components/VideoStyleHeader.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/terms/AcceptButton.tsx",
+    "to": "features/terms/components/AcceptButton.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/terms/EmptyState.tsx",
+    "to": "features/terms/components/EmptyState.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/terms/index.ts",
+    "to": "features/terms/components/storeIndex.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/terms/PageLoader.tsx",
+    "to": "features/terms/components/PageLoader.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/terms/ScrollIndicator.tsx",
+    "to": "features/terms/components/ScrollIndicator.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/terms/TermsAccordion.tsx",
+    "to": "features/terms/components/TermsAccordion.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/terms/TermsButton.tsx",
+    "to": "features/terms/components/TermsButton.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/terms/TermsCard.tsx",
+    "to": "features/terms/components/TermsCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/terms/TermsHeader.tsx",
+    "to": "features/terms/components/TermsHeader.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/terms/TermsHeaderStore.tsx",
+    "to": "features/terms/components/TermsHeaderStore.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/terms/TermsList.tsx",
+    "to": "features/terms/components/TermsList.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/terms/TermsSection.tsx",
+    "to": "features/terms/components/TermsSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/terms/TermsStore.tsx",
+    "to": "features/terms/components/TermsStore.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/tutorial/ChapterItem.tsx",
+    "to": "features/tutorial/components/ChapterItem.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/tutorial/ContinueLearningCard.tsx",
+    "to": "features/tutorial/components/ContinueLearningCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/tutorial/EmptyState.tsx",
+    "to": "features/tutorial/components/EmptyState.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/tutorial/index.ts",
+    "to": "features/tutorial/components/storeIndex.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/tutorial/LessonCard.tsx",
+    "to": "features/tutorial/components/LessonCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/tutorial/LoadingComponents.tsx",
+    "to": "features/tutorial/components/LoadingComponents.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/tutorial/ProgressBar.tsx",
+    "to": "features/tutorial/components/ProgressBar.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/tutorial/SkeletonLoader.tsx",
+    "to": "features/tutorial/components/SkeletonLoader.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/tutorial/TutorialButton.tsx",
+    "to": "features/tutorial/components/TutorialButton.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/tutorial/TutorialCard.tsx",
+    "to": "features/tutorial/components/TutorialCard.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/tutorial/TutorialHeaderStore.tsx",
+    "to": "features/tutorial/components/TutorialHeaderStore.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/tutorial/TutorialStore.tsx",
+    "to": "features/tutorial/components/TutorialStore.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/tutorial/VideoPlayer.tsx",
+    "to": "features/tutorial/components/VideoPlayer.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/BookmarkPlaylistModal.tsx",
+    "to": "features/video/components/BookmarkPlaylistModal.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/DiscussionContent.tsx",
+    "to": "features/video/components/DiscussionContent.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/MarkFilterDropdown.tsx",
+    "to": "features/video/components/MarkFilterDropdown.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/Navbar.tsx",
+    "to": "features/video/components/Navbar.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/Notes.tsx",
+    "to": "features/video/components/Notes.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/PlaylistSidebar.tsx",
+    "to": "features/video/components/PlaylistSidebar.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/ResizableDivider.tsx",
+    "to": "features/video/components/ResizableDivider.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/RichTextEditor.tsx",
+    "to": "features/video/components/RichTextEditor.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/RightPanel.tsx",
+    "to": "features/video/components/RightPanel.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/Sidebar.tsx",
+    "to": "features/video/components/Sidebar.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/SubjectBar.tsx",
+    "to": "features/video/components/SubjectBar.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/SubjectChapterRow.tsx",
+    "to": "features/video/components/SubjectChapterRow.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/SubjectModeToggle.tsx",
+    "to": "features/video/components/SubjectModeToggle.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/SubjectQuestionRow.tsx",
+    "to": "features/video/components/SubjectQuestionRow.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/Tabs.tsx",
+    "to": "features/video/components/Tabs.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/TheoryContent.tsx",
+    "to": "features/video/components/TheoryContent.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/TheoryFullPageView.tsx",
+    "to": "features/video/components/TheoryFullPageView.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/TheoryPanel.tsx",
+    "to": "features/video/components/TheoryPanel.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/VideoPanel.tsx",
+    "to": "features/video/components/VideoPanel.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/VideoPlayer.tsx",
+    "to": "features/video/components/VideoPlayer.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/videoPlaylistStore.ts",
+    "to": "features/video/components/videoPlaylistStore.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/store/video/videoSubjectStore.ts",
+    "to": "features/video/components/videoSubjectStore.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/bug/BugPageUI.tsx",
+    "to": "features/bug/components/BugPageUI.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/dashboardpage/DashboardPageUI.tsx",
+    "to": "features/dashboard/components/DashboardPageUI.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/feedback/FeedbackFormSection.tsx",
+    "to": "features/feedback/components/FeedbackFormSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/feedback/FeedbackHeroSection.tsx",
+    "to": "features/feedback/components/FeedbackHeroSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/feedback/FeedbackListSection.tsx",
+    "to": "features/feedback/components/FeedbackListSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/feedback/FeedbackPage.tsx",
+    "to": "features/feedback/components/FeedbackPage.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/feedback/FeedbackRoutePage.tsx",
+    "to": "features/feedback/components/FeedbackRoutePage.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/feedback/FeedbackStatsSection.tsx",
+    "to": "features/feedback/components/FeedbackStatsSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/feedback/index.ts",
+    "to": "features/feedback/components/uiIndex.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/feedback/RatingSection.tsx",
+    "to": "features/feedback/components/RatingSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/feedback/SuccessSection.tsx",
+    "to": "features/feedback/components/SuccessSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/feedback/UserReviewSection.tsx",
+    "to": "features/feedback/components/UserReviewSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/landingpage/LandingPageUI.tsx",
+    "to": "features/auth/components/LandingPageUI.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/news/NewsPage.tsx",
+    "to": "features/news/components/NewsPage.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/notes/NotesPageUI.tsx",
+    "to": "features/notes/components/NotesPageUI.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/notification/index.ts",
+    "to": "features/notification/components/uiIndex.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/notification/NotificationContainer.tsx",
+    "to": "features/notification/components/NotificationContainer.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/notification/NotificationContentSection.tsx",
+    "to": "features/notification/components/NotificationContentSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/notification/NotificationHeaderSection.tsx",
+    "to": "features/notification/components/NotificationHeaderSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/notification/NotificationHeroSection.tsx",
+    "to": "features/notification/components/NotificationHeroSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/notification/NotificationListSection.tsx",
+    "to": "features/notification/components/NotificationListSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/notification/NotificationsPage.tsx",
+    "to": "features/notification/components/NotificationsPage.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/notification/NotificationsRoutePage.tsx",
+    "to": "features/notification/components/NotificationsRoutePage.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/profile/EducationDetailsSection.tsx",
+    "to": "features/profile/components/EducationDetailsSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/profile/Navbar.tsx",
+    "to": "features/profile/components/Navbar.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/profile/PersonalDetailsSection.tsx",
+    "to": "features/profile/components/PersonalDetailsSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/profile/ProfileContainer.tsx",
+    "to": "features/profile/components/ProfileContainer.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/profile/ProfileContentSection.tsx",
+    "to": "features/profile/components/ProfileContentSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/profile/ProfileHeroSection.tsx",
+    "to": "features/profile/components/ProfileHeroSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/profile/ProfileRoutePage.tsx",
+    "to": "features/profile/components/ProfileRoutePage.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/profile/UpdateProfileSection.tsx",
+    "to": "features/profile/components/UpdateProfileSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/revision/RevisionPageUI.tsx",
+    "to": "features/revision/components/RevisionPageUI.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/session/SessionPage.tsx",
+    "to": "features/session/components/SessionPage.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/session/SessionPageUI.tsx",
+    "to": "features/session/components/SessionPageUI.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/session/SessionVideoPage.tsx",
+    "to": "features/session/components/SessionVideoPage.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/session/SessionVideoPageUI.tsx",
+    "to": "features/session/components/SessionVideoPageUI.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/terms/index.ts",
+    "to": "features/terms/components/uiIndex.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/terms/TermsAgreementSection.tsx",
+    "to": "features/terms/components/TermsAgreementSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/terms/TermsContentSection.tsx",
+    "to": "features/terms/components/TermsContentSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/terms/TermsFooterSection.tsx",
+    "to": "features/terms/components/TermsFooterSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/terms/TermsHeroSection.tsx",
+    "to": "features/terms/components/TermsHeroSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/terms/TermsNavigationSection.tsx",
+    "to": "features/terms/components/TermsNavigationSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/terms/TermsPage.tsx",
+    "to": "features/terms/components/TermsPage.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/terms/TermsRoutePage.tsx",
+    "to": "features/terms/components/TermsRoutePage.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/terms/TermsSidebarSection.tsx",
+    "to": "features/terms/components/TermsSidebarSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/tutorial/ChapterSection.tsx",
+    "to": "features/tutorial/components/ChapterSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/tutorial/ContinueLearningSection.tsx",
+    "to": "features/tutorial/components/ContinueLearningSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/tutorial/index.ts",
+    "to": "features/tutorial/components/uiIndex.ts"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/tutorial/LessonGrid.tsx",
+    "to": "features/tutorial/components/LessonGrid.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/tutorial/ProgressSection.tsx",
+    "to": "features/tutorial/components/ProgressSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/tutorial/TutorialContentSection.tsx",
+    "to": "features/tutorial/components/TutorialContentSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/tutorial/TutorialHeroSection.tsx",
+    "to": "features/tutorial/components/TutorialHeroSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/tutorial/TutorialPage.tsx",
+    "to": "features/tutorial/components/TutorialPage.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/tutorial/TutorialRoutePage.tsx",
+    "to": "features/tutorial/components/TutorialRoutePage.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/tutorial/TutorialSidebar.tsx",
+    "to": "features/tutorial/components/TutorialSidebar.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/tutorial/VideoSection.tsx",
+    "to": "features/tutorial/components/VideoSection.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/video/CustomVideoPlayer.tsx",
+    "to": "features/video/components/CustomVideoPlayer.tsx"
+  },
+  {
+    "from": "D:/Roteen/website/src/ui/video/video.tsx",
+    "to": "features/video/components/video.tsx"
+  }
+]

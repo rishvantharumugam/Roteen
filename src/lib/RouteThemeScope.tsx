@@ -3,7 +3,22 @@
 import { usePathname } from "next/navigation";
 import { useLayoutEffect } from "react";
 
-const LEGACY_DARK_ROUTES = ["/", "/video", "/news", "/dashboardpage", "/bug", "/notes", "/session"];
+const LEGACY_DARK_ROUTES = [
+  "/",
+  "/video",
+  "/news",
+  "/dashboard",
+  "/bug",
+  "/notes",
+  "/revision",
+  "/session",
+  "/profile",
+  "/feedback",
+  "/notification",
+  "/notifications",
+  "/terms",
+  "/tutorial",
+];
 
 export function usesLegacyDarkRoute(pathname: string | null) {
   if (!pathname) return false;
