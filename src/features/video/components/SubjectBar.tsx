@@ -220,7 +220,11 @@ export default function SubjectBar(props: SubjectBarProps) {
         }
 
         if (selectedMark !== "All") {
-          const rowMark = String(row.question_marks ?? row.questions_marks ?? "").trim().toLowerCase();
+          let rowMark = String(row.question_marks ?? row.questions_marks ?? "").trim().toLowerCase();
+          rowMark = rowMark.replace(/\\s+/g, "");
+          if (/^\\d+$/.test(rowMark)) {
+            rowMark += "m";
+          }
           if (rowMark !== requestedMark) {
             return false;
           }

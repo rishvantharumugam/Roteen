@@ -297,7 +297,7 @@ export async function signInWithGoogle(redirectTo?: string) {
       redirectTo: redirectTo || `${getSiteUrl()}${appRoutes.authCallback}`,
       queryParams: {
         access_type: 'offline',
-        prompt: 'consent',
+        prompt: 'select_account',
       },
     },
   });
