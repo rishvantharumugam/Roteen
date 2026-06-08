@@ -328,6 +328,15 @@ export default function VideoClient() {
         if (cancelled) {
           return;
         }
+
+        // Fix for mixed localStorage state: if the loaded quiz's mode doesn't match the current mode, it's invalid.
+        if (quiz && quiz.mode && quiz.mode.toLowerCase() !== subjectMode.toLowerCase()) {
+          console.warn(`Quiz mode mismatch. Quiz mode: ${quiz.mode}, Current mode: ${subjectMode}. Clearing selected quiz.`);
+          setState(prev => ({ ...prev, selectedQuizId: null }));
+          setChapterQuiz(null);
+          return;
+        }
+
         chapterQuizCacheRef.current.set(cacheKey, quiz);
         setChapterQuiz(quiz);
         setChapterQuizNotFound(!quiz);
@@ -916,6 +925,20 @@ export default function VideoClient() {
     setQuizAnswers({});
     setVisitedQuizQuestions([0]);
     setMarkedQuizQuestions([]);
+    setQuizQuestions([]);
+  }, []);
+
+  const handleModeChange = useCallback((newMode: LearningMode) => {
+    setSubjectMode(newMode);
+    setRestoredLearningState(null);
+    setState((prev) => ({
+      ...prev,
+      selectedQuizId: null,
+      selectedQuestionId: null,
+    }));
+    setChapterQuizPhase("landing");
+    setQuizQuestions([]);
+    setQuizAnswers({});
   }, []);
 
   const handleQuestionSelectWithQuizReset = useCallback((questionId: string) => {
@@ -1112,6 +1135,10 @@ export default function VideoClient() {
           const quizzes = await fetchChapterQuizzes(selectedSubjectId, activeChapterIdForQuiz);
           const filteredQuiz = quizzes.find(q => !q.mode || q.mode.toLowerCase() === subjectMode.toLowerCase()) || quizzes[0];
           if (filteredQuiz) {
+            setChapterQuizPhase("landing");
+            setQuizQuestions([]);
+            setQuizAnswers({});
+            setQuizQuestionIndex(0);
             setState(prev => ({ ...prev, selectedQuizId: filteredQuiz.id, selectedQuestionId: null }));
             return;
           }
@@ -1246,6 +1273,8 @@ export default function VideoClient() {
       autoSaveEnabled={autoSaveEnabled}
       noteSaveStatus={noteSaveStatus}
       onAutoSaveEnabledChange={setAutoSaveEnabled}
+      mode={subjectMode as "Bookback" | "Interior"}
+      onModeChange={handleModeChange as any}
       isBookmarked={isBookmarked}
       onBookmarkClick={handleOpenBookmarkModal}
       isBookmarkModalOpen={isBookmarkModalOpen}

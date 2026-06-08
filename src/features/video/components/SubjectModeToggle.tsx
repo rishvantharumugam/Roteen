@@ -22,9 +22,8 @@ export default function SubjectModeToggle({ mode, onChange }: SubjectModeToggleP
             type="button"
             tabIndex={0}
             onClick={() => onChange(option)}
-            className={`relative flex flex-1 items-center justify-center rounded-full px-4 py-2.5 text-[13px] font-semibold transition-colors duration-300 ${
-              isActive ? "text-white" : "text-zinc-500 hover:text-zinc-300"
-            }`}
+            className={`relative flex flex-1 items-center justify-center rounded-full px-4 py-2.5 text-[13px] font-semibold transition-colors duration-300 ${isActive ? "text-white" : "text-zinc-500 hover:text-zinc-300"
+              }`}
             whileHover={!isActive ? { scale: 1.02, backgroundColor: "rgba(255,255,255,0.03)" } : {}}
             whileTap={{ scale: 0.97 }}
           >

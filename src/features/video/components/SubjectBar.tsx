@@ -30,6 +30,8 @@ interface SubjectBarProps {
   onQuizSelect: (quizId: string) => void;
   onQuestionsLoaded?: (questions: { chapterId: string; questionId: string; questionTitle: string }[]) => void;
   onSubjectResolved?: (subject: { id: string; name: string; standard: string | null }) => void;
+  mode: QuestionMode;
+  onModeChange: (mode: QuestionMode) => void;
 }
 
 export default function SubjectBar(props: SubjectBarProps) {
@@ -46,6 +48,8 @@ export default function SubjectBar(props: SubjectBarProps) {
     onQuizSelect,
     onQuestionsLoaded,
     onSubjectResolved,
+    mode,
+    onModeChange,
   } = props;
 
   const markOptions = ["All", "2M", "3M", "5M", "7M", "10M"];
@@ -57,8 +61,6 @@ export default function SubjectBar(props: SubjectBarProps) {
   const [error, setError] = useState<string | null>(null);
   const [openChapterId, setOpenChapterId] = useState<string | null>(activeChapterId);
 
-  // Always start with defaults (matches server render), restore from localStorage after mount
-  const [mode, setMode] = useState<QuestionMode>("Bookback");
   const [selectedMark, setSelectedMark] = useState<string>("All");
 
   useEffect(() => {
@@ -66,7 +68,6 @@ export default function SubjectBar(props: SubjectBarProps) {
       const saved = localStorage.getItem(persistKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.mode === "Interior" || parsed.mode === "Bookback") setMode(parsed.mode);
         if (typeof parsed.selectedMark === "string") setSelectedMark(parsed.selectedMark);
       }
     } catch {}
@@ -108,9 +109,9 @@ export default function SubjectBar(props: SubjectBarProps) {
   // Persist mode + mark whenever they change
   useEffect(() => {
     try {
-      localStorage.setItem(persistKey, JSON.stringify({ mode, selectedMark }));
+      localStorage.setItem(persistKey, JSON.stringify({ selectedMark }));
     } catch {}
-  }, [mode, selectedMark, persistKey]);
+  }, [selectedMark, persistKey]);
 
   useEffect(() => {
     let mounted = true;
@@ -356,7 +357,7 @@ export default function SubjectBar(props: SubjectBarProps) {
 
   return (
     <aside className="animate-fade-in-left flex h-full w-full min-w-0 shrink flex-col rounded-2xl border border-zinc-800/80 bg-[#161616] p-4 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
-      {!isPlaylistMode && <SubjectModeToggle mode={mode} onChange={setMode} />}
+      {!isPlaylistMode && <SubjectModeToggle mode={mode} onChange={onModeChange} />}
 
       <motion.div className="flex items-center justify-between border-b border-zinc-800 pb-3">
         {!isPlaylistMode && (

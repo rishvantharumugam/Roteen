@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, ThumbsDown, Bug, Bookmark } from "lucide-react";
-import type { VideoData, VideoState } from "@/features/video/services/video";
+import type { VideoData, VideoState, QuestionMode } from "@/features/video/services/video";
 import type { VideoSubjectFilter } from "@/features/video/services/videoSubjectService";
 
 import SubjectBar from "@/features/video/components/SubjectBar";
@@ -33,6 +33,8 @@ interface VideoPageUIProps {
   selectedSubjectId?: string | null;
   isSubjectFiltered?: boolean;
   pageHeading?: string | null;
+  mode: QuestionMode;
+  onModeChange: (mode: QuestionMode) => void;
   onSubjectResolved?: (subject: { id: string; name: string; standard: string | null }) => void;
   theoryFullScreen: boolean;
   onChapterSelect: (chapterId: string) => void;
@@ -257,6 +259,8 @@ export default function VideoPageUI({
   onSelectExistingPlaylist,
   onCreateAndAddToPlaylist,
   currentUser = null,
+  mode,
+  onModeChange,
 }: VideoPageUIProps) {
   const { theme, resolvedTheme } = useTheme();
   const [theoryViewEnabled, setTheoryViewEnabled] = useState(false);
@@ -427,6 +431,8 @@ export default function VideoPageUI({
                 selectedQuestionId={state.selectedQuestionId}
                 selectedQuizId={state.selectedQuizId}
                 completedQuestions={state.completedQuestions}
+                mode={mode}
+                onModeChange={onModeChange}
                 onChapterSelect={onChapterSelect}
                 onQuestionSelect={onQuestionSelect}
                 onQuizSelect={onQuizSelect}
