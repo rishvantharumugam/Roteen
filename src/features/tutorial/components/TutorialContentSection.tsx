@@ -39,7 +39,7 @@ export function TutorialContentSection({
         <ChapterSection chapter={activeChapter} onLessonOpen={onLessonSelect} />
       </div>
 
-      <aside className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" min-h-0 overflow-hidden`}>
+      <aside className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl min-h-0 overflow-hidden`}>
         <div className="border-b border-zinc-800 p-4">
           <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
             Course playlist

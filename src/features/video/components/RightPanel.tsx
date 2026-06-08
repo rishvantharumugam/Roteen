@@ -14,7 +14,7 @@ export default function RightPanel({ activeTab, onTabChange }: RightPanelProps) 
   const [theoryViewEnabled, setTheoryViewEnabled] = useState(false);
 
   return (
-    <aside className={`$"rounded-2xl border border-zinc-800/90 bg-[radial-gradient(circle_at_10%_7%,rgba(62,43,138,0.22),rgba(8,12,24,0.96)_42%),linear-gradient(160deg,#050915,#040710)] shadow-[0_18px_36px_rgba(0,0,0,0.42)]" $"w-[340px] shrink-0"`}>
+    <aside className={`rounded-2xl border border-zinc-800/90 bg-[radial-gradient(circle_at_10%_7%,rgba(62,43,138,0.22),rgba(8,12,24,0.96)_42%),linear-gradient(160deg,#050915,#040710)] shadow-[0_18px_36px_rgba(0,0,0,0.42)] w-[340px] shrink-0`}>
       <div className="flex w-full items-center justify-between border-b border-zinc-800 p-4">
         <div className="flex items-center gap-6">
           <button

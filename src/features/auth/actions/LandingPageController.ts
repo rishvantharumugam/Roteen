@@ -28,7 +28,10 @@ export function useLandingPageController() {
     authMode: searchParams.get("auth"),
     step: searchParams.get("step"),
     source: searchParams.get("source"),
+    googleSuccess: searchParams.get("google_success"),
   });
+
+  const nextRoute = searchParams.get("next");
 
   const storedDraft = useSyncExternalStore<AuthFlowDraft | null>(
     subscribeToAuthFlowDraft,
@@ -40,7 +43,7 @@ export function useLandingPageController() {
     ? "signUp"
     : redirectFlags.shouldOpenSignUp
       ? "signUp"
-      : redirectFlags.shouldOpenSignIn
+      : redirectFlags.shouldOpenSignIn || redirectFlags.shouldShowGoogleSuccess
         ? "signIn"
         : storedDraft?.mode ?? null;
 
@@ -57,7 +60,7 @@ export function useLandingPageController() {
       ? "signUp"
       : redirectFlags.shouldOpenSignUp
         ? "signUp"
-        : redirectFlags.shouldOpenSignIn
+        : redirectFlags.shouldOpenSignIn || redirectFlags.shouldShowGoogleSuccess
           ? "signIn"
           : null,
   );
@@ -117,5 +120,7 @@ export function useLandingPageController() {
     navigation,
     openSignUp,
     storedDraft,
+    isGoogleSuccess: redirectFlags.shouldShowGoogleSuccess,
+    nextRoute,
   };
 }

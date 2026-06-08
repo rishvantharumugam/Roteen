@@ -11,7 +11,7 @@ interface SidebarProps {
 
 export default function Sidebar({ subject, chapterCounter, chapters, activeChapterId, onChapterSelect }: SidebarProps) {
   return (
-    <aside className={`$"rounded-2xl border border-zinc-800/90 bg-[radial-gradient(circle_at_10%_7%,rgba(62,43,138,0.22),rgba(8,12,24,0.96)_42%),linear-gradient(160deg,#050915,#040710)] shadow-[0_18px_36px_rgba(0,0,0,0.42)]" $"w-[260px] shrink-0" relative`}>
+    <aside className={`rounded-2xl border border-zinc-800/90 bg-[radial-gradient(circle_at_10%_7%,rgba(62,43,138,0.22),rgba(8,12,24,0.96)_42%),linear-gradient(160deg,#050915,#040710)] shadow-[0_18px_36px_rgba(0,0,0,0.42)] w-[260px] shrink-0 relative`}>
       <div className="mb-2 border-b border-zinc-800 p-4">
         <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">SUBJECT</p>
         <div className="mt-2 flex items-center justify-between">

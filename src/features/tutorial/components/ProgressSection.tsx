@@ -10,7 +10,7 @@ export interface ProgressSectionProps {
 
 export function ProgressSection({ pageData }: ProgressSectionProps) {
   return (
-    <section className={`$"rounded-2xl border border-zinc-800 bg-[#121212] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl" p-4`}>
+    <section className={`rounded-2xl border border-zinc-800 bg-[#121212] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl p-4`}>
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-violet-400/16 bg-violet-500/[0.08] text-violet-200">

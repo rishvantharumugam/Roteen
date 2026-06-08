@@ -59,7 +59,7 @@ export function FeedbackStatsSection({ stats }: FeedbackStatsSectionProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.28, delay: index * 0.04 }}
-            className={`$"rounded-2xl border border-zinc-800 bg-[#121212] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl" p-4`}
+            className={`rounded-2xl border border-zinc-800 bg-[#121212] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl p-4`}
           >
             <Icon className={`h-4 w-4 ${item.tone}`} />
             <p className="mt-3 text-xl font-semibold text-white">

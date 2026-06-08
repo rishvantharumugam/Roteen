@@ -15,7 +15,7 @@ export function TutorialSidebar({
   onChapterSelect,
 }: TutorialSidebarProps) {
   return (
-    <aside className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" hidden min-h-0 overflow-hidden lg:flex lg:flex-col`}>
+    <aside className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl hidden min-h-0 overflow-hidden lg:flex lg:flex-col`}>
       <div className="border-b border-zinc-800 p-4">
         <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
           Chapters

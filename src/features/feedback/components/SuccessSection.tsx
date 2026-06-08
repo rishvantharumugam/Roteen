@@ -12,7 +12,7 @@ export function SuccessSection({ message }: SuccessSectionProps) {
   }
 
   return (
-    <section className={`$"border-emerald-500/35 bg-emerald-500/12 text-emerald-200" rounded-2xl border px-4 py-3 text-sm font-medium`}>
+    <section className={`border-emerald-500/35 bg-emerald-500/12 text-emerald-200 rounded-2xl border px-4 py-3 text-sm font-medium`}>
       <span className="flex items-center gap-2">
         <CheckCircle2 className="h-4 w-4" />
         {message}

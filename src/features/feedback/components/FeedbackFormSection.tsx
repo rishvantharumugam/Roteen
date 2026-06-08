@@ -24,7 +24,7 @@ export function FeedbackFormSection({
   onSubmit,
 }: FeedbackFormSectionProps) {
   return (
-    <section className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" p-5`}>
+    <section className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl p-5`}>
       <div className="mb-5">
         <h2 className="text-base font-semibold text-white">Submit feedback</h2>
         <p className="mt-1 text-sm leading-6 text-slate-400">

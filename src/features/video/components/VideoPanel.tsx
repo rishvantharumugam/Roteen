@@ -28,7 +28,7 @@ export default function VideoPanel({
 }: VideoPanelProps) {
   return (
     <section className="flex h-full min-h-0 flex-col gap-4 overflow-hidden pr-1">
-      <div className={`$"rounded-2xl border border-zinc-800/90 bg-[radial-gradient(circle_at_10%_7%,rgba(62,43,138,0.22),rgba(8,12,24,0.96)_42%),linear-gradient(160deg,#050915,#040710)] shadow-[0_18px_36px_rgba(0,0,0,0.42)]" h-[45%] shrink-0 overflow-hidden`}>
+      <div className={`rounded-2xl border border-zinc-800/90 bg-[radial-gradient(circle_at_10%_7%,rgba(62,43,138,0.22),rgba(8,12,24,0.96)_42%),linear-gradient(160deg,#050915,#040710)] shadow-[0_18px_36px_rgba(0,0,0,0.42)] h-[45%] shrink-0 overflow-hidden`}>
         <div className="m-3 flex h-[calc(100%-72px)] min-h-0 flex-col items-center justify-center rounded-2xl border border-zinc-800 bg-black text-zinc-500">
           <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-base">
             ?
@@ -72,7 +72,7 @@ export default function VideoPanel({
         </div>
       </div>
 
-      <div className={`$"rounded-2xl border border-zinc-800/90 bg-[radial-gradient(circle_at_10%_7%,rgba(62,43,138,0.22),rgba(8,12,24,0.96)_42%),linear-gradient(160deg,#050915,#040710)] shadow-[0_18px_36px_rgba(0,0,0,0.42)]" h-[35%] min-h-0 shrink-0 overflow-hidden`}>
+      <div className={`rounded-2xl border border-zinc-800/90 bg-[radial-gradient(circle_at_10%_7%,rgba(62,43,138,0.22),rgba(8,12,24,0.96)_42%),linear-gradient(160deg,#050915,#040710)] shadow-[0_18px_36px_rgba(0,0,0,0.42)] h-[35%] min-h-0 shrink-0 overflow-hidden`}>
         <Tabs
           tabs={[
             { id: "notes", label: "Notes" },

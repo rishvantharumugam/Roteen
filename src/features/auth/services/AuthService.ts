@@ -98,7 +98,7 @@ function isProfileCompleted(profile: UserRecord) {
 
 function getProfileCompletionRoute(profile: UserRecord) {
   return isProfileCompleted(profile)
-    ? appRoutes.dashboard
+    ? appRoutes.home
     : `${appRoutes.home}?auth=signUp&step=3`;
 }
 
@@ -291,16 +291,32 @@ function mapSignUpErrorMessage(message: string | undefined) {
 }
 
 export async function signInWithGoogle(redirectTo?: string) {
-  return supabase.auth.signInWithOAuth({
+  const popupRedirect = redirectTo || `${getSiteUrl()}${appRoutes.authCallback}`;
+  const url = new URL(popupRedirect);
+  url.searchParams.set("popup", "1");
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: redirectTo || `${getSiteUrl()}${appRoutes.authCallback}`,
+      redirectTo: url.toString(),
+      skipBrowserRedirect: true,
       queryParams: {
         access_type: 'offline',
         prompt: 'select_account',
       },
     },
   });
+
+  let popupWindow: Window | null = null;
+  if (data?.url) {
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    popupWindow = window.open(data.url, 'google_oauth', `width=${width},height=${height},left=${left},top=${top}`);
+  }
+
+  return { error, popupWindow };
 }
 
 export async function sendEmailVerificationOtp(email: string, redirectTo?: string) {
@@ -342,7 +358,7 @@ export async function sendExistingUserLoginOtp(email: string, redirectTo?: strin
     email: normalizedEmail,
     options: {
       shouldCreateUser: false,
-      emailRedirectTo: redirectTo || `${getSiteUrl()}${appRoutes.dashboard}`,
+      emailRedirectTo: redirectTo || `${getSiteUrl()}${appRoutes.home}`,
     },
   });
 
@@ -407,7 +423,7 @@ export async function saveVerifiedStudentProfile(profile: UserProfileDetails) {
   return {
     data: {
       profile: updatedProfile,
-      route: appRoutes.dashboard,
+      route: appRoutes.home,
       isNewUser: false,
     },
     error: null,

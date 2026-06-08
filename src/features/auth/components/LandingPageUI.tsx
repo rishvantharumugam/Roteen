@@ -25,6 +25,8 @@ export default function LandingPageUI() {
     navigation,
     openSignUp,
     storedDraft,
+    isGoogleSuccess,
+    nextRoute,
   } = useLandingPageController();
 
   useEffect(() => {
@@ -41,21 +43,21 @@ export default function LandingPageUI() {
           <HeroSection
             badge={content.badge}
             title={content.title}
-          description={content.description}
-          primaryAction={content.primaryAction}
-          secondaryAction={content.secondaryAction}
-          heroCardTitle={content.heroCardTitle}
-          heroCardItems={content.heroCardItems}
-          featureHighlights={content.features.slice(0, 6)}
-          heroMetrics={heroMetrics}
-          onPrimaryActionClick={openSignUp}
-        />
+            description={content.description}
+            primaryAction={content.primaryAction}
+            secondaryAction={content.secondaryAction}
+            heroCardTitle={content.heroCardTitle}
+            heroCardItems={content.heroCardItems}
+            featureHighlights={content.features.slice(0, 6)}
+            heroMetrics={heroMetrics}
+            onPrimaryActionClick={openSignUp}
+          />
         </div>
 
         <div className="bg-[#090909]">
           <StatsSection stats={content.stats} />
         </div>
-        
+
         <div className="bg-[#0D0D0D]">
           <CtaSection
             primaryAction={content.primaryAction}
@@ -63,7 +65,7 @@ export default function LandingPageUI() {
             onPrimaryActionClick={openSignUp}
           />
         </div>
-        
+
         <div className="bg-[#000000]">
           <SiteFooter links={content.footerLinks} />
         </div>
@@ -76,6 +78,8 @@ export default function LandingPageUI() {
           initialSuccessMessage={modalSuccessMessage}
           mode={authMode}
           onClose={closeModal}
+          isGoogleSuccess={isGoogleSuccess}
+          nextRoute={nextRoute}
         />
       ) : null}
     </main>

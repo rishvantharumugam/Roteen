@@ -20,7 +20,7 @@ export function TermsHeroSection({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" overflow-hidden p-5`}
+      className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl overflow-hidden p-5`}
     >
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
@@ -37,7 +37,7 @@ export function TermsHeroSection({
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className={`$"rounded-2xl border border-zinc-800 bg-[#121212] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl" px-4 py-3`}>
+          <div className={`rounded-2xl border border-zinc-800 bg-[#121212] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl px-4 py-3`}>
             <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
               Effective
             </p>

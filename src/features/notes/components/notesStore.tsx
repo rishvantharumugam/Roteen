@@ -16,6 +16,7 @@ import {
   SquarePen,
   X,
   FileText,
+  Info,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { NoteService } from '@/features/notes/services/notesService';
@@ -58,8 +59,11 @@ export const NoteCard = ({
   onEdit: (id: string) => void;
   onView: (id: string) => void;
 }) => {
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+
   return (
-    <div
+    <>
+      <div
       className="w-full max-w-[240px] min-h-[220px] bg-[#121212] rounded-[18px] p-4 relative group transition-all border border-zinc-800 flex flex-col h-full cursor-pointer hover:-translate-y-0.5"
       onClick={() => onView(note.id)}
       onDoubleClick={() => onEdit(note.id)}
@@ -72,11 +76,11 @@ export const NoteCard = ({
         </div>
         <div className="flex items-center gap-3 pt-0.5">
           <Trash2
-            className="w-4 h-4 text-gray-400 hover:text-white cursor-pointer transition-colors"
+            className="w-4 h-4 text-red-500 hover:text-red-400 cursor-pointer transition-colors shrink-0"
             size={16}
             onClick={(event) => {
               event.stopPropagation();
-              onDelete(note.id);
+              setShowConfirmDelete(true);
             }}
           />
           <Pin
@@ -92,7 +96,67 @@ export const NoteCard = ({
       </div>
       <p className="text-[14px] text-[#94A3B8] leading-relaxed min-h-[96px] font-medium flex-1">{NoteService.stripHtml(note.description)}</p>
       <div className="text-[11px] font-bold text-gray-400 mt-4 tracking-widest mt-auto">{note.date}</div>
-    </div>
+      </div>
+
+      {showConfirmDelete ? (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/72 p-4 backdrop-blur-sm" onClick={(e) => { e.stopPropagation(); setShowConfirmDelete(false); }} role="presentation">
+          <motion.div
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full max-w-[440px] rounded-[16px] border border-white/10 bg-[#131313] p-5 md:p-6 shadow-[0_28px_80px_rgba(0,0,0,.6)] text-slate-100 cursor-default"
+            initial={{ opacity: 0, scale: 0.94, y: 16 }}
+            onClick={(event) => event.stopPropagation()}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center p-2.5 rounded-full border border-white/10 bg-transparent">
+                  <Trash2 size={18} className="text-gray-300" />
+                </div>
+                <h3 className="text-[19px] font-bold text-white tracking-wide">Delete Note</h3>
+              </div>
+              <button className="p-1.5 rounded-md border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition" onClick={(e) => { e.stopPropagation(); setShowConfirmDelete(false); }} type="button">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="mb-6 flex flex-col gap-4">
+              <p className="text-[14px] text-gray-300 leading-relaxed">
+                Are you sure you want to delete the note <br /><strong className="text-white text-[15px] mt-1 inline-block">{note.subject}?</strong>
+              </p>
+              
+              <div className="flex items-start gap-3 p-4 rounded-xl border border-white/10 bg-white/5">
+                <Info size={18} className="text-gray-400 shrink-0 mt-0.5" />
+                <p className="text-[13px] text-gray-300 leading-snug">
+                  You will lose access to this note permanently. This action cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                className="flex items-center justify-center w-full py-2.5 rounded-lg border border-white/10 bg-transparent text-[13px] font-bold text-white hover:bg-white/5 transition"
+                onClick={(e) => { e.stopPropagation(); setShowConfirmDelete(false); }}
+                type="button"
+              >
+                Go Back
+              </button>
+              <button
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-transparent bg-[#dc2626] hover:bg-[#b91c1c] text-[13px] font-bold text-white transition shadow-lg"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowConfirmDelete(false);
+                  onDelete(note.id);
+                }}
+                type="button"
+              >
+                Yes, Delete Note
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      ) : null}
+    </>
   );
 };
 

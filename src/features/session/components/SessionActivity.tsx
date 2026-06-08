@@ -18,7 +18,7 @@ export function SessionActivity({ activities }: SessionActivityProps) {
       <div className="mt-5 divide-y divide-slate-100">
         {activities.map((activity) => (
           <article className="flex gap-3 py-4 first:pt-0 last:pb-0" key={activity.id}>
-            <span className={`$"mt-1 h-2.5 w-2.5 shrink-0 rounded-full" ${toneStyles[activity.tone]}`} />
+            <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${toneStyles[activity.tone]}`} />
             <div className="min-w-0 flex-1">
               <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <p className="font-medium text-slate-950">{activity.title}</p>

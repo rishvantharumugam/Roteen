@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { applyRouteThemeClass } from "@/lib/RouteThemeScope";
 import { appRoutes } from "@/constants/AppRoutes";
 import { HeaderSettingsMenu } from "@/components/layout/HeaderSettingsMenu";
+import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
 
 type DashboardHeaderProps = {
   activeLabel?: string;
@@ -64,13 +65,7 @@ export function DashboardHeader({ activeLabel }: DashboardHeaderProps) {
             <path d="M21 12.79A9 9 0 1 1 11.21 3A7 7 0 0 0 21 12.79Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <button suppressHydrationWarning type="button" aria-label="Notifications" className="relative hover:text-white transition-colors">
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M15 17H5l1.4-1.4A2 2 0 0 0 7 14.2V11a5 5 0 1 1 10 0v3.2a2 2 0 0 0 .6 1.4L19 17h-4Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-          </svg>
-          <span className="absolute right-0 top-0 h-2 w-2 rounded-full bg-red-500" />
-        </button>
+        <NotificationDropdown />
         <HeaderSettingsMenu />
       </div>
     </header>

@@ -79,18 +79,20 @@ export function HeaderSettingsMenu() {
     if (isLoggingOut) return;
 
     setIsLoggingOut(true);
+    setIsOpen(false);
+
+    // Optimistically route immediately for a snappy user experience
+    applyRouteThemeClass(appRoutes.home);
+    router.replace(appRoutes.home);
+
+    // Run the slow network request in the background
     const { error } = await signOut();
 
     if (error) {
       console.warn("Failed to log out:", error);
-      setIsLoggingOut(false);
-      return;
     }
 
-    setIsOpen(false);
     setIsLoggingOut(false);
-    applyRouteThemeClass(appRoutes.home);
-    router.replace(appRoutes.home);
     router.refresh();
   };
 
@@ -102,10 +104,17 @@ export function HeaderSettingsMenu() {
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((value) => !value)}
-        className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-zinc-700/80 bg-zinc-900/90 text-xs font-semibold text-zinc-200 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_0_20px_rgba(168,85,247,0.18)] transition hover:border-purple-400/50 hover:text-white hover:shadow-[0_0_0_1px_rgba(168,85,247,0.35),0_0_26px_rgba(168,85,247,0.28)]"
+        className="group flex items-center gap-1.5 outline-none"
       >
-        <span className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(168,85,247,0.32),transparent_55%)] opacity-70 transition group-hover:opacity-100" />
-        <span className="relative">{initials}</span>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#3b3b40] text-zinc-300 transition-colors group-hover:bg-[#4a4a50] group-hover:text-white border border-white/5">
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        </div>
+        <svg className={`h-4 w-4 text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
       </button>
 
       {isOpen && (

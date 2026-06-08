@@ -15,7 +15,7 @@ export function TutorialHeroSection({ pageData }: TutorialHeroSectionProps) {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" overflow-hidden p-5`}
+      className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl overflow-hidden p-5`}
     >
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">

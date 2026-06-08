@@ -91,18 +91,16 @@ export function AuthProvider({
   }, [initialUser?.id]);
 
   const signOut = async () => {
-    setIsLoading(true);
+    // Optimistically clear local state for an instant UI update
+    setSession(null);
+    setUser(null);
 
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      setIsLoading(false);
       return { error: new Error(error.message) };
     }
 
-    setSession(null);
-    setUser(null);
-    setIsLoading(false);
     return { error: null };
   };
 

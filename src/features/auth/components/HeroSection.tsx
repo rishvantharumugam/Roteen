@@ -178,7 +178,7 @@ export function HeroSection({
                 width={623}
                 height={1328}
                 sizes="(min-width: 1024px) 320px, 82vw"
-                className="h-auto w-full"
+                className="h-auto w-full grayscale opacity-80 transition-all duration-500 hover:grayscale-0 hover:opacity-100"
               />
             </ScrollReveal>
 
@@ -216,14 +216,14 @@ export function HeroSection({
                       <div className="relative">
                         <div className="academy-phone-preview relative mx-auto min-h-[40rem] w-full max-w-[21rem] overflow-hidden rounded-[3.1rem] border-[7px] border-slate-950 bg-slate-950 p-2 sm:min-h-[43rem] sm:max-w-[22rem] md:min-h-[36rem] md:max-w-[19rem] lg:min-h-[40rem] lg:max-w-[21rem]">
                           <div className="absolute left-1/2 top-2 z-20 h-6 w-28 -translate-x-1/2 rounded-b-[1.2rem] bg-slate-950" />
-                          <div className="relative h-full overflow-hidden rounded-[2.25rem] bg-white">
-                            <div className="flex h-full flex-col bg-white">
-                              <div className="flex h-16 shrink-0 items-center justify-between px-4 pt-4 text-3xl leading-none !text-slate-950">
+                          <div className="relative h-full overflow-hidden rounded-[2.25rem] bg-zinc-900">
+                            <div className="flex h-full flex-col bg-zinc-900">
+                              <div className="flex h-16 shrink-0 items-center justify-between px-4 pt-4 text-3xl leading-none !text-zinc-100">
                                 <span aria-hidden="true">‹</span>
                                 <span aria-hidden="true" className="text-2xl">≡‹</span>
                               </div>
 
-                              <div className="relative mx-2 h-36 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                              <div className="relative mx-2 h-36 shrink-0 overflow-hidden rounded-xl bg-zinc-800">
                                 <Image
                                   src="/images/design-video.avif"
                                   alt="Newton's second law video lesson"
@@ -239,28 +239,28 @@ export function HeroSection({
                                 </div>
                               </div>
 
-                              <div className="flex shrink-0 items-center justify-between px-4 py-3 text-[11px] !text-slate-400">
+                              <div className="flex shrink-0 items-center justify-between px-4 py-3 text-[11px] !text-zinc-400">
                                 <div className="flex items-center gap-2">
                                   <span className="text-lg !text-[#705cff]">▰</span>
                                   <span className="text-lg">▱</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <span>Theory View</span>
-                                  <span className="h-5 w-10 rounded-full bg-slate-200 p-0.5">
-                                    <span className="block h-4 w-4 rounded-full bg-white shadow" />
+                                  <span className="h-5 w-10 rounded-full bg-zinc-800 p-0.5 border border-zinc-700">
+                                    <span className="block h-4 w-4 rounded-full bg-zinc-500 shadow" />
                                   </span>
                                 </div>
                               </div>
 
-                              <div className="flex shrink-0 items-center justify-between px-7 pb-4 text-[10px] !text-slate-500">
+                              <div className="flex shrink-0 items-center justify-between px-7 pb-4 text-[10px] !text-zinc-500">
                                 <span className="inline-flex items-center gap-2">
-                                  <span className="h-3 w-3 rounded-[3px] border border-slate-300" />
+                                  <span className="h-3 w-3 rounded-[3px] border border-zinc-600" />
                                   Mark as completed
                                 </span>
-                                <span className="text-lg !text-slate-300">⌑</span>
+                                <span className="text-lg !text-zinc-700">⌑</span>
                               </div>
 
-                              <div className="grid shrink-0 grid-cols-4 border-y border-slate-100 py-3 text-center text-[12px] !text-slate-400">
+                              <div className="grid shrink-0 grid-cols-4 border-y border-zinc-800/50 py-3 text-center text-[12px] !text-zinc-400">
                                 <span>▣ About</span>
                                 <span className="font-semibold !text-[#705cff] underline underline-offset-8">Notes</span>
                                 <span>✦ AI</span>
@@ -268,7 +268,7 @@ export function HeroSection({
                               </div>
 
                               <div className="flex shrink-0 items-center justify-between px-5 py-3">
-                                <div className="flex gap-3 text-xl font-semibold italic !text-slate-300">
+                                <div className="flex gap-3 text-xl font-semibold italic !text-zinc-600">
                                   <span>B</span>
                                   <span>I</span>
                                   <span className="underline">U</span>
@@ -280,13 +280,13 @@ export function HeroSection({
                                 </div>
                                 <button
                                   type="button"
-                                  className="rounded-lg border border-[#ded8ff] bg-white px-3 py-2 text-[12px] font-semibold !text-[#705cff] shadow-[0_8px_18px_rgba(112,92,255,0.12)]"
+                                  className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-[12px] font-semibold !text-[#705cff] shadow-sm"
                                 >
                                   Add to Notes
                                 </button>
                               </div>
 
-                              <div className="mx-6 mb-6 min-h-0 flex-1 rounded-sm border border-slate-200 p-4 text-[11px] italic leading-5 !text-slate-300">
+                              <div className="mx-6 mb-6 min-h-0 flex-1 rounded-sm border border-zinc-800 bg-zinc-800/50 p-4 text-[11px] italic leading-5 !text-zinc-500">
                                 Write your notes here... everything you type will be saved automatically...
                               </div>
                             </div>
@@ -296,30 +296,30 @@ export function HeroSection({
                         <div className="hidden">
                           <div className="absolute inset-x-8 bottom-2 h-8 rounded-[50%] bg-[#f5cfe0] blur-xl" />
                           <div className="relative mx-auto max-w-[25rem] -rotate-2 rounded-[1.35rem] border-[8px] border-slate-950 bg-slate-950 shadow-[0_22px_46px_rgba(15,23,42,0.2)]">
-                            <div className="relative aspect-[4/2.45] overflow-hidden rounded-[0.85rem] bg-white">
-                              <div className="absolute inset-0 bg-[linear-gradient(165deg,#ffffff_0%,#ffffff_66%,#ffe5f1_66%,#ffe5f1_100%)]" />
-                              <div className="absolute left-6 top-5 text-[7px] font-medium !text-slate-500">
+                            <div className="relative aspect-[4/2.45] overflow-hidden rounded-[0.85rem] bg-zinc-900">
+                              <div className="absolute inset-0 bg-[linear-gradient(165deg,#18181b_0%,#18181b_66%,#27272a_66%,#27272a_100%)]" />
+                              <div className="absolute left-6 top-5 text-[7px] font-medium !text-zinc-500">
                                 Good Education Building a Better Future
                               </div>
                               <div className="absolute -left-3 bottom-0 h-[72%] w-[33%] bg-[linear-gradient(135deg,#f02a91_0%,#f02a91_70%,transparent_70%)]" />
                               <div className="absolute left-[38%] top-8 h-8 w-[46%] -skew-x-12 bg-[#ec268e]" />
                               <div className="absolute left-[42%] top-[38%]">
-                                <p className="text-[10px] italic !text-slate-300">
+                                <p className="text-[10px] italic !text-zinc-400">
                                   Education Presentation Template
                                 </p>
-                                <p className="mt-1 max-w-[11rem] font-heading text-[2rem] font-light italic leading-[1.12] !text-slate-800">
+                                <p className="mt-1 max-w-[11rem] font-heading text-[2rem] font-light italic leading-[1.12] !text-zinc-100">
                                   Good Education Building a Better Future
                                 </p>
                               </div>
                               <div className="absolute left-7 top-[26%] h-16 w-12 rounded-t-full bg-[#f6d0ba]" />
                               <div className="absolute left-5 top-[49%] h-20 w-20 rounded-t-[2rem] bg-[#ef2f37]" />
-                              <div className="absolute right-3 bottom-2 text-[8px] !text-slate-400">1</div>
+                              <div className="absolute right-3 bottom-2 text-[8px] !text-zinc-500">1</div>
                             </div>
                           </div>
                           <button
                             type="button"
                             aria-label="Next presentation"
-                            className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl leading-none !text-slate-950 shadow-[0_10px_26px_rgba(15,23,42,0.12)]"
+                            className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800 text-2xl leading-none !text-zinc-100 shadow-md"
                           >
                             ›
                           </button>
@@ -365,7 +365,7 @@ export function HeroSection({
               width={1536}
               height={1024}
               sizes="(min-width: 1024px) 560px, 92vw"
-              className="h-auto w-full rounded-[2rem] border border-white/5"
+              className="h-auto w-full rounded-[2rem] border border-white/5 grayscale opacity-80 transition-all duration-500 hover:grayscale-0 hover:opacity-100"
             />
           </ScrollReveal>
         </div>
@@ -404,7 +404,7 @@ export function HeroSection({
               width={1536}
               height={1024}
               sizes="(min-width: 1024px) 560px, 92vw"
-              className="h-auto w-full rounded-[2rem] border border-white/5 shadow-2xl"
+              className="h-auto w-full rounded-[2rem] border border-white/5 shadow-2xl grayscale opacity-80 transition-all duration-500 hover:grayscale-0 hover:opacity-100"
             />
           </ScrollReveal>
         </div>
@@ -434,7 +434,7 @@ export function HeroSection({
               width={1536}
               height={1024}
               sizes="(min-width: 1280px) 960px, (min-width: 1024px) 78vw, 92vw"
-              className="relative h-auto w-full rounded-[2.25rem] border border-white/10 shadow-[0_28px_82px_rgba(0,0,0,0.6)]"
+              className="relative h-auto w-full rounded-[2.25rem] border border-white/10 shadow-[0_28px_82px_rgba(0,0,0,0.6)] grayscale opacity-80 transition-all duration-500 hover:grayscale-0 hover:opacity-100"
             />
           </ScrollReveal>
         </div>
@@ -620,7 +620,7 @@ export function HeroSection({
                 width={1600}
                 height={1049}
                 sizes="(min-width: 1280px) 880px, (min-width: 1024px) 64vw, 94vw"
-                className="h-auto w-full"
+                className="h-auto w-full grayscale opacity-80 transition-all duration-500 hover:grayscale-0 hover:opacity-100"
               />
             </div>
           </ScrollReveal>
@@ -670,7 +670,7 @@ export function HeroSection({
                 width={1600}
                 height={1049}
                 sizes="(min-width: 1280px) 928px, (min-width: 1024px) 74vw, 92vw"
-                className="h-auto w-full"
+                className="h-auto w-full grayscale opacity-80 transition-all duration-500 hover:grayscale-0 hover:opacity-100"
               />
             </div>
           </ScrollReveal>

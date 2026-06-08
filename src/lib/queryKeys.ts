@@ -5,4 +5,5 @@ export const queryKeys = {
   sessionsAll: ["sessions-all"] as const,
   sessionRecordsWithEnrollments: ["session-records-with-enrollments"] as const,
   sessionRecordById: (id: string) => ["session-record", id] as const,
+  notifications: ["notifications"] as const,
 };

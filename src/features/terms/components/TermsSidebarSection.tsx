@@ -19,7 +19,7 @@ export function TermsSidebarSection({
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.32 }}
-      className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" h-max p-4 lg:sticky lg:top-20`}
+      className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl h-max p-4 lg:sticky lg:top-20`}
     >
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
         Sections

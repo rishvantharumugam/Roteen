@@ -22,7 +22,7 @@ export function FeedbackInput({
       <span className="text-sm font-medium text-slate-200">{label}</span>
       <input
         id={inputId}
-        className={`$"h-11 rounded-xl border border-white/10 bg-black/35 px-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/15" ${className}`}
+        className={`h-11 rounded-xl border border-white/10 bg-black/35 px-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/15 ${className}`}
         {...props}
       />
       {error ? <span className="text-xs text-rose-300">{error}</span> : null}

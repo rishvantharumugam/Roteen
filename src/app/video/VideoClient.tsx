@@ -1110,8 +1110,9 @@ export default function VideoClient() {
         const isLast = isLastQuestionInChapter(orderedQuestions, state.selectedQuestionId);
         if (isLast && selectedSubjectId) {
           const quizzes = await fetchChapterQuizzes(selectedSubjectId, activeChapterIdForQuiz);
-          if (quizzes.length > 0) {
-            setState(prev => ({ ...prev, selectedQuizId: quizzes[0].id, selectedQuestionId: null }));
+          const filteredQuiz = quizzes.find(q => !q.mode || q.mode.toLowerCase() === subjectMode.toLowerCase()) || quizzes[0];
+          if (filteredQuiz) {
+            setState(prev => ({ ...prev, selectedQuizId: filteredQuiz.id, selectedQuestionId: null }));
             return;
           }
         }
@@ -1126,8 +1127,9 @@ export default function VideoClient() {
         const prevQ = orderedQuestions[activeQuestionIndex - 1];
         if (currentQ.chapterId !== prevQ.chapterId && selectedSubjectId) {
           const quizzes = await fetchChapterQuizzes(selectedSubjectId, prevQ.chapterId);
-          if (quizzes.length > 0) {
-            setState(prev => ({ ...prev, selectedQuizId: quizzes[0].id, selectedQuestionId: null, activeChapterId: prevQ.chapterId }));
+          const filteredQuiz = quizzes.find(q => !q.mode || q.mode.toLowerCase() === subjectMode.toLowerCase()) || quizzes[0];
+          if (filteredQuiz) {
+            setState(prev => ({ ...prev, selectedQuizId: filteredQuiz.id, selectedQuestionId: null, activeChapterId: prevQ.chapterId }));
             return;
           }
         }

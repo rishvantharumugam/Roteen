@@ -326,7 +326,7 @@ export function SessionDataTable({
 
               return (
               <motion.article
-                className="group flex h-full min-h-[390px] flex-col overflow-hidden rounded-[24px] border border-zinc-800 bg-[#121212] p-5 shadow-2xl transition-all duration-300"
+                className="group flex min-h-[390px] flex-col overflow-hidden rounded-[24px] border border-zinc-800 bg-[#121212] p-5 shadow-2xl transition-all duration-300"
                 key={session.id}
                 initial={{ opacity: 0, y: 18 }}
                 transition={{ duration: 0.35, delay: index * 0.05, ease: "easeOut" }}
@@ -411,7 +411,7 @@ export function SessionDataTable({
                   ) : action.type === "enrolled" ? (
                     <>
                       {status === "LIVE" && (
-                        <div className="flex items-center justify-center w-full pb-1 pt-0">
+                        <div className="flex items-center justify-center w-full rounded-lg border border-white/10 bg-transparent py-2 mb-2">
                           <span className="text-[12px] text-emerald-400 font-bold">Session has Started</span>
                         </div>
                       )}
@@ -445,7 +445,7 @@ export function SessionDataTable({
                     </>
                   ) : action.type === "cannot_join" ? (
                     <>
-                      <div className="flex items-center justify-center w-full pb-1 pt-0">
+                      <div className="flex items-center justify-center w-full rounded-lg border border-white/10 bg-transparent py-2 mb-2">
                         <span className="text-[12px] text-emerald-400 font-bold">Session has Started</span>
                       </div>
                       <button
@@ -459,7 +459,7 @@ export function SessionDataTable({
                     </>
                   ) : action.type === "join" ? (
                     <>
-                      <div className="flex items-center justify-center w-full pb-1 pt-0">
+                      <div className="flex items-center justify-center w-full rounded-lg border border-white/10 bg-transparent py-2 mb-2">
                         <span className="text-[12px] text-emerald-400 font-bold">Session has Started</span>
                       </div>
                       <Link className="flex items-center justify-center w-full rounded-lg bg-[#5b3ea8] hover:bg-[#4a328f] py-2.5 text-[13px] font-bold text-white transition shadow-lg" href={detailHref}>
@@ -494,7 +494,7 @@ export function SessionDataTable({
         <div className="no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] mt-5 flex items-stretch gap-5 overflow-x-auto pb-6 snap-x snap-mandatory [&>*]:snap-start [&>*]:shrink-0 [&>*]:w-[85vw] sm:[&>*]:w-[280px] xl:[&>*]:w-[calc(20%-16px)]">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={`prev-skeleton-${i}`} className="flex h-[390px] flex-col p-5 rounded-[24px] bg-[#151515] border border-[rgba(255,255,255,0.03)] w-full">
+              <div key={`prev-skeleton-${i}`} className="flex flex-col p-5 rounded-[24px] bg-[#151515] border border-[rgba(255,255,255,0.03)] w-full">
                 <div className="flex justify-between items-start mb-4">
                   <div className="h-5 w-24 rounded-full bg-[#1D1D1D] skeleton-shimmer" />
                 </div>
@@ -512,7 +512,7 @@ export function SessionDataTable({
             previousSessionRecords.map((session, index) => {
               return (
                 <motion.article
-                  className="group flex h-full min-h-[390px] flex-col overflow-hidden rounded-[24px] border border-zinc-800 bg-[#121212] p-5 shadow-2xl transition-all duration-300"
+                  className="group flex flex-col overflow-hidden rounded-[24px] border border-zinc-800 bg-[#121212] p-5 shadow-2xl transition-all duration-300"
                   key={session.id}
                   initial={{ opacity: 0, y: 18 }}
                   transition={{ duration: 0.35, delay: index * 0.05, ease: "easeOut" }}
@@ -593,7 +593,7 @@ export function SessionDataTable({
               </div>
               <div>
                 <p className="font-medium text-slate-400">Status</p>
-                <span className={`$"rounded-full border border-emerald-300/30 bg-emerald-500/14 px-3 py-1 text-xs font-semibold capitalize ring-1 ring-emerald-300/20 backdrop-blur" ${getSessionStatusClass(selectedSession.status)}`}>
+                <span className={`rounded-full border border-emerald-300/30 bg-emerald-500/14 px-3 py-1 text-xs font-semibold capitalize ring-1 ring-emerald-300/20 backdrop-blur ${getSessionStatusClass(selectedSession.status)}`}>
                   {selectedSession.status ?? "pending"}
                 </span>
               </div>
@@ -610,7 +610,7 @@ export function SessionDataTable({
             <div className="mt-5">
               {selectedSessionAction?.type === "enroll" ? (
                 <button
-                  className={`$"inline-grid place-items-center rounded-lg border-0 px-3.5 py-2 text-[13px] font-semibold text-white transition duration-300 disabled:cursor-not-allowed disabled:opacity-70" ${selectedActionClassName}`}
+                  className={`inline-grid place-items-center rounded-lg border-0 px-3.5 py-2 text-[13px] font-semibold text-white transition duration-300 disabled:cursor-not-allowed disabled:opacity-70 ${selectedActionClassName}`}
                   disabled={enrollingSessionId === selectedSession.id}
                   onClick={() => setConfirmEnrollSession(selectedSession)}
                   type="button"
@@ -620,13 +620,13 @@ export function SessionDataTable({
               ) : selectedSessionAction?.type === "enrolled" ? (
                 <div className="grid grid-cols-2 gap-3 w-full">
                   <button
-                    className={`$"inline-grid place-items-center rounded-lg border-0 px-3.5 py-2 text-[13px] font-semibold text-white transition duration-300 disabled:cursor-not-allowed disabled:opacity-70" w-full !bg-none bg-white/5 border border-white/10 hover:bg-white/10 text-white shadow-none hover:scale-100 !px-2`}
+                    className={`inline-grid place-items-center rounded-lg border-0 px-3.5 py-2 text-[13px] font-semibold text-white transition duration-300 disabled:cursor-not-allowed disabled:opacity-70 w-full !bg-none bg-white/5 border border-white/10 hover:bg-white/10 text-white shadow-none hover:scale-100 !px-2`}
                     type="button"
                   >
                     Ask
                   </button>
                   <button
-                    className={`$"inline-grid place-items-center rounded-lg border-0 px-3.5 py-2 text-[13px] font-semibold text-white transition duration-300 disabled:cursor-not-allowed disabled:opacity-70" w-full !bg-none bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 !text-rose-400 shadow-none hover:scale-100 !px-2`}
+                    className={`inline-grid place-items-center rounded-lg border-0 px-3.5 py-2 text-[13px] font-semibold text-white transition duration-300 disabled:cursor-not-allowed disabled:opacity-70 w-full !bg-none bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 !text-rose-400 shadow-none hover:scale-100 !px-2`}
                     disabled={unenrollingSessionId === selectedSession.id}
                     onClick={() => setConfirmUnenrollSession(selectedSession)}
                     type="button"
@@ -636,18 +636,18 @@ export function SessionDataTable({
                 </div>
               ) : selectedSessionAction?.type === "cannot_join" ? (
                 <button
-                  className={`$"inline-grid place-items-center rounded-lg border-0 px-3.5 py-2 text-[13px] font-semibold text-white transition duration-300 disabled:cursor-not-allowed disabled:opacity-70" !bg-none bg-slate-800/50 border border-slate-700/50 !text-rose-500 cursor-not-allowed`}
+                  className={`inline-grid place-items-center rounded-lg border-0 px-3.5 py-2 text-[13px] font-semibold text-white transition duration-300 disabled:cursor-not-allowed disabled:opacity-70 !bg-none bg-slate-800/50 border border-slate-700/50 !text-rose-500 cursor-not-allowed`}
                   disabled
                   type="button"
                 >
                   {selectedSessionAction.label}
                 </button>
               ) : selectedSessionAction?.type === "join" ? (
-                <Link className={`$"inline-grid place-items-center rounded-lg border-0 px-3.5 py-2 text-[13px] font-semibold text-white transition duration-300 disabled:cursor-not-allowed disabled:opacity-70" ${selectedActionClassName}`} href={selectedSessionDetailHref}>
+                <Link className={`inline-grid place-items-center rounded-lg border-0 px-3.5 py-2 text-[13px] font-semibold text-white transition duration-300 disabled:cursor-not-allowed disabled:opacity-70 ${selectedActionClassName}`} href={selectedSessionDetailHref}>
                   {selectedSessionAction.label}
                 </Link>
               ) : (
-                <span className={`$"inline-grid place-items-center rounded-lg border-0 px-3.5 py-2 text-[13px] font-semibold text-white transition duration-300 disabled:cursor-not-allowed disabled:opacity-70" ${selectedActionClassName}`}>
+                <span className={`inline-grid place-items-center rounded-lg border-0 px-3.5 py-2 text-[13px] font-semibold text-white transition duration-300 disabled:cursor-not-allowed disabled:opacity-70 ${selectedActionClassName}`}>
                   {selectedSessionAction?.label ?? "View"}
                 </span>
               )}

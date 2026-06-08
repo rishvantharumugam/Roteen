@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Moon, Bell, User, TrendingUp, Megaphone, Bug, MessageSquare, BookOpen, FileText, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { appRoutes } from '@/constants/AppRoutes';
+import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
 
 export const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -41,10 +42,7 @@ export const Navbar = () => {
 
       <div className="flex items-center gap-6 text-[#A1A1AA]">
         <button className="hover:text-white transition-colors"><Moon size={20} /></button>
-        <button className="hover:text-white transition-colors relative">
-          <Bell size={20} />
-          <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-[#050505]"></span>
-        </button>
+        <NotificationDropdown />
         
         <div className="relative" ref={dropdownRef}>
           <button 

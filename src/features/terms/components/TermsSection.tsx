@@ -17,7 +17,7 @@ export function TermsSection({ section }: TermsSectionProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.32 }}
-      className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" scroll-mt-24 p-5`}
+      className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl scroll-mt-24 p-5`}
     >
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[10rem_minmax(0,1fr)]">
         <div>

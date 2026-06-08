@@ -15,7 +15,7 @@ export function FeedbackListSection({
   onReviewClick,
 }: FeedbackListSectionProps) {
   return (
-    <section className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" min-h-0 overflow-hidden`}>
+    <section className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl min-h-0 overflow-hidden`}>
       <div className="flex items-center justify-between gap-3 border-b border-zinc-800 p-5">
         <div>
           <h2 className="text-base font-semibold text-white">User comments</h2>
@@ -30,11 +30,10 @@ export function FeedbackListSection({
               key={item.id}
               feedback={item}
               isHighlighted={item.id === highlightedFeedbackId}
-              onReviewClick={onReviewClick}
             />
           ))
         ) : (
-          <div className={`$"rounded-2xl border border-zinc-800 bg-[#121212] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl" p-5 text-center`}>
+          <div className={`rounded-2xl border border-zinc-800 bg-[#121212] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl p-5 text-center`}>
             <p className="text-sm font-medium text-white">No comments yet</p>
             <p className="mt-1 text-sm text-slate-500">
               Submitted feedback will appear here.

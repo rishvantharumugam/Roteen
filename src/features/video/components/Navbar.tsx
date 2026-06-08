@@ -3,6 +3,7 @@
 import { useTheme } from "next-themes";
 
 import { HeaderSettingsMenu } from "@/components/layout/HeaderSettingsMenu";
+import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
 
 interface NavbarProps {
   brand: string;
@@ -54,18 +55,7 @@ export default function Navbar({ brand, menu }: NavbarProps) {
           )}
         </button>
 
-        <button
-          type="button"
-          title="Notifications"
-          aria-label="Notifications"
-          className="relative rounded-full p-2 text-zinc-400 transition hover:bg-zinc-800/50 hover:text-white"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M15 17H5l1.4-1.4A2 2 0 0 0 7 14.2V11a5 5 0 1 1 10 0v3.2a2 2 0 0 0 .6 1.4L19 17h-4Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-          </svg>
-          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
-        </button>
+        <NotificationDropdown />
 
         <HeaderSettingsMenu />
       </div>

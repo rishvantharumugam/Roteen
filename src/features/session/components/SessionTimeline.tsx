@@ -31,7 +31,7 @@ export function SessionTimeline({ items }: SessionTimelineProps) {
                 <p className="font-medium text-slate-950">{item.title}</p>
                 <p className="mt-1 text-sm text-slate-500">{item.time}</p>
               </div>
-              <span className={`$"w-fit rounded-md px-2.5 py-1 text-xs font-semibold ring-1" ${statusStyles[item.status]}`}>
+              <span className={`w-fit rounded-md px-2.5 py-1 text-xs font-semibold ring-1 ${statusStyles[item.status]}`}>
                 {item.status}
               </span>
             </div>

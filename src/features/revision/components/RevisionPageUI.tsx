@@ -41,7 +41,7 @@ export const RevisionPage: React.FC<RevisionPageProps> = ({
     <div className={`bg-black text-zinc-200 min-h-screen text-white font-sans overflow-x-hidden`}>
       <RevisionHeader />
       
-      <main className="px-8 md:px-16 py-12 max-w-[1400px] mx-auto">
+      <main className="px-8 md:px-12 py-12 max-w-[1660px] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-[40px] font-black tracking-tight">REVISION</h1>

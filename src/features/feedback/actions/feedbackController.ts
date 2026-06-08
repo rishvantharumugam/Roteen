@@ -104,6 +104,7 @@ function parseFeedbackPayload(payload: unknown): FeedbackFormInput {
         ? candidate.category
         : "Product Experience",
     comment: typeof candidate.comment === "string" ? candidate.comment : "",
+    userId: typeof candidate.userId === "string" ? candidate.userId : null,
   } as FeedbackFormInput);
 }
 
@@ -194,9 +195,14 @@ export async function handleFeedbackGetRequest() {
   }
 }
 
-export async function handleFeedbackPostRequest(request: NextRequest) {
+export async function handleFeedbackPostRequest(request: NextRequest, userId?: string | null) {
   try {
     const payload = parseFeedbackPayload(await request.json());
+    
+    if (userId) {
+      payload.userId = userId;
+    }
+
     const response = await feedbackService.submitFeedbackToSupabase(payload);
 
     return NextResponse.json(

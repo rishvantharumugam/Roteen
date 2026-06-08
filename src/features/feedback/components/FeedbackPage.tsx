@@ -50,7 +50,6 @@ export function FeedbackPage({
         <div className="mx-auto flex w-full max-w-[1540px] flex-col gap-4 pb-6">
           <FeedbackHeroSection
             stats={pageData.stats}
-            onGiveFeedbackClick={onGiveFeedbackClick}
           />
           <FeedbackStatsSection stats={pageData.stats} />
           <SuccessSection message={successMessage} />

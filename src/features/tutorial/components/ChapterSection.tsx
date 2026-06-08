@@ -10,7 +10,7 @@ export interface ChapterSectionProps {
 
 export function ChapterSection({ chapter, onLessonOpen }: ChapterSectionProps) {
   return (
-    <section className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" p-5`}>
+    <section className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl p-5`}>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-violet-200">Chapter</span>

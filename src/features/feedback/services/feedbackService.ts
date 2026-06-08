@@ -10,6 +10,8 @@ export interface FeedbackRow {
   user_id?: string | null;
   feedback?: string | null;
   category?: string | null;
+  rating?: number | null;
+  created_at?: string | null;
 }
 
 export interface FeedbackItem {
@@ -30,6 +32,7 @@ export interface FeedbackFormInput {
   rating: number;
   category: FeedbackCategory;
   comment: string;
+  userId?: string | null;
 }
 
 export interface FeedbackStats {
@@ -164,13 +167,13 @@ async function readErrorMessage(response: Response) {
 }
 
 function normalizeFeedbackItem(row: FeedbackRow, index: number): FeedbackItem {
-  const createdAt = new Date(Date.now() - index * 60_000).toISOString();
+  const createdAt = row.created_at || new Date().toISOString();
 
   return {
     id: trimValue(String(row.id ?? "")) || `feedback-${index + 1}`,
     name: "Roteen Student",
     email: "",
-    rating: 0,
+    rating: normalizeRating(row.rating),
     category: normalizeCategory(row.category),
     comment: trimValue(row.feedback) || "Shared helpful product feedback.",
     status: "Saved",
@@ -224,6 +227,7 @@ function normalizeSubmissionInput(input: FeedbackFormInput): FeedbackFormInput {
     rating: normalizeRating(input.rating),
     category: normalizeCategory(input.category),
     comment: trimValue(input.comment).replace(/\s+/g, " "),
+    userId: input.userId,
   };
 }
 
@@ -261,9 +265,10 @@ function createInsertPayload(input: FeedbackFormInput) {
   const { userId } = getSupabaseConfig();
 
   return {
-    user_id: userId || null,
+    user_id: input.userId || userId || null,
     feedback: input.comment,
     category: input.category,
+    rating: input.rating,
   };
 }
 
@@ -271,7 +276,8 @@ async function fetchFeedbackRowsFromSupabase() {
   const { supabaseUrl, supabaseAccessKey, feedbackTableName } = getSupabaseConfig();
   const url = createFeedbackUrl(supabaseUrl, feedbackTableName);
 
-  url.searchParams.set("select", "id,user_id,feedback,category");
+  url.searchParams.set("select", "id,user_id,feedback,category,rating,created_at");
+  url.searchParams.set("order", "created_at.desc");
   url.searchParams.set("limit", "24");
 
   const response = await fetch(url, {

@@ -8,7 +8,7 @@ export interface RatingSectionProps {
 
 export function RatingSection({ stats }: RatingSectionProps) {
   return (
-    <section className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" p-5`}>
+    <section className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl p-5`}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold text-white">Rating spread</h2>

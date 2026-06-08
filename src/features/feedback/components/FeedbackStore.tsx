@@ -50,11 +50,25 @@ function createEmptyPageData(): FeedbackPageData {
   };
 }
 
+import { useAuth } from "@/providers/AuthProvider";
+
 export function FeedbackStore() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   const [pageData, setPageData] = useState<FeedbackPageData | null>(null);
   const [input, setInput] = useState<FeedbackFormInput>(defaultFeedbackInput);
+
+  useEffect(() => {
+    if (user) {
+      setInput((prev) => ({
+        ...prev,
+        name: prev.name || user.user_metadata?.full_name || user.user_metadata?.name || "",
+        email: prev.email || user.email || "",
+      }));
+    }
+  }, [user]);
+
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<keyof FeedbackFormInput, string>> | undefined
   >();
@@ -132,7 +146,10 @@ export function FeedbackStore() {
     setFieldErrors(undefined);
     setSuccessMessage("");
 
-    const response = await requestFeedbackSubmission(input);
+    const response = await requestFeedbackSubmission({
+      ...input,
+      userId: user?.id || null,
+    });
 
     if (!response.ok) {
       setFieldErrors(response.fieldErrors);

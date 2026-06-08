@@ -5,6 +5,7 @@ import { resolveAuthenticatedUser } from "@/features/auth/services/AuthService";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const isPopup = searchParams.get("popup") === "1";
   const forwardedHost = request.headers.get('x-forwarded-host');
   const isLocalEnv = process.env.NODE_ENV === 'development';
 
@@ -18,19 +19,29 @@ export async function GET(request: Request) {
     }
   };
 
+  const respondWithError = (message: string) => {
+    if (isPopup) {
+      return new NextResponse(`
+        <html><body><script>
+          if (window.opener) {
+            window.opener.postMessage({ type: 'GOOGLE_SIGN_IN_ERROR', error: '${message}' }, '*');
+            window.close();
+          }
+        </script></body></html>
+      `, { headers: { 'Content-Type': 'text/html' } });
+    }
+    return NextResponse.redirect(getRedirectUrl(`/auth/auth-code-error?message=${encodeURIComponent(message)}`));
+  };
+
   if (!code) {
-    return NextResponse.redirect(
-      getRedirectUrl(`/auth/auth-code-error?message=${encodeURIComponent("Missing OAuth code from provider.")}`)
-    );
+    return respondWithError("Missing OAuth code from provider.");
   }
 
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
-    return NextResponse.redirect(
-      getRedirectUrl(`/auth/auth-code-error?message=${encodeURIComponent(error.message)}`)
-    );
+    return respondWithError(error.message);
   }
 
   const {
@@ -39,11 +50,7 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return NextResponse.redirect(
-      getRedirectUrl(`/auth/auth-code-error?message=${encodeURIComponent(
-        userError?.message ?? "Google sign-in did not return a user."
-      )}`)
-    );
+    return respondWithError(userError?.message ?? "Google sign-in did not return a user.");
   }
 
   const { data: resolution, error: profileError } = await resolveAuthenticatedUser(
@@ -52,11 +59,25 @@ export async function GET(request: Request) {
   );
 
   if (profileError || !resolution) {
-    return NextResponse.redirect(
-      getRedirectUrl(`/auth/auth-code-error?message=${encodeURIComponent(profileError?.message ?? "Unable to resolve your account.")}`)
-    );
+    return respondWithError(profileError?.message ?? "Unable to resolve your account.");
   }
 
-  return NextResponse.redirect(getRedirectUrl(resolution.route));
+  const isProfileComplete = resolution.route === "/" || resolution.route.startsWith("/dashboard");
+  const finalRoute = isProfileComplete
+    ? `/?google_success=1&next=${encodeURIComponent(resolution.route)}`
+    : resolution.route;
+    
+  if (isPopup) {
+    return new NextResponse(`
+      <html><body><script>
+        if (window.opener) {
+          window.opener.postMessage({ type: 'GOOGLE_SIGN_IN_SUCCESS', url: '${finalRoute}' }, '*');
+          window.close();
+        }
+      </script></body></html>
+    `, { headers: { 'Content-Type': 'text/html' } });
+  }
+
+  return NextResponse.redirect(getRedirectUrl(finalRoute));
 }
 

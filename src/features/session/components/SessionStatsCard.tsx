@@ -14,7 +14,7 @@ export function SessionStatsCard({ stat }: SessionStatsCardProps) {
       viewport={{ once: true, amount: 0.35 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
     >
-      <div className={`$"h-[3px] bg-gradient-to-r" ${stat.accent}`} />
+      <div className={`h-[3px] bg-gradient-to-r ${stat.accent}`} />
       <div className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div>

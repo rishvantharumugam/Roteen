@@ -15,7 +15,7 @@ export function ContinueLearningCard({
   onContinue,
 }: ContinueLearningCardProps) {
   return (
-    <section className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" p-4`}>
+    <section className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl p-4`}>
       <div className="flex items-start gap-4">
         <div className="relative hidden h-24 w-40 shrink-0 overflow-hidden rounded-xl bg-slate-950 sm:block">
           <div

@@ -743,28 +743,25 @@ export function BugWorkspace() {
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
-                      <div>
+                      <div className="flex flex-col">
                         <label className="text-xs text-slate-500 mb-2 block">Status</label>
-                        <div className="rounded border border-slate-300 dark:border-[#333] bg-white dark:bg-[#222] px-3 py-2 text-sm text-slate-700 dark:text-slate-300 flex justify-between items-center transition-colors duration-300">
-                          {getBugStatus(selectedBug.status)}
-                          <Icons.ChevronDown />
+                        <div className="h-full rounded border border-slate-300 dark:border-[#333] bg-white dark:bg-[#222] px-3 py-2 text-sm text-slate-700 dark:text-slate-300 flex justify-between items-center transition-colors duration-300">
+                          <span className="truncate">{getBugStatus(selectedBug.status)}</span>
                         </div>
                       </div>
-                      <div>
+                      <div className="flex flex-col">
                         <label className="text-xs text-slate-500 mb-2 block">Priority</label>
-                        <div className="rounded border border-slate-300 dark:border-[#333] bg-white dark:bg-[#222] px-3 py-2 text-sm text-slate-700 dark:text-slate-300 flex justify-between items-center transition-colors duration-300">
-                          <span className={`flex items-center gap-2 ${getPriorityColor(selectedBug.priority)}`}>
-                            <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
-                            {selectedBug.priority || "High"}
+                        <div className="h-full rounded border border-slate-300 dark:border-[#333] bg-white dark:bg-[#222] px-3 py-2 text-sm text-slate-700 dark:text-slate-300 flex justify-between items-center transition-colors duration-300">
+                          <span className={`flex items-center gap-2 truncate ${getPriorityColor(selectedBug.priority)}`}>
+                            <div className="w-1.5 h-1.5 rounded-full bg-current shrink-0"></div>
+                            <span className="truncate">{selectedBug.priority || "High"}</span>
                           </span>
-                          <Icons.ChevronDown />
                         </div>
                       </div>
-                      <div>
+                      <div className="flex flex-col">
                         <label className="text-xs text-slate-500 mb-2 block">Category</label>
-                        <div className="rounded border border-slate-300 dark:border-[#333] bg-white dark:bg-[#222] px-3 py-2 text-sm text-slate-700 dark:text-slate-300 flex justify-between items-center transition-colors duration-300">
-                          {selectedBug.category || "Quiz"}
-                          <Icons.ChevronDown />
+                        <div className="h-full rounded border border-slate-300 dark:border-[#333] bg-white dark:bg-[#222] px-3 py-2 text-sm text-slate-700 dark:text-slate-300 flex justify-between items-center transition-colors duration-300">
+                          <span className="truncate">{selectedBug.category || "Quiz"}</span>
                         </div>
                       </div>
                     </div>

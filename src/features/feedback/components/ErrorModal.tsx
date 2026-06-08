@@ -18,7 +18,7 @@ export function ErrorModal({ title, message, onClose }: ErrorModalProps) {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 14, scale: 0.98 }}
         transition={{ duration: 0.22 }}
-        className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" w-full max-w-md p-6 text-center`}
+        className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl w-full max-w-md p-6 text-center`}
       >
         <AlertCircle className="mx-auto h-12 w-12 text-rose-300" />
         <h2 className="mt-4 text-lg font-semibold text-white">{title}</h2>

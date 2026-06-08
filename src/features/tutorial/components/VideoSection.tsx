@@ -14,7 +14,7 @@ export function VideoSection({ lesson, onMarkComplete }: VideoSectionProps) {
     <section className="space-y-4">
       <VideoPlayer lesson={lesson} onMarkComplete={onMarkComplete} />
 
-      <div className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" p-5`}>
+      <div className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl p-5`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-violet-200">

@@ -24,6 +24,12 @@ export type SubjectPanelCacheData = {
     question_marks?: string | null;
     questions_marks?: string | null;
   }[];
+  quizzes?: {
+    id: string;
+    chapter_id: string | number | null;
+    title?: string | null;
+    mode?: string | null;
+  }[];
 };
 
 const SUBJECT_NAME_ALIASES: Record<string, string> = {
@@ -76,14 +82,14 @@ export function getSubjectPanelCacheKey(filter: VideoSubjectFilter): string {
   const standardSuffix = filter.standard?.trim() ? `|std:${filter.standard.trim()}` : "";
 
   if (filter.subjectId) {
-    return `id:${filter.subjectId}${standardSuffix}`;
+    return `id:${filter.subjectId}${standardSuffix}_v3`;
   }
 
   if (filter.subjectSlug) {
-    return `slug:${filter.subjectSlug.trim().toLowerCase()}${standardSuffix}`;
+    return `slug:${filter.subjectSlug.trim().toLowerCase()}${standardSuffix}_v3`;
   }
 
-  return `default:math${standardSuffix || "|std:10"}`;
+  return `default:math${standardSuffix || "|std:10"}_v3`;
 }
 
 export function readSubjectPanelCache(key: string): SubjectPanelCacheData | null {
@@ -279,18 +285,29 @@ export async function fetchSubjectPanelData(
       return query;
     };
 
-    const [chapterResult, initialQuestionResult] = await Promise.all([
+    const buildQuizQuery = () => {
+      return supabase
+        .from("quizzes")
+        .select("id, chapter_id, title, mode")
+        .eq("subject_id", subjectId);
+    };
+
+    const [chapterResult, initialQuestionResult, quizResult] = await Promise.all([
       chapterQuery,
       buildQuestionQuery(),
+      buildQuizQuery(),
     ]);
 
     console.log("=== CHAPTER RESULT ===", chapterResult);
     console.log("=== QUESTION RESULT ===", initialQuestionResult);
+    console.log("=== QUIZ RESULT ===", quizResult);
 
     let chapterRows = chapterResult.data;
     const chapterError = chapterResult.error;
     let questionRows = initialQuestionResult.data;
     const questionError = initialQuestionResult.error;
+    let quizRows = quizResult.data;
+    const quizError = quizResult.error;
 
     if (chapterError) {
       console.error("CHAPTER ERROR", chapterError);
@@ -336,6 +353,7 @@ export async function fetchSubjectPanelData(
       standard: subjectStandard,
       chapters: chapterRows || [],
       questions: normalizedQuestionRows,
+      quizzes: quizRows || [],
     };
 
     writeSubjectPanelCache(cacheKey, payload);

@@ -220,9 +220,10 @@ export default function SubjectBar(props: SubjectBarProps) {
         }
 
         if (selectedMark !== "All") {
-          let rowMark = String(row.question_marks ?? row.questions_marks ?? "").trim().toLowerCase();
-          rowMark = rowMark.replace(/\\s+/g, "");
-          if (/^\\d+$/.test(rowMark)) {
+          const rawMark = (row as any).question_marks ?? (row as any).questions_marks ?? (row as any).mark ?? (row as any).marks ?? (row as any).questions_sections ?? "";
+          let rowMark = String(rawMark).trim().toLowerCase();
+          rowMark = rowMark.replace(/\s+/g, "");
+          if (/^\d+$/.test(rowMark)) {
             rowMark += "m";
           }
           if (rowMark !== requestedMark) {
@@ -263,7 +264,7 @@ export default function SubjectBar(props: SubjectBarProps) {
       chapter.topics.push({
         id: String(row.id),
         title: String(row.question_name),
-        mark: String(row.question_marks ?? row.questions_marks ?? ""),
+        mark: String((row as any).question_marks ?? (row as any).questions_marks ?? (row as any).mark ?? (row as any).marks ?? (row as any).questions_sections ?? ""),
       });
     });
 

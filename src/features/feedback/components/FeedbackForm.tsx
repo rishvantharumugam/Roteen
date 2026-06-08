@@ -75,7 +75,7 @@ export function FeedbackForm({
             }
           >
             {categories.map((category) => (
-              <option key={category} value={category}>
+              <option key={category} value={category} className="bg-[#121212] text-white">
                 {category}
               </option>
             ))}

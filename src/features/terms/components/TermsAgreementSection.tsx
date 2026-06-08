@@ -32,7 +32,7 @@ export function TermsAgreementSection({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.32 }}
-      className={`$"rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl" p-5`}
+      className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl p-5`}
     >
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
         <div className="min-w-0">

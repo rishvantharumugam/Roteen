@@ -37,6 +37,8 @@ type AuthModalProps = {
   initialSuccessMessage?: string;
   mode: AuthMode;
   onClose: () => void;
+  isGoogleSuccess?: boolean;
+  nextRoute?: string | null;
 };
 
 function GoogleIcon() {
@@ -64,13 +66,11 @@ function GoogleIcon() {
 
 function MailVerifyArtwork() {
   return (
-    <div className="mx-auto mb-3 flex h-24 w-24 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,_rgba(129,140,248,0.35),_rgba(79,70,229,0.12)_58%,_transparent_70%)]">
-      <div className="flex h-16 w-16 items-center justify-center rounded-[1.4rem] border border-indigo-100 bg-white shadow-[0_18px_35px_rgba(79,70,229,0.18)]">
-        <svg aria-hidden="true" viewBox="0 0 48 48" className="h-9 w-9">
-          <rect x="8" y="12" width="32" height="24" rx="6" fill="#EEF2FF" />
-          <path d="M12 18l12 9 12-9" fill="none" stroke="#4F46E5" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="35" cy="15" r="7" fill="#4F46E5" />
-          <path d="M35 11v8M31 15h8" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
+    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-zinc-900">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-zinc-800 bg-[#141414] shadow-lg">
+        <svg aria-hidden="true" viewBox="0 0 48 48" className="h-6 w-6">
+          <rect x="8" y="12" width="32" height="24" rx="6" fill="#1c1c1c" />
+          <path d="M12 18l12 9 12-9" fill="none" stroke="#eb7b34" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
     </div>
@@ -83,6 +83,8 @@ export function AuthModal({
   initialSuccessMessage = "",
   mode,
   onClose,
+  isGoogleSuccess = false,
+  nextRoute = null,
 }: AuthModalProps) {
   const router = useRouter();
   const [signInEmail, setSignInEmail] = useState(
@@ -148,6 +150,51 @@ export function AuthModal({
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState(initialSuccessMessage);
   const [countdownTick, setCountdownTick] = useState(() => Date.now());
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(3);
+  const [pendingRoute, setPendingRoute] = useState<string | null>(null);
+  const [loginMethod, setLoginMethod] = useState<"otp" | "google">("otp");
+
+  function triggerSuccess() {
+    setShowSuccess(true);
+  }
+
+  useEffect(() => {
+    if (isGoogleSuccess && !showSuccess) {
+      setPendingRoute(nextRoute ?? appRoutes.home);
+      triggerSuccess();
+    }
+  }, [isGoogleSuccess, nextRoute, showSuccess]);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (typeof event.data !== 'object' || event.data === null) return;
+      
+      if (event.data.type === 'GOOGLE_SIGN_IN_SUCCESS') {
+        const parsedUrl = new URL(event.data.url, window.location.origin);
+        const successParam = parsedUrl.searchParams.get("google_success") === "1";
+        const nextRouteParam = parsedUrl.searchParams.get("next");
+        
+        if (successParam) {
+          setPendingRoute(nextRouteParam ?? appRoutes.home);
+          triggerSuccess();
+        } else {
+          setIsGoogleSubmitting(false);
+          clearAuthFlowDraft();
+          onClose();
+          router.push(event.data.url);
+          router.refresh();
+        }
+      } else if (event.data.type === 'GOOGLE_SIGN_IN_ERROR') {
+        setErrorMessage(event.data.error || "An error occurred during Google sign-in.");
+        setIsGoogleSubmitting(false);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onClose, router]);
+
   const remainingMs = flowExpiresAt
     ? Math.max(0, flowExpiresAt - countdownTick)
     : AUTH_FLOW_TTL_MS;
@@ -182,6 +229,19 @@ export function AuthModal({
       window.clearInterval(intervalId);
     };
   }, [flowExpiresAt, onClose, router]);
+
+  useEffect(() => {
+    if (!showSuccess || pendingRoute === null) return;
+    if (redirectCountdown <= 0) {
+      clearAuthFlowDraft();
+      onClose();
+      router.push(pendingRoute);
+      router.refresh();
+      return;
+    }
+    const timer = window.setTimeout(() => setRedirectCountdown((c) => c - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [showSuccess, redirectCountdown, pendingRoute, onClose, router]);
 
   useEffect(() => {
     if (mode === "signIn" && signInStep === 2) {
@@ -241,15 +301,15 @@ export function AuthModal({
 
   const isSignIn = mode === "signIn";
   const inputClassName =
-    "mt-1.5 w-full rounded-2xl border border-slate-200/80 bg-white/88 px-4 py-3 text-sm text-slate-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.65)] outline-none transition placeholder:text-slate-400 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/20";
+    "w-full rounded-md border border-[#1f1f1f] bg-[#111111] px-4 py-2.5 text-[14px] text-zinc-200 outline-none transition placeholder:text-[#666] focus:border-[#333] focus:bg-[#151515]";
   const otpInputClassName =
-    "mt-1.5 w-full rounded-2xl border border-slate-200/80 bg-white/88 px-4 py-3 text-center text-sm tracking-[0.35em] text-slate-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.65)] outline-none transition placeholder:tracking-normal focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/20";
+    "w-full rounded-md border border-[#1f1f1f] bg-[#111111] px-4 py-2.5 text-center text-[14px] tracking-[0.35em] text-zinc-200 outline-none transition placeholder:tracking-normal focus:border-[#333] focus:bg-[#151515]";
   const selectClassName =
-    "mt-1.5 w-full rounded-2xl border border-slate-200/80 bg-white/88 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/20";
+    "w-full rounded-md border border-[#1f1f1f] bg-[#111111] px-4 py-2.5 text-[14px] text-zinc-200 outline-none transition focus:border-[#333] focus:bg-[#151515]";
   const primaryButtonClassName =
-    "mt-1 w-full rounded-2xl bg-[linear-gradient(135deg,#2956ff_0%,#4f46e5_45%,#7c3aed_100%)] px-5 py-3 text-base font-semibold text-white shadow-[0_18px_38px_rgba(79,70,229,0.38)] transition hover:-translate-y-0.5 hover:brightness-105";
+    "w-full rounded-md bg-violet-600 px-5 py-2.5 text-[14px] font-medium text-white transition hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed";
   const secondaryButtonClassName =
-    "w-full rounded-2xl border border-slate-200 bg-white/80 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50";
+    "w-full rounded-md border border-[#1f1f1f] bg-transparent px-5 py-2.5 text-[14px] font-medium text-zinc-400 transition hover:bg-[#111111]";
 
   async function handleSignIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -263,7 +323,7 @@ export function AuthModal({
       }
 
       setIsSubmitting(true);
-      const redirectTo = `${getSiteUrl()}${appRoutes.dashboard}`;
+      const redirectTo = `${getSiteUrl()}${appRoutes.home}`;
       const { error } = await sendExistingUserLoginOtp(signInEmail, redirectTo);
 
       if (error) {
@@ -292,9 +352,8 @@ export function AuthModal({
 
     setFlowExpiresAt(null);
     clearAuthFlowDraft();
-    onClose();
-    router.push(data?.route ?? appRoutes.dashboard);
-    router.refresh();
+    setPendingRoute(data?.route ?? appRoutes.home);
+    triggerSuccess();
   }
 
   async function handleSignUp(event: FormEvent<HTMLFormElement>) {
@@ -351,9 +410,9 @@ export function AuthModal({
         setIsSubmitting(false);
         setFlowExpiresAt(null);
         clearAuthFlowDraft();
-        onClose();
-        router.push(data.route);
-        router.refresh();
+        setLoginMethod("otp");
+        setPendingRoute(data.route);
+        triggerSuccess();
         return;
       }
 
@@ -389,9 +448,9 @@ export function AuthModal({
     setIsSubmitting(false);
     setFlowExpiresAt(null);
     clearAuthFlowDraft();
-    onClose();
-    router.push(data?.route ?? appRoutes.dashboard);
-    router.refresh();
+    setLoginMethod("otp");
+    setPendingRoute(data?.route ?? appRoutes.home);
+    triggerSuccess();
   }
 
   async function handleGoogleSignIn() {
@@ -400,496 +459,528 @@ export function AuthModal({
     setSuccessMessage("");
 
     const redirectTo = `${getSiteUrl()}${appRoutes.authCallback}`;
-    const { error } = await signInWithGoogle(redirectTo);
+    const { error, popupWindow } = await signInWithGoogle(redirectTo);
 
     if (error) {
       setErrorMessage(error.message);
       setIsGoogleSubmitting(false);
+    } else if (popupWindow) {
+      const checkClosed = window.setInterval(() => {
+        if (popupWindow.closed) {
+          window.clearInterval(checkClosed);
+          setIsGoogleSubmitting(false);
+        }
+      }, 500);
+    } else {
+      setErrorMessage("Please allow popups to sign in with Google.");
+      setIsGoogleSubmitting(false);
     }
   }
 
+  const slideStyle = (direction: 'left' | 'right', active: boolean): React.CSSProperties => ({
+    transform: active ? `translateX(${direction === 'left' ? '-112%' : '112%'})` : 'translateX(0%)',
+    transition: 'transform 380ms cubic-bezier(0.4, 0, 0.2, 1)',
+    willChange: 'transform',
+  });
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden px-2 py-3 sm:px-4 sm:py-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden px-4 py-6">
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[radial-gradient(circle_at_12%_20%,rgba(56,189,248,0.18),transparent_38%),radial-gradient(circle_at_86%_78%,rgba(124,58,237,0.16),transparent_36%),rgba(2,6,23,0.62)] backdrop-blur-md"
+        className="absolute inset-0 bg-black/80 backdrop-blur-[2px] transition-[backdrop-filter] duration-300"
+        onClick={onClose}
       />
-      <div aria-hidden="true" className="pointer-events-none absolute -left-28 top-20 h-72 w-72 rounded-full bg-violet-600/20 blur-[110px]" />
-      <div aria-hidden="true" className="pointer-events-none absolute -right-20 bottom-8 h-80 w-80 rounded-full bg-violet-300/25 blur-[120px]" />
 
-      <div className="auth-modal-shell relative z-10 w-full max-w-[28rem] rounded-[30px] p-[1.5px] shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-[30rem]">
-        <div className="flex max-h-[94dvh] flex-col overflow-hidden rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,250,255,0.96))]">
-        <button
-          type="button"
-          aria-label="Close"
-          className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/35 bg-white/20 text-lg font-semibold text-white shadow-[0_10px_24px_rgba(15,23,42,0.25),inset_0_1px_0_rgba(255,255,255,0.5)] transition hover:scale-105 hover:bg-white/30"
-          onClick={onClose}
+      {/* Shared modal card — both panels live inside, overflow hidden clips the slide */}
+      <div className="relative z-10 w-[95%] max-w-[25rem] rounded-xl border border-[#161616] bg-[#0a0a0a] shadow-2xl overflow-hidden">
+
+        <div
+          style={slideStyle('left', showSuccess)}
+          className="flex flex-col"
         >
-          x
-        </button>
+          <div className="flex flex-1 flex-col no-scrollbar rounded-xl px-7 py-9">
 
-        <div className="relative overflow-hidden bg-[radial-gradient(circle_at_18%_0%,rgba(255,255,255,0.38),transparent_36%),linear-gradient(135deg,#1e40af_0%,#4f46e5_48%,#6d28d9_100%)] px-6 pb-5 pt-10 text-center text-white">
-          <div className="pointer-events-none absolute -bottom-16 right-[-56px] h-44 w-44 rounded-full border border-white/30 bg-white/10 blur-[1px]" />
-          <h2 className="font-heading text-[2.65rem] font-semibold tracking-tight sm:text-[3.2rem]">
-            {isSignIn
-              ? "Sign In"
-              : signUpStep === 1
-                ? "Get Started"
-                : signUpStep === 2
-                  ? "Verify Email"
-                  : "Student Details"}
-          </h2>
-          <p className="mt-1.5 text-[0.97rem] text-indigo-100">
-            {isSignIn
-              ? ""
-              : signUpStep === 1
-                ? ""
-              : signUpStep === 2
-                ? "Enter the OTP from your email to verify your account."
-              : "Fill your profile details to complete registration."}
-          </p>
-          {((isSignIn && signInStep === 2) || (!isSignIn && signUpStep > 1)) && flowExpiresAt ? (
-            <p className="mt-2 text-sm font-semibold text-violet-300">
-              Session expires in {formatAuthFlowCountdown(remainingMs)}
-            </p>
-          ) : null}
-        </div>
-
-        {isSignIn ? (
-          <form className="space-y-4 px-5 py-5" onSubmit={handleSignIn}>
-            {signInStep === 1 ? (
-              <label className="block text-sm font-medium text-slate-600">
-                Email
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={signInEmail}
-                  onChange={(event) => setSignInEmail(event.target.value)}
-                  required
-                  className={inputClassName}
-                />
-              </label>
-            ) : (
-              <>
-                <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,rgba(250,250,250,0.95)_0%,rgba(255,255,255,0.98)_100%)] px-4 py-4 text-center">
-                  <MailVerifyArtwork />
-                  <p className="text-base font-semibold text-slate-800">
-                    Check your email
-                  </p>
-                  <p className="mt-1.5 text-sm text-slate-500">
-                    We sent a 6-digit OTP to{" "}
-                    <span className="font-semibold text-slate-700">
-                      {signInEmail.trim().toLowerCase()}
+            <div className="flex flex-col items-center mb-6">
+              <div className="mb-7 flex items-center justify-center mt-2">
+                <span className="relative inline-flex items-end font-heading text-[30px] font-black italic leading-none tracking-normal sm:text-[34px]">
+                  <span className="text-white">Rot</span>
+                  <span className="relative text-violet-400">
+                    <span className="absolute -top-4 left-1/2 hidden h-5 w-11 -translate-x-1/2 sm:block">
+                      <span className="absolute left-1 top-2 h-3 w-5 -rotate-12 rounded-t-full border-t-[3px] border-white" />
+                      <span className="absolute right-1 top-2 h-3 w-5 rotate-12 rounded-t-full border-t-[3px] border-white" />
                     </span>
-                  </p>
-                </div>
+                    een
+                  </span>
+                </span>
+              </div>
+              <h2 className="text-[22px] font-bold text-white tracking-tight">
+                {isSignIn
+                  ? "Welcome 👋 Let's sign in!"
+                  : signUpStep === 1
+                    ? "Welcome 👋 Fuel your Future"
+                    : signUpStep === 2
+                      ? "Verify your email"
+                      : "Complete your profile"}
+              </h2>
+              {((isSignIn && signInStep === 2) || (!isSignIn && signUpStep > 1)) && flowExpiresAt ? (
+                <p className="mt-2 text-[13px] font-medium text-violet-400">
+                  Session expires in {formatAuthFlowCountdown(remainingMs)}
+                </p>
+              ) : null}
+            </div>
 
-                <label className="block text-sm font-medium text-slate-600">
-                  Verification Code
+            {isSignIn ? (
+              <form className="space-y-4" onSubmit={handleSignIn}>
+                {signInStep === 1 ? (
                   <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    placeholder="Enter 6-digit OTP"
-                    value={signInOtp}
-                    onChange={(event) =>
-                      setSignInOtp(
-                        event.target.value.replace(/\D/g, "").slice(0, 6),
-                      )
-                    }
-                    required
-                    className={otpInputClassName}
-                  />
-                </label>
-              </>
-            )}
-
-            {errorMessage ? (
-              <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                {errorMessage}
-              </p>
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={isSubmitting || isGoogleSubmitting}
-              className={primaryButtonClassName}
-            >
-              {signInStep === 1
-                ? isSubmitting
-                  ? "Sending OTP..."
-                  : "Continue"
-                : isSubmitting
-                  ? "Verifying..."
-                  : "Verify Email"}
-            </button>
-
-            {signInStep === 2 ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setErrorMessage("");
-                    setSuccessMessage("");
-                    setSignInStep(1);
-                    setSignInOtp("");
-                  }}
-                  className={secondaryButtonClassName}
-                >
-                  Change Email
-                </button>
-
-                <button
-                  type="button"
-                  onClick={async () => {
-                    setErrorMessage("");
-                    setSuccessMessage("");
-                    setIsSubmitting(true);
-                    const redirectTo = `${getSiteUrl()}${appRoutes.dashboard}`;
-                    const { error } = await sendExistingUserLoginOtp(
-                      signInEmail,
-                      redirectTo,
-                    );
-                    setIsSubmitting(false);
-
-                    if (error) {
-                      setErrorMessage(error.message);
-                      return;
-                    }
-
-                    setFlowExpiresAt(getAuthFlowExpiryTimestamp());
-                    setSuccessMessage(
-                      `A fresh OTP has been sent to ${signInEmail.trim().toLowerCase()}.`,
-                    );
-                  }}
-                  className="w-full rounded-2xl border border-violet-200 bg-violet-50/70 px-5 py-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
-                >
-                  Resend OTP
-                </button>
-              </>
-            ) : null}
-
-            {signInStep === 1 ? (
-              <>
-                <div className="flex items-center gap-3 py-0.5 text-xs text-slate-400">
-                  <span className="h-px flex-1 bg-slate-200" />
-                  Or
-                  <span className="h-px flex-1 bg-slate-200" />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  disabled={isSubmitting || isGoogleSubmitting}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.06)] transition hover:border-violet-200 hover:bg-violet-50/45 disabled:cursor-not-allowed disabled:text-slate-400"
-                >
-                  <GoogleIcon />
-                  {isGoogleSubmitting ? "Redirecting to Google..." : "Continue with Google"}
-                </button>
-              </>
-            ) : null}
-          </form>
-        ) : (
-          <form className="no-scrollbar min-h-0 overflow-y-auto space-y-3 px-4 py-3.5 sm:px-4.5" onSubmit={handleSignUp}>
-            {signUpStep === 1 ? (
-              <>
-                <label className="block text-sm font-medium text-slate-600">
-                  Email
-                  <input
+                    suppressHydrationWarning
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder="example@gmail.com"
+                    value={signInEmail}
+                    onChange={(event) => setSignInEmail(event.target.value)}
+                    required
+                    className={inputClassName}
+                  />
+                ) : (
+                  <>
+                    <div className="rounded-xl border border-[#2a2a2a] bg-[#141414] px-4 py-6 text-center">
+                      <MailVerifyArtwork />
+                      <p className="text-[15px] font-semibold text-zinc-200">
+                        Check your email
+                      </p>
+                      <p className="mt-2 text-[13px] text-zinc-400">
+                        We sent a 6-digit OTP to{" "}
+                        <span className="font-semibold text-zinc-300">
+                          {signInEmail.trim().toLowerCase()}
+                        </span>
+                      </p>
+                    </div>
+
+                    <input
+                      suppressHydrationWarning
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="Enter 6-digit OTP"
+                      value={signInOtp}
+                      onChange={(event) =>
+                        setSignInOtp(
+                          event.target.value.replace(/\D/g, "").slice(0, 6),
+                        )
+                      }
+                      required
+                      className={otpInputClassName}
+                    />
+                  </>
+                )}
+
+                {errorMessage ? (
+                  <p className="rounded-lg bg-red-950/30 px-4 py-3 text-[13px] text-red-500 border border-red-900/50">
+                    {errorMessage}
+                  </p>
+                ) : null}
+
+                <button
+                  suppressHydrationWarning
+                  type="submit"
+                  disabled={isSubmitting || isGoogleSubmitting}
+                  className={primaryButtonClassName}
+                >
+                  {signInStep === 1
+                    ? isSubmitting
+                      ? "Sending OTP..."
+                      : "Continue"
+                    : isSubmitting
+                      ? "Verifying..."
+                      : "Verify Email"}
+                </button>
+
+                {signInStep === 2 ? (
+                  <>
+                    <button
+                      suppressHydrationWarning
+                      type="button"
+                      onClick={() => {
+                        setErrorMessage("");
+                        setSuccessMessage("");
+                        setSignInStep(1);
+                        setSignInOtp("");
+                      }}
+                      className={secondaryButtonClassName}
+                    >
+                      Change Email
+                    </button>
+
+                    <button
+                      suppressHydrationWarning
+                      type="button"
+                      onClick={async () => {
+                        setErrorMessage("");
+                        setSuccessMessage("");
+                        setIsSubmitting(true);
+                        const redirectTo = `${getSiteUrl()}${appRoutes.home}`;
+                        const { error } = await sendExistingUserLoginOtp(
+                          signInEmail,
+                          redirectTo,
+                        );
+                        setIsSubmitting(false);
+
+                        if (error) {
+                          setErrorMessage(error.message);
+                          return;
+                        }
+
+                        setFlowExpiresAt(getAuthFlowExpiryTimestamp());
+                        setSuccessMessage(
+                          `A fresh OTP has been sent to ${signInEmail.trim().toLowerCase()}.`,
+                        );
+                      }}
+                      className="w-full rounded-lg border border-[#2a2a2a] bg-transparent px-5 py-3 text-[14px] font-medium text-[#d97736] transition hover:bg-[#1a1a1a]"
+                    >
+                      Resend OTP
+                    </button>
+                  </>
+                ) : null}
+
+                {signInStep === 1 ? (
+                  <>
+                    <div className="flex items-center gap-4 py-1.5 text-[12px] text-[#444]">
+                      <span className="h-[1px] flex-1 bg-[#222]" />
+                      or
+                      <span className="h-[1px] flex-1 bg-[#222]" />
+                    </div>
+
+                    <button
+                      suppressHydrationWarning
+                      type="button"
+                      onClick={handleGoogleSignIn}
+                      disabled={isSubmitting || isGoogleSubmitting}
+                      className="flex w-full items-center justify-center gap-3 rounded-md border border-[#1f1f1f] bg-[#111111] px-5 py-2.5 text-[14px] font-medium text-white transition hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:text-zinc-500"
+                    >
+                      <GoogleIcon />
+                      {isGoogleSubmitting ? "Redirecting to Google..." : "Continue with Google"}
+                    </button>
+                  </>
+                ) : null}
+              </form>
+            ) : (
+              <form className="space-y-4" onSubmit={handleSignUp}>
+                {signUpStep === 1 ? (
+                  <input
+                    suppressHydrationWarning
+                    type="email"
+                    placeholder="example@gmail.com"
                     value={signUpEmail}
                     onChange={(event) => setSignUpEmail(event.target.value)}
                     required
-                  className={inputClassName}
-                />
-                </label>
-              </>
-            ) : signUpStep === 2 ? (
-              <>
-                <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,rgba(250,250,250,0.95)_0%,rgba(255,255,255,0.98)_100%)] px-4 py-4 text-center">
-                  <MailVerifyArtwork />
-                  <p className="text-base font-semibold text-slate-800">
-                    Check your email
-                  </p>
-                  <p className="mt-1.5 text-sm text-slate-500">
-                    We sent a 6-digit OTP to{" "}
-                    <span className="font-semibold text-slate-700">
-                      {signUpEmail.trim().toLowerCase()}
-                    </span>
-                  </p>
-                </div>
-
-                <label className="block text-sm font-medium text-slate-600">
-                  Verification Code
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    placeholder="Enter 6-digit OTP"
-                    value={signUpOtp}
-                    onChange={(event) =>
-                      setSignUpOtp(
-                        event.target.value.replace(/\D/g, "").slice(0, 6),
-                      )
-                    }
-                    required
-                    className={otpInputClassName}
+                    className={inputClassName}
                   />
-                </label>
-              </>
-            ) : (
-              <>
-                <label className="block text-sm font-medium text-slate-600">
-                  Phone Number
-                  <div className="mt-1.5 flex rounded-2xl border border-slate-200/80 bg-white/88 transition focus-within:border-violet-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-violet-500/20">
-                    <span className="flex items-center border-r border-slate-200 px-3 text-sm text-slate-500">
-                      IN
-                    </span>
+                ) : signUpStep === 2 ? (
+                  <>
+                    <div className="rounded-xl border border-[#2a2a2a] bg-[#141414] px-4 py-6 text-center">
+                      <MailVerifyArtwork />
+                      <p className="text-[15px] font-semibold text-zinc-200">
+                        Check your email
+                      </p>
+                      <p className="mt-2 text-[13px] text-zinc-400">
+                        We sent a 6-digit OTP to{" "}
+                        <span className="font-semibold text-zinc-300">
+                          {signUpEmail.trim().toLowerCase()}
+                        </span>
+                      </p>
+                    </div>
+
                     <input
-                      type="tel"
-                      placeholder="9876543210"
-                      value={signUpPhone}
+                      suppressHydrationWarning
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="Enter 6-digit OTP"
+                      value={signUpOtp}
                       onChange={(event) =>
-                        setSignUpPhone(
-                          event.target.value.replace(/\D/g, "").slice(0, 10),
+                        setSignUpOtp(
+                          event.target.value.replace(/\D/g, "").slice(0, 6),
                         )
                       }
-                      inputMode="numeric"
                       required
-                      minLength={10}
-                      maxLength={10}
-                      className="w-full rounded-r-2xl bg-transparent px-3 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                      className={otpInputClassName}
                     />
+                  </>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] transition focus-within:border-[#4a4a4a] focus-within:bg-[#202020]">
+                      <span className="flex items-center border-r border-[#2a2a2a] px-4 text-[14px] text-zinc-500">
+                        IN
+                      </span>
+                      <input
+                        suppressHydrationWarning
+                        type="tel"
+                        placeholder="9876543210"
+                        value={signUpPhone}
+                        onChange={(event) =>
+                          setSignUpPhone(
+                            event.target.value.replace(/\D/g, "").slice(0, 10),
+                          )
+                        }
+                        inputMode="numeric"
+                        required
+                        minLength={10}
+                        maxLength={10}
+                        className="w-full rounded-r-lg bg-transparent px-4 py-3.5 text-[14px] text-zinc-200 outline-none placeholder:text-zinc-500"
+                      />
+                    </div>
+
+                    <select
+                      suppressHydrationWarning
+                      value={signUpStandard}
+                      onChange={(event) => setSignUpStandard(event.target.value)}
+                      required
+                      className={selectClassName}
+                    >
+                      <option value="">Select Std</option>
+                      {standardOptions.map((option: string) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      suppressHydrationWarning
+                      value={signUpSchoolType}
+                      onChange={(event) => setSignUpSchoolType(event.target.value)}
+                      required
+                      className={selectClassName}
+                    >
+                      <option value="">Select School Type</option>
+                      {schoolTypeOptions.map((option: string) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+
+                    <input
+                      suppressHydrationWarning
+                      type="text"
+                      placeholder="Enter school name"
+                      value={signUpSchoolName}
+                      onChange={(event) => setSignUpSchoolName(event.target.value)}
+                      required
+                      className={inputClassName}
+                    />
+
+                    <input
+                      suppressHydrationWarning
+                      type="date"
+                      value={signUpDob}
+                      onChange={(event) => setSignUpDob(event.target.value)}
+                      required
+                      className={inputClassName}
+                    />
+
+                    <select
+                      suppressHydrationWarning
+                      value={signUpDistrict}
+                      onChange={(event) => setSignUpDistrict(event.target.value)}
+                      required
+                      className={selectClassName}
+                    >
+                      <option value="">Select district</option>
+                      {districtOptions.map((option: string) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      suppressHydrationWarning
+                      value={signUpGender}
+                      onChange={(event) => setSignUpGender(event.target.value)}
+                      required
+                      className={selectClassName}
+                    >
+                      <option value="">Select Gender</option>
+                      {genderOptions.map((option: string) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      suppressHydrationWarning
+                      value={signUpMedium}
+                      onChange={(event) => setSignUpMedium(event.target.value)}
+                      required
+                      className={selectClassName}
+                    >
+                      <option value="">Select Medium</option>
+                      {mediumOptions.map((option: string) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      suppressHydrationWarning
+                      value={signUpUserType}
+                      onChange={(event) => setSignUpUserType(event.target.value)}
+                      required
+                      className={selectClassName}
+                    >
+                      <option value="">Select User Type</option>
+                      {userTypeOptions.map((option: string) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </label>
+                )}
 
-                <label className="block text-sm font-medium text-slate-600">
-                  Std
-                  <select
-                    value={signUpStandard}
-                    onChange={(event) => setSignUpStandard(event.target.value)}
-                    required
-                    className={selectClassName}
-                  >
-                    <option value="">Select Std</option>
-                    {standardOptions.map((option: string) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {errorMessage ? (
+                  <p className="rounded-lg bg-red-950/30 px-4 py-3 text-[13px] text-red-500 border border-red-900/50">
+                    {errorMessage}
+                  </p>
+                ) : null}
 
-                <label className="block text-sm font-medium text-slate-600">
-                  School Type
-                  <select
-                    value={signUpSchoolType}
-                    onChange={(event) => setSignUpSchoolType(event.target.value)}
-                    required
-                    className={selectClassName}
-                  >
-                    <option value="">Select School Type</option>
-                    {schoolTypeOptions.map((option: string) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block text-sm font-medium text-slate-600">
-                  School Name
-                  <input
-                    type="text"
-                    placeholder="Enter school name"
-                    value={signUpSchoolName}
-                    onChange={(event) => setSignUpSchoolName(event.target.value)}
-                    required
-                    className={inputClassName}
-                  />
-                </label>
-
-                <label className="block text-sm font-medium text-slate-600">
-                  DOB
-                  <input
-                    type="date"
-                    value={signUpDob}
-                    onChange={(event) => setSignUpDob(event.target.value)}
-                    required
-                    className={inputClassName}
-                  />
-                </label>
-
-                <label className="block text-sm font-medium text-slate-600">
-                  District
-                  <select
-                    value={signUpDistrict}
-                    onChange={(event) => setSignUpDistrict(event.target.value)}
-                    required
-                    className={selectClassName}
-                  >
-                    <option value="">Select district</option>
-                    {districtOptions.map((option: string) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block text-sm font-medium text-slate-600">
-                  Gender
-                  <select
-                    value={signUpGender}
-                    onChange={(event) => setSignUpGender(event.target.value)}
-                    required
-                    className={selectClassName}
-                  >
-                    <option value="">Select Gender</option>
-                    {genderOptions.map((option: string) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block text-sm font-medium text-slate-600">
-                  Medium
-                  <select
-                    value={signUpMedium}
-                    onChange={(event) => setSignUpMedium(event.target.value)}
-                    required
-                    className={selectClassName}
-                  >
-                    <option value="">Select Medium</option>
-                    {mediumOptions.map((option: string) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block text-sm font-medium text-slate-600">
-                  User Type
-                  <select
-                    value={signUpUserType}
-                    onChange={(event) => setSignUpUserType(event.target.value)}
-                    required
-                    className={selectClassName}
-                  >
-                    <option value="">Select User Type</option>
-                    {userTypeOptions.map((option: string) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-              </>
-            )}
-
-            {errorMessage ? (
-              <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                {errorMessage}
-              </p>
-            ) : null}
-
-            {successMessage ? (
-              <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                {successMessage}
-              </p>
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={isSubmitting || isGoogleSubmitting}
-              className={primaryButtonClassName}
-            >
-              {signUpStep === 1
-                ? isSubmitting
-                  ? "Sending OTP..."
-                  : "Continue"
-                : signUpStep === 2
-                  ? isSubmitting
-                    ? "Verifying..."
-                    : "Verify Email"
-                  : isSubmitting
-                    ? "Completing Sign Up..."
-                    : "Complete Sign Up"}
-            </button>
-
-            {signUpStep === 2 || signUpStep === 3 ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setErrorMessage("");
-                  setSuccessMessage("");
-                  setSignUpStep(signUpStep === 3 ? 2 : 1);
-                }}
-                className={secondaryButtonClassName}
-              >
-                {signUpStep === 2 ? "Change Email" : "Back"}
-              </button>
-            ) : null}
-
-            {signUpStep === 2 ? (
-              <button
-                type="button"
-                onClick={async () => {
-                  setErrorMessage("");
-                  setSuccessMessage("");
-                  setIsSubmitting(true);
-                  const redirectTo = `${getSiteUrl()}${appRoutes.authCallback}`;
-                  const { error } = await sendEmailVerificationOtp(signUpEmail, redirectTo);
-                  setIsSubmitting(false);
-
-                  if (error) {
-                    setErrorMessage(error.message);
-                    return;
-                  }
-
-                  setFlowExpiresAt(getAuthFlowExpiryTimestamp());
-                  setSuccessMessage(
-                    `A fresh OTP has been sent to ${signUpEmail.trim().toLowerCase()}.`,
-                  );
-                }}
-                className="w-full rounded-2xl border border-violet-200 bg-violet-50/70 px-5 py-2.5 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
-              >
-                Resend OTP
-              </button>
-            ) : null}
-
-            {signUpStep === 1 ? (
-              <>
-                <div className="flex items-center gap-3 py-0.5 text-xs text-slate-400">
-                  <span className="h-px flex-1 bg-slate-200" />
-                  Or
-                  <span className="h-px flex-1 bg-slate-200" />
-                </div>
+                {successMessage ? (
+                  <p className="rounded-lg bg-emerald-950/30 px-4 py-3 text-[13px] text-emerald-500 border border-emerald-900/50">
+                    {successMessage}
+                  </p>
+                ) : null}
 
                 <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
+                  suppressHydrationWarning
+                  type="submit"
                   disabled={isSubmitting || isGoogleSubmitting}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.06)] transition hover:border-violet-200 hover:bg-violet-50/45 disabled:cursor-not-allowed disabled:text-slate-400"
+                  className={primaryButtonClassName}
                 >
-                  <GoogleIcon />
-                  {isGoogleSubmitting ? "Redirecting to Google..." : "Continue with Google"}
+                  {signUpStep === 1
+                    ? isSubmitting
+                      ? "Sending OTP..."
+                      : "Continue"
+                    : signUpStep === 2
+                      ? isSubmitting
+                        ? "Verifying..."
+                        : "Verify Email"
+                      : isSubmitting
+                        ? "Completing Sign Up..."
+                        : "Complete Sign Up"}
                 </button>
 
-              </>
-            ) : (
-              null
+                {signUpStep === 2 || signUpStep === 3 ? (
+                  <button
+                    suppressHydrationWarning
+                    type="button"
+                    onClick={() => {
+                      setErrorMessage("");
+                      setSuccessMessage("");
+                      setSignUpStep(signUpStep === 3 ? 2 : 1);
+                    }}
+                    className={secondaryButtonClassName}
+                  >
+                    {signUpStep === 2 ? "Change Email" : "Back"}
+                  </button>
+                ) : null}
+
+                {signUpStep === 2 ? (
+                  <button
+                    suppressHydrationWarning
+                    type="button"
+                    onClick={async () => {
+                      setErrorMessage("");
+                      setSuccessMessage("");
+                      setIsSubmitting(true);
+                      const redirectTo = `${getSiteUrl()}${appRoutes.authCallback}`;
+                      const { error } = await sendEmailVerificationOtp(signUpEmail, redirectTo);
+                      setIsSubmitting(false);
+
+                      if (error) {
+                        setErrorMessage(error.message);
+                        return;
+                      }
+
+                      setFlowExpiresAt(getAuthFlowExpiryTimestamp());
+                      setSuccessMessage(
+                        `A fresh OTP has been sent to ${signUpEmail.trim().toLowerCase()}.`,
+                      );
+                    }}
+                    className="w-full rounded-lg border border-[#2a2a2a] bg-transparent px-5 py-3 text-[14px] font-medium text-[#d97736] transition hover:bg-[#1a1a1a]"
+                  >
+                    Resend OTP
+                  </button>
+                ) : null}
+
+                {signUpStep === 1 ? (
+                  <>
+                    <div className="flex items-center gap-4 py-1.5 text-[12px] text-[#444]">
+                      <span className="h-[1px] flex-1 bg-[#222]" />
+                      or
+                      <span className="h-[1px] flex-1 bg-[#222]" />
+                    </div>
+
+                    <button
+                      suppressHydrationWarning
+                      type="button"
+                      onClick={handleGoogleSignIn}
+                      disabled={isSubmitting || isGoogleSubmitting}
+                      className="flex w-full items-center justify-center gap-3 rounded-md border border-[#1f1f1f] bg-[#111111] px-5 py-2.5 text-[14px] font-medium text-white transition hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:text-zinc-500"
+                    >
+                      <GoogleIcon />
+                      {isGoogleSubmitting ? "Redirecting to Google..." : "Continue with Google"}
+                    </button>
+                  </>
+                ) : null}
+              </form>
             )}
-          </form>
-        )}
-        </div>
-      </div>
+
+            <div className="mt-5 text-center pb-2">
+              <button suppressHydrationWarning type="button" onClick={onClose} className="text-[14.5px] font-medium text-[#aaa] hover:text-[#ccc] transition-colors">
+                Skip &amp; continue to <span className="text-violet-400 hover:text-violet-300 transition-colors">Home</span>
+              </button>
+            </div>
+
+          </div>{/* end inner padding */}
+        </div>{/* end form panel */}
+
+        {/* ── Success panel ── */}
+        <div
+          style={{
+            ...slideStyle('right', !showSuccess),
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '3.5rem 2rem',
+            textAlign: 'center',
+          }}
+        >
+          {/* Green checkmark */}
+          <div className="mb-7 flex h-[68px] w-[68px] items-center justify-center rounded-full bg-[#22C55E] shadow-[0_0_32px_rgba(34,197,94,0.35)]">
+            <svg viewBox="0 0 24 24" className="h-9 w-9" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.8" />
+            </svg>
+          </div>
+          <h2 className="mb-3 text-[22px] font-bold text-white">Success!</h2>
+          <p className="mb-1 text-[13.5px] text-[#888]">
+            Successfully logged into{" "}
+            <span className="relative inline-flex items-end font-black italic leading-none">
+              <span className="text-white text-[15px]">Rot</span>
+              <span className="text-violet-400 text-[15px]">een</span>
+            </span>
+          </p>
+          <p className="mt-6 text-[13px] text-[#555]">
+            Redirecting in {redirectCountdown}s...
+          </p>
+        </div>{/* end success panel */}
+
+      </div>{/* end shared card */}
     </div>
   );
 }
-

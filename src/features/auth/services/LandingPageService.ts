@@ -142,16 +142,19 @@ export function getLandingAuthRedirectFlags(params: {
   authMode: string | null;
   step: string | null;
   source: string | null;
+  googleSuccess: string | null;
 }) {
   const shouldOpenSignUp = params.authMode === "signUp" && params.step !== "3";
   const shouldOpenSignIn = params.authMode === "signIn";
   const shouldOpenStudentDetails = params.authMode === "signUp" && params.step === "3";
   const shouldShowGoogleMessage = shouldOpenStudentDetails && params.source === "google";
+  const shouldShowGoogleSuccess = params.googleSuccess === "1";
 
   return {
     shouldOpenSignUp,
     shouldOpenSignIn,
     shouldOpenStudentDetails,
     shouldShowGoogleMessage,
+    shouldShowGoogleSuccess,
   };
 }
