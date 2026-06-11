@@ -28,16 +28,36 @@ function getInitials(name: string) {
     .join("");
 }
 
+import { ProfileService } from "@/features/profile/services/profile.service";
+
 export function HeaderSettingsMenu() {
   const router = useRouter();
   const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [dynamicName, setDynamicName] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const displayName = getDisplayName(
+  
+  useEffect(() => {
+    async function fetchName() {
+      if (!user?.id) return;
+      try {
+        const profile = await ProfileService.getProfile(user.id);
+        if (profile && profile.full_name && !profile.full_name.startsWith('Error:')) {
+          setDynamicName(profile.full_name);
+        }
+      } catch (err) {
+        // Ignore fetch errors
+      }
+    }
+    fetchName();
+  }, [user?.id]);
+
+  const fallbackName = getDisplayName(
     user?.email,
     user?.user_metadata?.full_name ?? user?.user_metadata?.name,
   );
+  const displayName = dynamicName || fallbackName;
   const initials = getInitials(displayName) || "U";
 
   useEffect(() => {

@@ -8,6 +8,8 @@ import {
   processDashboardMetrics,
   type DashboardSubjectRecord,
   withQuestionCounts,
+  fetchUserCoursesProgress,
+  type CourseProgressItem,
 } from "@/features/dashboard/services/DashboardPageService";
 
 async function fetchDashboardClientData() {
@@ -20,10 +22,19 @@ async function fetchDashboardClientData() {
     throw new Error(error.message);
   }
 
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id;
+  
+  let progressData: CourseProgressItem[] = [];
+  if (userId) {
+    progressData = await fetchUserCoursesProgress(supabase, userId);
+  }
+
   const subjects = (data as DashboardSubjectRecord[]) ?? [];
   return {
     ongoingCourses: processDashboardMetrics(subjects),
     initialExploreSubjects: subjects,
+    progressData,
   };
 }
 
@@ -33,7 +44,7 @@ export default function DashboardPageUI() {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard-bootstrap"],
     queryFn: fetchDashboardClientData,
-    staleTime: 2 * 60_000,
+    staleTime: 0,
     gcTime: 15 * 60_000,
   });
 
@@ -44,6 +55,7 @@ export default function DashboardPageUI() {
   return (
     <DashboardPageClientView
       initialExploreSubjects={data?.initialExploreSubjects ?? []}
+      progressData={data?.progressData ?? []}
     />
   );
 }

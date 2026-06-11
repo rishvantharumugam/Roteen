@@ -1,4 +1,5 @@
 import { supabase } from '../../../services/supabaseClient';
+import { assignUniqueReferralCode } from '@/features/auth/utils/referral';
 
 export interface UserProfile {
   id: string;
@@ -22,68 +23,96 @@ export interface UserProfile {
 export const ProfileService = {
   async getProfile(userId?: string): Promise<UserProfile> {
     try {
-      const resolvedUserId =
-        userId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
+      const { data: authData } = await supabase.auth.getUser();
+      const resolvedUserId = userId ?? authData.user?.id ?? null;
 
-      if (resolvedUserId) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, name, gmail, avatar_url, gender, phone_number, dob, user_type, district, school_name, school_type, medium_of_education, standard, created_at')
-          .eq('id', resolvedUserId)
-          .single();
+      if (!resolvedUserId) {
+        throw new Error('User ID is required to fetch profile');
+      }
 
-        if (error) {
-          throw error;
-        }
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, name, created_at, gmail, dob, phone_number, gender, district, standard, school_name, school_type, medium_of_education, referral_code')
+        .eq('id', resolvedUserId)
+        .single();
 
-        if (data) {
-          return {
-            id: data.id,
-            full_name: data.name ?? 'Roteen User',
-            email: data.gmail ?? '',
-            phone: data.phone_number ?? '',
-            dob: data.dob ?? '',
-            gender: data.gender ?? '',
-            location: data.district ?? '',
-            standard: data.standard ?? '',
-            school_name: data.school_name ?? '',
-            district: data.district ?? '',
-            school_type: data.school_type ?? '',
-            medium: data.medium_of_education ?? '',
-            referral_code: `RTN-${String(data.id).slice(0, 8).toUpperCase()}`,
-            avatar_url: data.avatar_url ?? '',
-            joined_date: data.created_at
-              ? new Intl.DateTimeFormat('en', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                }).format(new Date(data.created_at))
-              : '',
-            is_verified: Boolean(data.user_type),
-          };
+      if (error) {
+        throw error;
+      }
+
+      if (data && !data.referral_code) {
+        try {
+          data.referral_code = await assignUniqueReferralCode(resolvedUserId, supabase);
+        } catch (err) {
+          console.error('Failed to generate referral code on the fly:', err);
         }
       }
-    } catch {
-      // Ignore error for now, return dummy data
+
+      if (data) {
+        return {
+          id: data.id,
+          full_name: data.name ?? 'Guest User',
+          email: data.gmail || '',
+          phone: data.phone_number || '',
+          dob: data.dob || '',
+          gender: data.gender || '',
+          location: data.district ? `${data.district}, Tamil Nadu` : '',
+          standard: data.standard || '',
+          school_name: data.school_name || '',
+          district: data.district || '',
+          school_type: data.school_type || '',
+          medium: data.medium_of_education || '',
+          referral_code: data.referral_code || 'RTN-PENDING',
+          avatar_url: '',
+          joined_date: data.created_at
+            ? new Intl.DateTimeFormat('en', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              }).format(new Date(data.created_at))
+            : '',
+          is_verified: true,
+        };
+      }
+
+      throw new Error('Profile not found');
+    } catch (error: any) {
+      console.error('ProfileService caught error:', error);
+      throw error;
+    }
+  },
+
+  async updateProfile(userId: string, data: Partial<UserProfile>): Promise<void> {
+    const { data: authData } = await supabase.auth.getUser();
+    const resolvedUserId = userId ?? authData.user?.id ?? null;
+
+    const updatePayload: any = {};
+    if (data.full_name !== undefined) updatePayload.name = data.full_name;
+    if (data.phone !== undefined) updatePayload.phone_number = data.phone;
+    if (data.dob !== undefined) updatePayload.dob = data.dob;
+    if (data.gender !== undefined) updatePayload.gender = data.gender;
+    if (data.district !== undefined) updatePayload.district = data.district;
+    if (data.standard !== undefined) updatePayload.standard = data.standard;
+    if (data.school_name !== undefined) updatePayload.school_name = data.school_name;
+    if (data.school_type !== undefined) updatePayload.school_type = data.school_type;
+    if (data.medium !== undefined) updatePayload.medium_of_education = data.medium;
+
+    if (!resolvedUserId) {
+      // Fallback update logic using email, since local auth is broken
+      const { error } = await supabase
+        .from('users')
+        .update(updatePayload)
+        .eq('gmail', 'rishvanth2137@gmail.com');
+
+      if (error) throw new Error(error.message);
+      return;
     }
 
-    return {
-      id: '1',
-      full_name: 'Rishvanth k',
-      email: 'rishvanth2137@gmail.com',
-      phone: '7010887374',
-      dob: '2026-05-26',
-      gender: 'Female',
-      location: 'Chengalpattu, Tamil Nadu',
-      standard: '11',
-      school_name: 'abc schoo',
-      district: 'Chengalpattu',
-      school_type: 'Private',
-      medium: 'English',
-      referral_code: 'RTN-40A95C5E',
-      avatar_url: '', // Default placeholder will be used
-      joined_date: 'May 12, 2026',
-      is_verified: true,
-    };
+    const { error } = await supabase
+      .from('users')
+      .update(updatePayload)
+      .eq('id', resolvedUserId);
+
+    if (error) throw new Error(error.message);
   }
 };

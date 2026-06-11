@@ -1,5 +1,7 @@
 "use client";
 
+import React, { useState } from 'react';
+import { useAuth } from '@/providers/AuthProvider';
 import { useProfileController } from "@/features/profile/actions/profile.controller";
 import { EmptyState } from "@/features/profile/components/EmptyState";
 import { LoadingSkeleton } from "@/features/profile/components/LoadingSkeleton";
@@ -10,9 +12,12 @@ import { ProfileContainer } from "@/features/profile/components/ProfileContainer
 import { ProfileContentSection } from "@/features/profile/components/ProfileContentSection";
 import { ProfileHeroSection } from "@/features/profile/components/ProfileHeroSection";
 import { UpdateProfileSection } from "@/features/profile/components/UpdateProfileSection";
+import { EditProfileModal } from "@/features/profile/components/EditProfileModal";
 
 export function ProfileStore() {
-  const { profile, isLoading, error } = useProfileController();
+  const { user } = useAuth();
+  const { profile, isLoading, error, refreshProfile } = useProfileController(user?.id);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   return (
     <ProfileContainer>
@@ -29,10 +34,18 @@ export function ProfileStore() {
           <>
             <ProfileHeroSection profile={profile} />
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <PersonalDetailsSection profile={profile} />
-              <EducationDetailsSection profile={profile} />
+              <PersonalDetailsSection profile={profile} onEdit={() => setIsEditModalOpen(true)} />
+              <EducationDetailsSection profile={profile} onEdit={() => setIsEditModalOpen(true)} />
             </div>
-            <UpdateProfileSection />
+            <UpdateProfileSection onUpdate={() => setIsEditModalOpen(true)} />
+            
+            {isEditModalOpen && (
+              <EditProfileModal
+                profile={profile}
+                onClose={() => setIsEditModalOpen(false)}
+                onSave={refreshProfile}
+              />
+            )}
           </>
         ) : null}
       </ProfileContentSection>

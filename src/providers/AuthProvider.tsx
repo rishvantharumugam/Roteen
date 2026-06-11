@@ -41,22 +41,29 @@ export function AuthProvider({
     const syncAuthState = async () => {
       setIsLoading(true);
 
-      const { data, error } = await supabase.auth.getSession();
+      try {
+        const { data, error } = await supabase.auth.getSession();
 
-      if (!isActive) {
-        return;
+        if (!isActive) {
+          return;
+        }
+
+        if (error) {
+          setSession(null);
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+      } catch {
+        // Transient network error (e.g. "Failed to fetch" on tab wake-up).
+        // Supabase auth-js retries automatically; keep whatever session state
+        // we already have from initialSession / initialUser props.
+      } finally {
+        if (isActive) setIsLoading(false);
       }
-
-      if (error) {
-        setSession(null);
-        setUser(null);
-        setIsLoading(false);
-        return;
-      }
-
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setIsLoading(false);
     };
 
     const {
@@ -74,6 +81,22 @@ export function AuthProvider({
         previousUserId = nextUserId;
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("auth-user-changed"));
+          
+          try {
+            const { clearLocalLearningState } = require('@/features/video/components/learningStateStore');
+            clearLocalLearningState();
+            
+            const keysToRemove: string[] = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.startsWith('roteen_video_state_')) {
+                keysToRemove.push(key);
+              }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+          } catch (e) {
+            console.error('Failed to clear video state on user change', e);
+          }
         }
       }
 

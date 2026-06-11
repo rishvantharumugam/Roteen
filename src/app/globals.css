@@ -16,6 +16,18 @@
   --color-violet-400: #a78bfa;
 }
 
+@layer base {
+  button, 
+  [role="button"],
+  a,
+  label,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"] {
+    cursor: pointer;
+  }
+}
+
 @keyframes skeleton-loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }

@@ -68,14 +68,18 @@ import {
 } from "@/features/video/components/videoSubjectStore";
 import { useVideoPlaylistContext } from "@/features/video/components/videoPlaylistStore";
 import {
-  fetchRemoteLearningState,
-  persistRemoteLearningState,
   readLearningState,
   writeLearningState,
   type LearningLanguage,
   type LearningMode,
   type LearningState,
 } from "@/features/video/components/learningStateStore";
+import {
+  fetchVideoUrlFromSupabase,
+  trackVideoEngagement,
+  fetchVideoWatchedSeconds,
+  updateVideoWatchedSeconds,
+} from "@/features/video/services/videoProgressService";
 
 function normalizeErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -124,6 +128,7 @@ function resolveEffectiveSubjectFilter(
 export default function VideoClient() {
   const searchParams = useSearchParams();
   const playlistIdFromQuery = searchParams.get("playlistId");
+  const questionIdFromQuery = searchParams.get("questionId");
   const playlistContext = useVideoPlaylistContext();
   const querySubjectFilter = useMemo(() => parseVideoSubjectFilter(searchParams), [searchParams]);
   const cachedSelectedSubject = useSelectedVideoSubject();
@@ -156,6 +161,11 @@ export default function VideoClient() {
   const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
   const [isBookmarkSubmitting, setIsBookmarkSubmitting] = useState(false);
   const [bookmarkError, setBookmarkError] = useState<string | null>(null);
+
+  const [initialVideoProgress, setInitialVideoProgress] = useState(0);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoId, setVideoId] = useState<string | null>(null);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [resolvedPlaylistQuestionIds, setResolvedPlaylistQuestionIds] = useState<string[] | null>(null);
@@ -189,6 +199,8 @@ export default function VideoClient() {
   const [theoryLanguage, setTheoryLanguage] = useState<LearningLanguage>("English");
   const [sidebarScrollPosition, setSidebarScrollPosition] = useState(0);
   const [videoPosition, setVideoPosition] = useState(0);
+  const videoPositionRef = useRef(0);
+  const lastSavedPositionRef = useRef<number | null>(null);
   const [visitedQuizQuestions, setVisitedQuizQuestions] = useState<number[]>([0]);
   const [markedQuizQuestions, setMarkedQuizQuestions] = useState<number[]>([]);
   const selectedSubjectId = subjectFilter.subjectId ?? resolvedSubject?.id ?? null;
@@ -526,7 +538,7 @@ export default function VideoClient() {
       setSubjectMode(saved.mode);
       setTheoryLanguage(saved.language ?? "English");
       setSidebarScrollPosition(saved.scrollPosition ?? 0);
-      setVideoPosition(saved.videoPosition ?? 0);
+      setVideoPosition(0);
       setQuizQuestionIndex(Math.max(0, saved.questionIndex ?? 0));
       setQuizAnswers(saved.selectedAnswers ?? {});
       setVisitedQuizQuestions(saved.visitedQuestions?.length ? saved.visitedQuestions : [saved.questionIndex ?? 0]);
@@ -553,21 +565,6 @@ export default function VideoClient() {
     };
 
     applySavedState(localState);
-
-    if (user?.id) {
-      void fetchRemoteLearningState(user.id).then((remoteState) => {
-        if (!remoteState || cancelled) {
-          return;
-        }
-
-        const remoteTime = new Date(remoteState.updatedAt ?? 0).getTime();
-        const localTime = new Date(localState?.updatedAt ?? 0).getTime();
-        if (remoteTime > localTime) {
-          writeLearningState(remoteState);
-          applySavedState(remoteState);
-        }
-      });
-    }
 
     return () => {
       cancelled = true;
@@ -603,7 +600,6 @@ export default function VideoClient() {
       language: theoryLanguage,
       theoryView: theoryFullScreen,
       scrollPosition: sidebarScrollPosition,
-      videoPosition,
       selectedAnswers: quizAnswers,
       visitedQuestions: visitedQuizQuestions,
       markedQuestions: markedQuizQuestions,
@@ -620,14 +616,6 @@ export default function VideoClient() {
         completedQuestions: state.completedQuestions,
       }),
     );
-
-    const timeoutId = window.setTimeout(() => {
-      if (user?.id) {
-        void persistRemoteLearningState(user.id, nextLearningState);
-      }
-    }, 600);
-
-    return () => window.clearTimeout(timeoutId);
   }, [
     chapterQuizPhase,
     learningStateHydrated,
@@ -646,7 +634,6 @@ export default function VideoClient() {
     theoryFullScreen,
     theoryLanguage,
     user?.id,
-    videoPosition,
     videoStateStorageKey,
     visitedQuizQuestions,
   ]);
@@ -672,6 +659,14 @@ export default function VideoClient() {
         cancelled = true;
       };
     }
+
+    if (lastLoadedNoteRef.current.questionId === selectedQuestionId) {
+      console.log("[NotesLoader] Note already loaded/loading for question:", selectedQuestionId);
+      return;
+    }
+
+    // Set the questionId immediately to prevent overlapping focus-triggered calls
+    lastLoadedNoteRef.current = { questionId: selectedQuestionId, content: lastLoadedNoteRef.current.content };
 
     onNotesChange("");
     setIsNoteLoading(true);
@@ -787,6 +782,19 @@ export default function VideoClient() {
       };
     });
   }, [learningStateHydrated, orderedQuestions, questionsLoaded, restoredLearningState?.quizId, state.selectedQuestionId, state.selectedQuizId]);
+
+  useEffect(() => {
+    if (!questionsLoaded || !questionIdFromQuery) return;
+    const target = orderedQuestions.find((q) => q.questionId === questionIdFromQuery);
+    if (target) {
+      setState((prev) => ({
+        ...prev,
+        activeChapterId: target.chapterId,
+        selectedQuestionId: target.questionId,
+        selectedQuizId: null,
+      }));
+    }
+  }, [questionIdFromQuery, orderedQuestions, questionsLoaded]);
 
   useEffect(() => {
     let cancelled = false;
@@ -927,6 +935,153 @@ export default function VideoClient() {
     setMarkedQuizQuestions([]);
     setQuizQuestions([]);
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const activeQuestionId = state.selectedQuestionId;
+    if (!activeQuestionId) {
+      setVideoUrl(null);
+      setVideoId(null);
+      setIsVideoLoading(false);
+      setInitialVideoProgress(0);
+      return;
+    }
+
+    setIsVideoLoading(true);
+    setVideoUrl(null);
+    setVideoId(null);
+    setInitialVideoProgress(0);
+
+    fetchVideoUrlFromSupabase(activeQuestionId, selectedSubjectId)
+      .then(async (resolvedVideo) => {
+        if (!isMounted) return;
+        setVideoUrl(resolvedVideo.url);
+        setVideoId(resolvedVideo.videoId);
+
+        let startProgress = 0;
+        if (user?.id) {
+          startProgress = await fetchVideoWatchedSeconds(
+            user.id,
+            activeQuestionId,
+            resolvedVideo.videoId
+          );
+        }
+
+        if (!isMounted) return;
+        setInitialVideoProgress(startProgress);
+        videoPositionRef.current = startProgress;
+        lastSavedPositionRef.current = null;
+        setIsVideoLoading(false);
+      })
+      .catch((err) => {
+        console.warn("Error resolving video url/id:", err);
+        if (isMounted) {
+          setIsVideoLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id, state.selectedQuestionId, selectedSubjectId, orderedQuestions, restoredLearningState]);
+
+  const handleVideoProgressUpdate = useCallback(
+    (seconds: number) => {
+      setVideoPosition(seconds);
+      videoPositionRef.current = seconds;
+    },
+    []
+  );
+
+  const saveWatchedSeconds = useCallback(async (seconds: number) => {
+    if (!user?.id || !state.selectedQuestionId) return;
+    const watchedSeconds = Math.floor(seconds);
+    if (watchedSeconds <= 0) return;
+
+    if (lastSavedPositionRef.current === watchedSeconds) {
+      return;
+    }
+    lastSavedPositionRef.current = watchedSeconds;
+
+    await updateVideoWatchedSeconds(user.id, state.selectedQuestionId, videoId, watchedSeconds);
+  }, [user?.id, state.selectedQuestionId, videoId]);
+
+  const handleVideoPlay = useCallback(() => {
+    if (user?.id && state.selectedQuestionId) {
+      void trackVideoEngagement(user.id, state.selectedQuestionId, videoId, "play");
+    }
+  }, [user?.id, state.selectedQuestionId, videoId]);
+
+  const handleVideoPause = useCallback((seconds: number) => {
+    if (user?.id && state.selectedQuestionId) {
+      void trackVideoEngagement(user.id, state.selectedQuestionId, videoId, "pause");
+      void saveWatchedSeconds(seconds);
+    }
+  }, [user?.id, state.selectedQuestionId, videoId, saveWatchedSeconds]);
+
+  const handleVideoEnded = useCallback((seconds: number) => {
+    if (user?.id && state.selectedQuestionId) {
+      void trackVideoEngagement(user.id, state.selectedQuestionId, videoId, "ended");
+      void saveWatchedSeconds(seconds);
+    }
+  }, [user?.id, state.selectedQuestionId, videoId, saveWatchedSeconds]);
+
+  const handleVideoSeeked = useCallback((seconds: number) => {
+    if (user?.id && state.selectedQuestionId) {
+      void saveWatchedSeconds(seconds);
+    }
+  }, [user?.id, state.selectedQuestionId, videoId, saveWatchedSeconds]);
+
+  // Save progress on tab close, page hide, browser refresh, page leave
+  useEffect(() => {
+    const handleUnloadOrHide = () => {
+      if (!user?.id || !state.selectedQuestionId) return;
+      const currentSecs = Math.floor(videoPositionRef.current);
+      if (currentSecs <= 0) return;
+
+      if (lastSavedPositionRef.current === currentSecs) {
+        return;
+      }
+      lastSavedPositionRef.current = currentSecs;
+
+      void updateVideoWatchedSeconds(user.id, state.selectedQuestionId, videoId, currentSecs);
+    };
+
+    const handleBeforeUnload = () => {
+      handleUnloadOrHide();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        handleUnloadOrHide();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+
+      // Save progress when the effect is cleaned up / component unmounts (route change)
+      if (user?.id && state.selectedQuestionId) {
+        const currentSecs = Math.floor(videoPositionRef.current);
+        if (currentSecs > 0 && lastSavedPositionRef.current !== currentSecs) {
+          lastSavedPositionRef.current = currentSecs;
+          void updateVideoWatchedSeconds(user.id, state.selectedQuestionId, videoId, currentSecs);
+        }
+      }
+    };
+  }, [user?.id, state.selectedQuestionId, videoId]);
+
+  const handleMarkCompleteToggle = useCallback(() => {
+    if (!user?.id || !state.selectedQuestionId) return;
+    const wasCompleted = state.completedQuestions.includes(state.selectedQuestionId);
+    handleMarkComplete(setState);
+    const event = wasCompleted ? "incomplete" : "complete";
+    void trackVideoEngagement(user.id, state.selectedQuestionId, videoId, event);
+  }, [user?.id, state.selectedQuestionId, state.completedQuestions, videoId]);
 
   const handleModeChange = useCallback((newMode: LearningMode) => {
     setSubjectMode(newMode);
@@ -1260,7 +1415,7 @@ export default function VideoClient() {
       onQuizRetry={handleQuizRetry}
       onQuizContinue={handleQuizContinue}
       onDislike={handleDislikeClick}
-      onMarkComplete={() => handleMarkComplete(setState)}
+      onMarkComplete={handleMarkCompleteToggle}
       onCenterTabChange={(tab: "notes" | "assistant") => handleTabChange(setState, "center-tab", tab)}
       onNotesChange={onNotesChange}
       onRightTabChange={(tab: "theory" | "discussion" | "quick_revision") => handleTabChange(setState, "right-tab", tab)}
@@ -1288,6 +1443,15 @@ export default function VideoClient() {
       onNewPlaylistNameChange={setNewPlaylistName}
       onSelectExistingPlaylist={handleSelectExistingPlaylist}
       onCreateAndAddToPlaylist={handleCreateAndAddToPlaylist}
+      initialVideoProgress={initialVideoProgress}
+      onVideoProgressUpdate={handleVideoProgressUpdate}
+      videoUrl={videoUrl}
+      videoId={videoId}
+      isVideoLoading={isVideoLoading}
+      onVideoPlay={handleVideoPlay}
+      onVideoPause={handleVideoPause}
+      onVideoEnded={handleVideoEnded}
+      onVideoSeeked={handleVideoSeeked}
       currentUser={
         user
           ? {

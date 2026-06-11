@@ -8,9 +8,10 @@ interface MarkFilterDropdownProps {
   options: string[];
   selected: string;
   onChange: (value: string) => void;
+  placeholder?: string;
 }
 
-export default function MarkFilterDropdown({ options, selected, onChange }: MarkFilterDropdownProps) {
+export default function MarkFilterDropdown({ options, selected, onChange, placeholder = "All Marks" }: MarkFilterDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -39,7 +40,7 @@ export default function MarkFilterDropdown({ options, selected, onChange }: Mark
         className="group relative flex items-center gap-2 rounded-xl border border-zinc-700/50 bg-[#060810]/80 px-3 py-1.5 text-xs font-medium text-zinc-300 shadow-[inset_0_1px_4px_rgba(255,255,255,0.05)] backdrop-blur-md transition-all hover:border-purple-500/50 hover:text-white"
         whileTap={{ scale: 0.96 }}
       >
-        <span className="relative z-10">{selected === "All" ? "All Marks" : selected}</span>
+        <span className="relative z-10">{selected === "All" ? placeholder : selected}</span>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -103,7 +104,7 @@ export default function MarkFilterDropdown({ options, selected, onChange }: Mark
                       animate={{ scale: isSelected ? 1.05 : 1 }}
                       className="relative z-10 drop-shadow-sm"
                     >
-                      {option === "All" ? "All Marks" : option}
+                      {option === "All" ? placeholder : option}
                     </motion.span>
 
                     {/* Tiny glowing spark indicator when selected */}

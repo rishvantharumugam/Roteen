@@ -62,6 +62,7 @@ export default function SubjectBar(props: SubjectBarProps) {
   const [openChapterId, setOpenChapterId] = useState<string | null>(activeChapterId);
 
   const [selectedMark, setSelectedMark] = useState<string>("All");
+  const [selectedLevel, setSelectedLevel] = useState<string>("All");
 
   useEffect(() => {
     try {
@@ -69,6 +70,7 @@ export default function SubjectBar(props: SubjectBarProps) {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (typeof parsed.selectedMark === "string") setSelectedMark(parsed.selectedMark);
+        if (typeof parsed.selectedLevel === "string") setSelectedLevel(parsed.selectedLevel);
       }
     } catch {}
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -106,12 +108,12 @@ export default function SubjectBar(props: SubjectBarProps) {
     }
   }, [cacheKey, onSubjectResolved]);
 
-  // Persist mode + mark whenever they change
+  // Persist mode + mark + level whenever they change
   useEffect(() => {
     try {
-      localStorage.setItem(persistKey, JSON.stringify({ selectedMark }));
+      localStorage.setItem(persistKey, JSON.stringify({ selectedMark, selectedLevel }));
     } catch {}
-  }, [selectedMark, persistKey]);
+  }, [selectedMark, selectedLevel, persistKey]);
 
   useEffect(() => {
     let mounted = true;
@@ -231,6 +233,13 @@ export default function SubjectBar(props: SubjectBarProps) {
             return false;
           }
         }
+
+        if (selectedLevel !== "All") {
+          const rowLevel = String((row as any).level ?? "").trim();
+          if (rowLevel !== selectedLevel) {
+            return false;
+          }
+        }
       }
 
       return true;
@@ -279,7 +288,7 @@ export default function SubjectBar(props: SubjectBarProps) {
       totalQuestions: questions.length,
       chapters: chaptersWithQuestions,
     };
-  }, [playlistQuestionIds, rawData, mode, selectedMark, subjectFilter?.standard]);
+  }, [playlistQuestionIds, rawData, mode, selectedMark, selectedLevel, subjectFilter?.standard]);
 
   useEffect(() => {
     if (panelData.chapters.length > 0) {
@@ -366,11 +375,20 @@ export default function SubjectBar(props: SubjectBarProps) {
               {panelData.subject}
               <span className="text-xs font-normal text-zinc-400">{chapterCounter}</span>
             </h2>
-            <MarkFilterDropdown
-              options={markOptions}
-              selected={selectedMark}
-              onChange={setSelectedMark}
-            />
+            <div className="flex items-center gap-2">
+              <MarkFilterDropdown
+                options={markOptions}
+                selected={selectedMark}
+                onChange={setSelectedMark}
+                placeholder="Marks"
+              />
+              <MarkFilterDropdown
+                options={["All", "1", "2", "3", "4", "5"]}
+                selected={selectedLevel}
+                onChange={setSelectedLevel}
+                placeholder="Level"
+              />
+            </div>
           </>
         )}
       </motion.div>

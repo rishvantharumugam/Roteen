@@ -44,6 +44,20 @@ export function toTitleCase(value: string) {
     .join(" ");
 }
 
+export function parseTimeStrToSeconds(val: string | number): number {
+  if (typeof val === "number") return val;
+  if (!val) return 0;
+  if (!val.includes(":")) return parseFloat(val) || 0;
+  const parts = val.split(":");
+  if (parts.length === 3) {
+    const h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    const s = parseFloat(parts[2]) || 0;
+    return h * 3600 + m * 60 + s;
+  }
+  return 0;
+}
+
 export function processDashboardMetrics(subjects: DashboardSubjectRecord[]): DashboardSubjectCard[] {
   const maxChapterCount = Math.max(1, ...subjects.map((subject) => subject.chapters?.length ?? 0));
 
@@ -142,4 +156,83 @@ export async function withQuestionCounts(
       };
     }),
   );
+}
+
+export type CourseProgressItem = {
+  id: string;
+  question_id: string;
+  updated_at: string;
+  status: string;
+  question_title: string;
+  subject_id: string;
+  subject_name: string;
+  subject_standard: string | null;
+  video_id: string | null;
+  video_duration: number | null;
+  watched_seconds: number;
+};
+
+export async function fetchUserCoursesProgress(
+  supabaseClient: SupabaseClient,
+  userId: string
+): Promise<CourseProgressItem[]> {
+  try {
+    const { data, error } = await supabaseClient
+      .from("user_questions_progress")
+      .select(`
+        ID,
+        Users_ID,
+        Questions_ID,
+        videos_id,
+        watched_seconds,
+        updated_at,
+        status,
+        questions (
+          id,
+          question,
+          subject_id,
+          subjects (
+            id,
+            subject_name,
+            standard
+          )
+        ),
+        videos (
+          id,
+          duration_seconds,
+          video_url
+        )
+      `)
+      .eq("Users_ID", userId)
+      .gt("watched_seconds", 0)
+      .neq("status", "Resolved")
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+    if (!data) return [];
+
+    return data
+      .filter((row: any) => row.questions && row.questions.subjects)
+      .map((row: any) => {
+        const q = row.questions;
+        const s = q.subjects;
+        const v = row.videos;
+        return {
+          id: row.ID,
+          question_id: row.Questions_ID,
+          updated_at: row.updated_at,
+          status: row.status,
+          question_title: q.question || "Untitled Question",
+          subject_id: q.subject_id,
+          subject_name: s.subject_name || "Subject",
+          subject_standard: s.standard,
+          video_id: row.videos_id,
+          video_duration: v ? (v.duration_seconds || null) : null,
+          watched_seconds: row.watched_seconds || 0,
+        };
+      });
+  } catch (err) {
+    console.error("Failed to fetch user courses progress from Supabase:", err);
+    return [];
+  }
 }

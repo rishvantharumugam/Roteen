@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { supabase } from "@/lib/supabase/client";
 
 export type LearningMode = "Bookback" | "Interior";
 export type LearningLanguage = "English" | "Tamil" | string;
@@ -20,7 +19,6 @@ export interface LearningState {
   language?: LearningLanguage;
   theoryView?: boolean;
   scrollPosition?: number;
-  videoPosition?: number;
   selectedAnswers?: Record<string, string>;
   visitedQuestions?: number[];
   markedQuestions?: number[];
@@ -30,6 +28,7 @@ export interface LearningState {
 
 interface LearningStoreState extends Partial<LearningState> {
   setLearningState: (data: Partial<LearningState>) => void;
+  clearLearningState: () => void;
 }
 
 export const useLearningStore = create<LearningStoreState>()(
@@ -40,6 +39,28 @@ export const useLearningStore = create<LearningStoreState>()(
           ...state,
           ...data,
           updatedAt: new Date().toISOString(),
+        })),
+      clearLearningState: () =>
+        set(() => ({
+          subjectId: undefined,
+          subjectType: undefined,
+          mode: undefined,
+          chapterId: undefined,
+          topicId: undefined,
+          quizId: undefined,
+          questionIndex: undefined,
+          currentQuestion: undefined,
+          currentView: undefined,
+          activeTab: undefined,
+          notesTab: undefined,
+          language: undefined,
+          theoryView: undefined,
+          scrollPosition: undefined,
+          selectedAnswers: undefined,
+          visitedQuestions: undefined,
+          markedQuestions: undefined,
+          completedQuestions: undefined,
+          updatedAt: undefined,
         })),
     }),
     {
@@ -60,51 +81,6 @@ export function writeLearningState(state: LearningState) {
   useLearningStore.getState().setLearningState(state);
 }
 
-export async function fetchRemoteLearningState(userId: string): Promise<LearningState | null> {
-  const { data, error } = await supabase
-    .from("user_learning_progress")
-    .select("*")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    console.warn("Failed to fetch remote learning state", error.message || error);
-    return null;
-  }
-
-  if (!data) return null;
-
-  return {
-    subjectId: data.subject_id,
-    mode: data.mode as LearningMode,
-    subjectType: data.mode as LearningMode,
-    chapterId: data.chapter_id,
-    topicId: data.topic_id ?? undefined,
-    quizId: data.quiz_id ?? undefined,
-    questionIndex: data.question_index ?? 0,
-    currentQuestion: data.question_index ?? 0,
-    // Infer the view from the presence of quiz vs topic
-    currentView: data.quiz_id ? "quiz" : "topic",
-    updatedAt: data.updated_at,
-  } as LearningState;
-}
-
-export async function persistRemoteLearningState(userId: string, state: LearningState) {
-  const { error } = await supabase.from("user_learning_progress").upsert(
-    {
-      user_id: userId,
-      subject_id: state.subjectId,
-      mode: state.mode,
-      chapter_id: state.chapterId,
-      topic_id: state.topicId ?? null,
-      quiz_id: state.quizId ?? null,
-      question_index: state.questionIndex ?? 0,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id" } // Upsert based on user_id assuming one active state per user
-  );
-
-  if (error) {
-    console.warn("Failed to persist learning state to Supabase", error.message || error);
-  }
+export function clearLocalLearningState() {
+  useLearningStore.getState().clearLearningState();
 }

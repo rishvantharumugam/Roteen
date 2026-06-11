@@ -732,6 +732,21 @@ export function AuthModal({
 
                     <select
                       suppressHydrationWarning
+                      value={signUpDistrict}
+                      onChange={(event) => setSignUpDistrict(event.target.value)}
+                      required
+                      className={selectClassName}
+                    >
+                      <option value="">Select district</option>
+                      {districtOptions.map((option: string) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      suppressHydrationWarning
                       value={signUpStandard}
                       onChange={(event) => setSignUpStandard(event.target.value)}
                       required
@@ -778,21 +793,6 @@ export function AuthModal({
                       required
                       className={inputClassName}
                     />
-
-                    <select
-                      suppressHydrationWarning
-                      value={signUpDistrict}
-                      onChange={(event) => setSignUpDistrict(event.target.value)}
-                      required
-                      className={selectClassName}
-                    >
-                      <option value="">Select district</option>
-                      {districtOptions.map((option: string) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
 
                     <select
                       suppressHydrationWarning
@@ -969,7 +969,8 @@ export function AuthModal({
           </div>
           <h2 className="mb-3 text-[22px] font-bold text-white">Success!</h2>
           <p className="mb-1 text-[13.5px] text-[#888]">
-            Successfully logged into{" "}
+            {isSignIn ? "Successfully logged into" : "Account created successfully for"}
+            {" "}
             <span className="relative inline-flex items-end font-black italic leading-none">
               <span className="text-white text-[15px]">Rot</span>
               <span className="text-violet-400 text-[15px]">een</span>

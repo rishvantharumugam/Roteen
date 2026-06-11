@@ -1,6 +1,7 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { supabase, getSiteUrl } from '@/lib/supabase/client';
 import { appRoutes } from "@/constants/AppRoutes";
+import { assignUniqueReferralCode } from '../utils/referral';
 
 const DUPLICATE_EMAIL_MESSAGE =
   "This email is already registered. Please log in with your existing account.";
@@ -33,6 +34,7 @@ export type UserRecord = {
   medium_of_education: string | null;
   standard: string | null;
   created_at: string | null;
+  referral_code: string | null;
 };
 
 type AuthResolution = {
@@ -109,7 +111,7 @@ export async function getUserRecordById(
   return supabaseClient
     .from("users")
     .select(
-      "id, name, gmail, avatar_url, gender, phone_number, dob, user_type, district, school_name, school_type, medium_of_education, standard, created_at",
+      "id, name, gmail, avatar_url, gender, phone_number, dob, user_type, district, school_name, school_type, medium_of_education, standard, created_at, referral_code",
     )
     .eq("id", userId)
     .maybeSingle<UserRecord>();
@@ -162,12 +164,21 @@ export async function ensureUserRecord(
       })
       .eq("id", user.id)
       .select(
-        "id, name, gmail, avatar_url, gender, phone_number, dob, user_type, district, school_name, school_type, medium_of_education, standard, created_at",
+        "id, name, gmail, avatar_url, gender, phone_number, dob, user_type, district, school_name, school_type, medium_of_education, standard, created_at, referral_code",
       )
       .maybeSingle<UserRecord>();
 
+    let finalProfile = updatedProfile ?? existingProfile;
+    if (finalProfile && !finalProfile.referral_code && !updateError) {
+      try {
+        finalProfile.referral_code = await assignUniqueReferralCode(user.id, supabaseClient);
+      } catch (err) {
+        console.error('Failed to assign referral code to existing user:', err);
+      }
+    }
+
     return {
-      profile: updatedProfile ?? existingProfile,
+      profile: finalProfile,
       isNewUser: false,
       error: updateError,
     };
@@ -184,9 +195,17 @@ export async function ensureUserRecord(
     .from("users")
     .insert(payload)
     .select(
-      "id, name, gmail, avatar_url, gender, phone_number, dob, user_type, district, school_name, school_type, medium_of_education, standard, created_at",
+      "id, name, gmail, avatar_url, gender, phone_number, dob, user_type, district, school_name, school_type, medium_of_education, standard, created_at, referral_code",
     )
     .single<UserRecord>();
+
+  if (insertedProfile && !insertedProfile.referral_code && !insertError) {
+    try {
+      insertedProfile.referral_code = await assignUniqueReferralCode(user.id, supabaseClient);
+    } catch (err) {
+      console.error('Failed to assign referral code to new user:', err);
+    }
+  }
 
   return {
     profile: insertedProfile ?? null,
@@ -268,7 +287,7 @@ export async function updateUserProfile(
     .from("users")
     .upsert(payload, { onConflict: "id" })
     .select(
-      "id, name, gmail, avatar_url, gender, phone_number, dob, user_type, district, school_name, school_type, medium_of_education, standard, created_at",
+      "id, name, gmail, avatar_url, gender, phone_number, dob, user_type, district, school_name, school_type, medium_of_education, standard, created_at, referral_code",
     )
     .single<UserRecord>();
 

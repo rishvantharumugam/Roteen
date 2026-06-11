@@ -7,14 +7,15 @@ import { ProfileButton } from './ProfileButton';
 
 interface PersonalDetailsSectionProps {
   profile: UserProfile;
+  onEdit?: () => void;
 }
 
-export const PersonalDetailsSection: React.FC<PersonalDetailsSectionProps> = ({ profile }) => {
+export const PersonalDetailsSection: React.FC<PersonalDetailsSectionProps> = ({ profile, onEdit }) => {
   return (
     <ProfileCard className="flex-1">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-white tracking-wide">Personal Details</h2>
-        <ProfileButton icon={Edit2} variant="ghost" className="px-4 py-1.5 text-sm border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] text-white">Edit</ProfileButton>
+        <ProfileButton onClick={onEdit} icon={Edit2} variant="ghost" className="px-4 py-1.5 text-sm border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] text-white">Edit</ProfileButton>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ProfileInfoItem icon={<Mail size={20} />} label="Email" value={profile.email} />

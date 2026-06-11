@@ -34,8 +34,10 @@ export const NotesNavigation = () => {
   const notesQuery = useQuery({
     queryKey: queryKeys.notes,
     queryFn: () => NoteController.fetchNotes(),
-    staleTime: 60_000,
-    gcTime: 15 * 60_000,
+    staleTime: Infinity,
+    gcTime: 30 * 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   useEffect(() => {

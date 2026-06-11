@@ -2,7 +2,7 @@ import React from 'react';
 import { Shield } from 'lucide-react';
 import { UpdateButton } from './UpdateButton';
 
-export const UpdateProfileSection: React.FC = () => {
+export const UpdateProfileSection: React.FC<{ onUpdate?: () => void }> = ({ onUpdate }) => {
   return (
     <div className="bg-[#141414] border border-[#202024] rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
       <div className="flex items-center gap-6">
@@ -16,7 +16,7 @@ export const UpdateProfileSection: React.FC = () => {
           </p>
         </div>
       </div>
-      <UpdateButton />
+      <UpdateButton onClick={onUpdate} />
     </div>
   );
 };

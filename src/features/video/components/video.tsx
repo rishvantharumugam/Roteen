@@ -4,13 +4,14 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, ThumbsDown, Bug, Bookmark } from "lucide-react";
+import { ChevronLeft, ChevronRight, ThumbsDown, Bug, Bookmark, Star } from "lucide-react";
 import type { VideoData, VideoState, QuestionMode } from "@/features/video/services/video";
 import type { VideoSubjectFilter } from "@/features/video/services/videoSubjectService";
 
 import SubjectBar from "@/features/video/components/SubjectBar";
 import PlaylistSidebar from "@/features/video/components/PlaylistSidebar";
 import { HeaderSettingsMenu } from "@/components/layout/HeaderSettingsMenu";
+import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
 import { supabase } from '@/lib/supabase/client';
 import { applyRouteThemeClass } from "@/lib/RouteThemeScope";
 import dynamic from "next/dynamic";
@@ -21,11 +22,14 @@ import BookmarkPlaylistModal from "@/features/video/components/BookmarkPlaylistM
 import ChapterQuizPanel, { type ChapterQuizPhase } from "@/features/video/components/ChapterQuizPanel";
 import type { ChapterQuizRecord, QuizQuestionRecord, QuizProgressRecord } from "@/features/video/services/videoQuizService";
 import CustomVideoPlayer from "./CustomVideoPlayer";
+import { fetchQuestionLevel } from "@/features/video/services/videoProgressService";
 
 interface VideoPageUIProps {
   data: VideoData;
   state: VideoState;
   subjectFilter?: VideoSubjectFilter;
+  initialVideoProgress?: number;
+  onVideoProgressUpdate?: (seconds: number, videoId?: string | null) => void;
   playlistQuestionIds?: string[] | null;
   playlistId?: string | null;
   playlistTitle?: string;
@@ -88,113 +92,42 @@ interface VideoPageUIProps {
   onSelectExistingPlaylist: (playlistId: string) => void;
   onCreateAndAddToPlaylist: () => void;
   currentUser?: { id: string; name: string } | null;
+  videoUrl?: string | null;
+  videoId?: string | null;
+  isVideoLoading?: boolean;
+  onVideoPlay?: () => void;
+  onVideoPause?: (seconds: number) => void;
+  onVideoEnded?: (seconds: number) => void;
+  onVideoSeeked?: (seconds: number) => void;
 }
 
-function normalizeVideoUrl(value: unknown): string | null {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
+function StarRating({ level }: { level: number }) {
+  return (
+    <div className="flex items-center gap-0.5 px-3 py-1 bg-zinc-900/80 rounded-full border border-zinc-800 shadow-inner" title="Priority level">
+      {[1, 2, 3, 4, 5].map((star) => {
+        const isFilled = star <= level;
+        return (
+          <div
+            key={star}
+            className="p-1"
+            aria-label={isFilled ? "Filled star" : "Empty star"}
+          >
+            <Star
+              className={`h-4 w-4 ${
+                isFilled
+                  ? "fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_8px_rgba(255,184,0,0.5)]"
+                  : "fill-transparent text-zinc-600"
+              } transition-all duration-200`}
+              strokeWidth={2}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
-function getQuestionIdCandidates(questionId: string): Array<string | number> {
-  const normalized = questionId.trim();
-  if (!normalized) {
-    return [];
-  }
 
-  if (/^\d+$/.test(normalized)) {
-    return [normalized, Number(normalized)];
-  }
-
-  return [normalized];
-}
-
-type ResolvedVideo = {
-  url: string | null;
-  videoId: string | null;
-};
-
-async function fetchVideoUrlFromSupabase(
-  questionId: string,
-  subjectId: string | null,
-): Promise<ResolvedVideo> {
-  const candidates = getQuestionIdCandidates(questionId);
-  if (candidates.length === 0) {
-    return { url: null, videoId: null };
-  }
-
-  for (const candidate of candidates) {
-    let query = supabase
-      .from("videos")
-      .select("id, video_url")
-      .eq("question_id", candidate)
-      .limit(1);
-
-    if (subjectId) {
-      query = query.eq("subject_id", subjectId);
-    }
-
-    let { data, error } = await query;
-
-    if (error && subjectId && (error.code === "PGRST204" || error.code === "42703")) {
-      const fallbackResult = await supabase
-        .from("videos")
-        .select("id, video_url")
-        .eq("question_id", candidate)
-        .limit(1);
-      data = fallbackResult.data;
-      error = fallbackResult.error;
-    }
-
-    if (error) {
-      console.warn("Could not fetch video from videos table:", error);
-    } else {
-      const resolved = normalizeVideoUrl(data?.[0]?.video_url);
-      if (resolved) {
-        return { url: resolved, videoId: data?.[0]?.id ? String(data[0].id) : null };
-      }
-    }
-  }
-
-  // Fallback: some schemas keep the link directly in questions.video_url.
-  for (const candidate of candidates) {
-    let query = supabase
-      .from("questions")
-      .select("video_url")
-      .eq("id", candidate)
-      .limit(1);
-
-    if (subjectId) {
-      query = query.eq("subject_id", subjectId);
-    }
-
-    let { data, error } = await query;
-
-    if (error && subjectId && (error.code === "PGRST204" || error.code === "42703")) {
-      const fallbackResult = await supabase
-        .from("questions")
-        .select("video_url")
-        .eq("id", candidate)
-        .limit(1);
-      data = fallbackResult.data;
-      error = fallbackResult.error;
-    }
-
-    if (error) {
-      console.warn("Could not fetch video from questions table:", error);
-    } else {
-      const resolved = normalizeVideoUrl(data?.[0]?.video_url);
-      if (resolved) {
-        return { url: resolved, videoId: null };
-      }
-    }
-  }
-
-  return { url: null, videoId: null };
-}
 
 export default function VideoPageUI({
   data,
@@ -261,52 +194,47 @@ export default function VideoPageUI({
   currentUser = null,
   mode,
   onModeChange,
+  initialVideoProgress = 0,
+  onVideoProgressUpdate,
+  videoUrl = null,
+  videoId: selectedVideoId = null,
+  isVideoLoading = false,
+  onVideoPlay,
+  onVideoPause,
+  onVideoEnded,
+  onVideoSeeked,
 }: VideoPageUIProps) {
   const { theme, resolvedTheme } = useTheme();
   const [theoryViewEnabled, setTheoryViewEnabled] = useState(false);
   const [theoryLanguage, setTheoryLanguage] = useState<"English" | "Tamil">("English");
   const theoryScrollRef = useRef<HTMLDivElement>(null);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
-  const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const [questionLevel, setQuestionLevel] = useState<number>(0);
 
-  // Fetch video URL for the selected question
+  // Fetch only the question level for the selected question
   useEffect(() => {
     let isMounted = true;
-    const fetchVideo = async () => {
-      if (!state.selectedQuestionId) {
+    if (!state.selectedQuestionId) {
+      setQuestionLevel(0);
+      return;
+    }
+    setQuestionLevel(0);
+    fetchQuestionLevel(state.selectedQuestionId)
+      .then((level) => {
         if (isMounted) {
-          setVideoUrl(null);
-          setSelectedVideoId(null);
-          setIsVideoLoading(false);
+          setQuestionLevel(level);
         }
-        return;
-      }
+      })
+      .catch((err) => {
+        console.warn("Error fetching question level:", err);
+        if (isMounted) {
+          setQuestionLevel(0);
+        }
+      });
 
-      setIsVideoLoading(true);
-      setVideoUrl(null);
-      setSelectedVideoId(null);
-      try {
-        const resolvedVideo = await fetchVideoUrlFromSupabase(state.selectedQuestionId, selectedSubjectId);
-
-        if (isMounted) {
-          setVideoUrl(resolvedVideo.url);
-          setSelectedVideoId(resolvedVideo.videoId);
-        }
-      } catch (err) {
-        console.warn("Error fetching video:", err);
-        if (isMounted) {
-          setVideoUrl(null);
-          setSelectedVideoId(null);
-        }
-      } finally {
-        if (isMounted) setIsVideoLoading(false);
-      }
+    return () => {
+      isMounted = false;
     };
-
-    fetchVideo();
-    return () => { isMounted = false; };
-  }, [selectedSubjectId, state.selectedQuestionId]);
+  }, [state.selectedQuestionId]);
 
   useEffect(() => {
     if (theoryScrollRef.current) {
@@ -389,17 +317,7 @@ export default function VideoPageUI({
             )}
           </button>
 
-          <button
-            title="Notifications"
-            aria-label="Notifications"
-            className="relative rounded-full p-2 text-zinc-400 transition hover:bg-zinc-800/50 hover:text-white"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M15 17H5l1.4-1.4A2 2 0 0 0 7 14.2V11a5 5 0 1 1 10 0v3.2a2 2 0 0 0 .6 1.4L19 17h-4Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
-          </button>
+          <NotificationDropdown />
 
           <HeaderSettingsMenu />
         </div>
@@ -485,7 +403,21 @@ export default function VideoPageUI({
               <div className={`"rounded-2xl border border-zinc-800/90 bg-[#161616] shadow-[0_18px_36px_rgba(0,0,0,0.42)]" flex h-full min-h-0 flex-col overflow-hidden`}>
                 <div className="m-3 flex min-h-0 flex-1 flex-col items-center justify-center rounded-2xl border border-zinc-800 bg-black text-zinc-500 overflow-hidden">
                   {isVideoLoading ? null : videoUrl ? (
-                    <CustomVideoPlayer key={videoUrl} url={videoUrl} />
+                    <CustomVideoPlayer 
+                      key={videoUrl} 
+                      url={videoUrl} 
+                      videoId={selectedVideoId}
+                      initialProgress={initialVideoProgress}
+                      onProgressUpdate={(seconds) => {
+                        if (onVideoProgressUpdate) {
+                          onVideoProgressUpdate(seconds, selectedVideoId);
+                        }
+                      }}
+                      onPlay={onVideoPlay}
+                      onPause={onVideoPause}
+                      onEnded={onVideoEnded}
+                      onSeeked={onVideoSeeked}
+                    />
                   ) : (
                     <>
                       <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-base">?</div>
@@ -495,8 +427,8 @@ export default function VideoPageUI({
                   )}
                 </div>
                 <div className="shrink-0">
-                  <div className="flex items-center justify-between px-2 py-2">
-                    <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between px-2 py-2 relative">
+                    <div className="flex flex-1 items-center gap-4 justify-start">
                       <button
                         type="button"
                         onClick={onDislike}
@@ -534,17 +466,21 @@ export default function VideoPageUI({
                         />
                       </button>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <label className="flex cursor-pointer items-center gap-2">
-                        <span className={`text-sm text-white transition ${canMarkSelectedQuestion ? "" : "opacity-50"}`}>
-                          {selectedQuestionCompleted ? "Completed" : "Mark as Completed"}
-                        </span>
+
+                    <div className="flex items-center justify-center">
+                      <StarRating level={questionLevel} />
+                    </div>
+
+                    <div className="flex flex-1 items-center gap-4 justify-end">
+                      <label className="flex cursor-pointer items-center justify-center">
                         <input
                           type="checkbox"
+                          title={selectedQuestionCompleted ? "Completed" : "Mark as Completed"}
+                          aria-label={selectedQuestionCompleted ? "Completed" : "Mark as Completed"}
                           checked={selectedQuestionCompleted}
                           onChange={onMarkComplete}
                           disabled={!canMarkSelectedQuestion}
-                          className="h-4 w-4 accent-white disabled:cursor-not-allowed disabled:opacity-50"
+                          className="h-4 w-4 cursor-pointer accent-white disabled:cursor-not-allowed disabled:opacity-50"
                         />
                       </label>
 

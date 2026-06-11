@@ -25,12 +25,12 @@ const SubjectChapterRow = memo(function SubjectChapterRow({
       type="button"
       onClick={() => onClick(chapter.id)}
       layout="position"
-      whileHover={{ scale: 1.01, backgroundColor: "rgba(168,85,247,0.05)" }}
+      whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       className={`group relative flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all duration-300 ${
         active || isOpen
-          ? "border-purple-500/30 bg-[#0c0f1d] shadow-[0_4px_20px_rgba(124,58,237,0.1)]"
-          : "border-transparent hover:border-zinc-800/80 hover:bg-zinc-900/40"
+          ? "border-purple-500/30 bg-transparent shadow-[0_4px_20px_rgba(124,58,237,0.1)]"
+          : "border-transparent hover:border-zinc-800/80 bg-transparent"
       }`}
     >
       {/* Glowing side indicator */}
@@ -78,10 +78,6 @@ const SubjectChapterRow = memo(function SubjectChapterRow({
         </motion.div>
       </div>
 
-      {/* Active/Open Glow effect */}
-      {(active || isOpen) && (
-        <div className="pointer-events-none absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-purple-500/10 to-transparent" />
-      )}
     </motion.button>
   );
 });

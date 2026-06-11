@@ -1,4 +1,4 @@
-export const standardOptions = ["6", "7", "8", "9", "10", "11", "12"] as const;
+export const standardOptions = ["9", "10", "11", "12"] as const;
 
 export const schoolTypeOptions = ["Government", "Private"] as const;
 
