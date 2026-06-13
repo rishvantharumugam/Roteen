@@ -393,7 +393,7 @@ export default function SubjectBar(props: SubjectBarProps) {
         )}
       </motion.div>
 
-      <motion.div className="mt-3 max-h-[calc(100vh-150px)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1 custom-scrollbar">
+      <motion.div className="mt-3 max-h-full lg:max-h-[calc(100vh-150px)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1 custom-scrollbar">
         {loading ? (
           <div className="flex flex-col gap-3 overflow-hidden px-2 pt-2">
             {Array.from({ length: 6 }).map((_, i) => (

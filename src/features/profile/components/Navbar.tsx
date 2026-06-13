@@ -5,8 +5,10 @@ import { Moon, Bell, User, TrendingUp, Megaphone, Bug, MessageSquare, BookOpen, 
 import Link from 'next/link';
 import { appRoutes } from '@/constants/AppRoutes';
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
+import { useAuth } from "@/providers/AuthProvider";
 
 export const Navbar = () => {
+  const { signOut } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -89,7 +91,13 @@ export const Navbar = () => {
               
               <div className="h-px bg-[#27272A] my-2"></div>
               
-              <button onClick={() => setIsDropdownOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
+              <button
+                onClick={async () => {
+                  setIsDropdownOpen(false);
+                  await signOut();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+              >
                 <LogOut size={16} /> Log Out
               </button>
             </div>

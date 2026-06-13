@@ -133,8 +133,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ profile, onC
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#141414] border border-[#202024] rounded-2xl w-full max-w-2xl shadow-2xl relative my-8">
-        <div className="flex items-center justify-between p-6 border-b border-[#202024]">
+      <div className="bg-[#141414] border border-[#202024] rounded-2xl w-full max-w-2xl shadow-2xl relative flex flex-col max-h-[calc(100vh-2rem)] overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-[#202024] shrink-0">
           <h2 className="text-xl font-bold text-white tracking-wide">Edit Profile</h2>
           <button 
             onClick={onClose}
@@ -144,126 +144,128 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ profile, onC
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
-          {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar">
+            {error && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                {error}
+              </div>
+            )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#A1A1AA]">Full Name</label>
-              <input
-                type="text"
-                name="full_name"
-                value={formData.full_name || ''}
-                onChange={handleChange}
-                className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#8B5CF6] transition-colors"
-              />
-            </div>
-            
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#A1A1AA]">Email</label>
-              <input
-                type="email"
-                value={profile.email}
-                disabled
-                className="bg-[#111] border border-[#202020] rounded-lg px-4 py-2.5 text-[#666] cursor-not-allowed"
-              />
-              <span className="text-xs text-[#666]">Email address cannot be changed</span>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#A1A1AA]">Full Name</label>
+                <input
+                  type="text"
+                  name="full_name"
+                  value={formData.full_name || ''}
+                  onChange={handleChange}
+                  className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#8B5CF6] transition-colors"
+                />
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#A1A1AA]">Email</label>
+                <input
+                  type="email"
+                  value={profile.email}
+                  disabled
+                  className="bg-[#111] border border-[#202020] rounded-lg px-4 py-2.5 text-[#666] cursor-not-allowed"
+                />
+                <span className="text-xs text-[#666]">Email address cannot be changed</span>
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#A1A1AA]">Mobile Number</label>
-              <input
-                type="text"
-                name="phone"
-                value={formData.phone || ''}
-                onChange={handleChange}
-                className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#8B5CF6] transition-colors"
-              />
-            </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#A1A1AA]">Mobile Number</label>
+                <input
+                  type="text"
+                  name="phone"
+                  value={formData.phone || ''}
+                  onChange={handleChange}
+                  className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#8B5CF6] transition-colors"
+                />
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#A1A1AA]">Date of Birth</label>
-              <input
-                type="date"
-                name="dob"
-                value={formData.dob || ''}
-                onChange={handleChange}
-                className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#8B5CF6] transition-colors"
-              />
-            </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#A1A1AA]">Date of Birth</label>
+                <input
+                  type="date"
+                  name="dob"
+                  value={formData.dob || ''}
+                  onChange={handleChange}
+                  className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#8B5CF6] transition-colors"
+                />
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#A1A1AA]">Gender</label>
-              <CustomSelect
-                name="gender"
-                value={formData.gender || ''}
-                options={genderOptions}
-                onChange={handleChange}
-                placeholder="Select gender"
-              />
-            </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#A1A1AA]">Gender</label>
+                <CustomSelect
+                  name="gender"
+                  value={formData.gender || ''}
+                  options={genderOptions}
+                  onChange={handleChange}
+                  placeholder="Select gender"
+                />
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#A1A1AA]">District</label>
-              <CustomSelect
-                name="district"
-                value={formData.district || ''}
-                options={districtSelectOptions}
-                onChange={handleChange}
-                placeholder="Select district"
-              />
-            </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#A1A1AA]">District</label>
+                <CustomSelect
+                  name="district"
+                  value={formData.district || ''}
+                  options={districtSelectOptions}
+                  onChange={handleChange}
+                  placeholder="Select district"
+                />
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#A1A1AA]">Standard</label>
-              <CustomSelect
-                name="standard"
-                value={formData.standard || ''}
-                options={standardOptions}
-                onChange={handleChange}
-                placeholder="Select standard"
-              />
-            </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#A1A1AA]">Standard</label>
+                <CustomSelect
+                  name="standard"
+                  value={formData.standard || ''}
+                  options={standardOptions}
+                  onChange={handleChange}
+                  placeholder="Select standard"
+                />
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#A1A1AA]">School Name</label>
-              <input
-                type="text"
-                name="school_name"
-                value={formData.school_name || ''}
-                onChange={handleChange}
-                className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#8B5CF6] transition-colors"
-              />
-            </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#A1A1AA]">School Name</label>
+                <input
+                  type="text"
+                  name="school_name"
+                  value={formData.school_name || ''}
+                  onChange={handleChange}
+                  className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#8B5CF6] transition-colors"
+                />
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#A1A1AA]">School Type</label>
-              <CustomSelect
-                name="school_type"
-                value={formData.school_type || ''}
-                options={schoolTypeOptions}
-                onChange={handleChange}
-                placeholder="Select school type"
-              />
-            </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#A1A1AA]">School Type</label>
+                <CustomSelect
+                  name="school_type"
+                  value={formData.school_type || ''}
+                  options={schoolTypeOptions}
+                  onChange={handleChange}
+                  placeholder="Select school type"
+                />
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#A1A1AA]">Medium of Study</label>
-              <CustomSelect
-                name="medium"
-                value={formData.medium || ''}
-                options={mediumOptions}
-                onChange={handleChange}
-                placeholder="Select medium"
-              />
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#A1A1AA]">Medium of Study</label>
+                <CustomSelect
+                  name="medium"
+                  value={formData.medium || ''}
+                  options={mediumOptions}
+                  onChange={handleChange}
+                  placeholder="Select medium"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="mt-8 flex items-center justify-end gap-4">
+          <div className="flex items-center justify-end gap-4 p-6 border-t border-[#202024] shrink-0 bg-[#141414]">
             <button
               type="button"
               onClick={onClose}

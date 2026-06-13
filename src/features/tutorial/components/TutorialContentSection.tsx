@@ -30,7 +30,7 @@ export function TutorialContentSection({
 }: TutorialContentSectionProps) {
   return (
     <div className="grid min-h-0 gap-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
-      <div className="min-h-0 space-y-4 overflow-y-auto pr-1">
+      <div className="space-y-4 pr-1 lg:min-h-0 lg:overflow-y-auto">
         <ContinueLearningSection
           lesson={continueLesson}
           onContinue={onLessonSelect}
@@ -39,13 +39,13 @@ export function TutorialContentSection({
         <ChapterSection chapter={activeChapter} onLessonOpen={onLessonSelect} />
       </div>
 
-      <aside className={`rounded-2xl border border-zinc-800 bg-[#121212]  backdrop-blur-xl min-h-0 overflow-hidden`}>
-        <div className="border-b border-zinc-800 p-4">
+      <aside className="rounded-2xl border border-zinc-800 bg-[#121212] backdrop-blur-xl lg:min-h-0 lg:overflow-hidden flex flex-col">
+        <div className="border-b border-zinc-800 p-4 shrink-0">
           <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
             Course playlist
           </h2>
         </div>
-        <div className="min-h-0 space-y-3 overflow-y-auto p-4">
+        <div className="space-y-3 p-4 lg:min-h-0 lg:overflow-y-auto">
           <ProgressSection pageData={pageData} />
           {pageData.lessons.map((lesson) => (
             <TutorialCard

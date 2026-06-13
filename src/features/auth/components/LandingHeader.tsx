@@ -91,7 +91,7 @@ export function LandingHeader({
       }`}
     >
       <div
-        className={`landing-header-shell mx-auto grid max-w-7xl grid-cols-[auto_1fr] items-center gap-4 px-5 transition-all duration-300 md:grid-cols-[1fr_auto_1fr] lg:px-7 ${
+        className={`landing-header-shell mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-2.5 sm:gap-4 px-3 sm:px-5 transition-all duration-300 md:grid-cols-[1fr_auto_1fr] lg:px-7 ${
           isScrolled ? "is-scrolled py-2.5" : "py-3.5"
         }`}
       >
@@ -99,7 +99,7 @@ export function LandingHeader({
           <RoteenWordmark />
         </Link>
 
-        <nav className="landing-header-nav hidden items-center justify-center gap-8 md:flex">
+        <nav className="landing-header-nav flex items-center justify-center gap-3 sm:gap-6 md:gap-8">
           {navigation.map((item) => (
             <Link
               key={item.label}
@@ -108,7 +108,7 @@ export function LandingHeader({
               onMouseEnter={item.href === appRoutes.dashboard ? prefetchDashboard : undefined}
               onFocus={item.href === appRoutes.dashboard ? prefetchDashboard : undefined}
               onTouchStart={item.href === appRoutes.dashboard ? prefetchDashboard : undefined}
-              className={`inline-flex items-center gap-2 text-base transition-colors ${
+              className={`inline-flex items-center gap-1.5 sm:gap-2 text-[13px] sm:text-sm md:text-base transition-colors ${
                 item.active ? "font-semibold text-white" : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -118,7 +118,7 @@ export function LandingHeader({
           ))}
         </nav>
 
-        <div className="col-span-2 flex items-center justify-end gap-3 md:col-span-1">
+        <div className="flex items-center justify-end gap-3">
           <UserMenu
             loginClassName="premium-button-hover bg-violet-600 hover:bg-violet-500 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-500/50"
             loginLabel="Get Started"

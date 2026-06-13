@@ -4,7 +4,6 @@ import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { appRoutes } from "@/constants/AppRoutes";
 import { supabase } from '@/lib/supabase/client';
-import { ensureUserRecord } from "@/features/auth/services/AuthService";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -218,8 +217,15 @@ async function readFileAsDataUrl(file: File) {
 
 export function BugWorkspace() {
   const { user, isLoading: isAuthLoading } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [bugs, setBugs] = useState<BugRecord[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsLoggingOut(window.sessionStorage.getItem("roteen_logging_out") === "true");
+    }
+  }, []);
   const [form, setForm] = useState<BugFormState>(defaultFormState);
   const [selectedImageName, setSelectedImageName] = useState("");
   const [selectedImageDataUrl, setSelectedImageDataUrl] = useState("");
@@ -289,18 +295,11 @@ export function BugWorkspace() {
         return;
       }
 
-      const { profile, error: profileError } = await ensureUserRecord(user, supabase);
-      if (profileError || !profile) {
-        setSubmitError(profileError?.message ?? "Unable to load your profile for bug reports.");
-        setIsLoading(false);
-        return;
-      }
-
-      setUserId(profile.id);
+      setUserId(user.id);
       const { data, error } = await supabase
         .from(BUG_TABLE)
         .select(bugSelectColumns)
-        .eq("user_id", profile.id)
+        .eq("user_id", user.id)
         .order("reported_at", { ascending: false });
 
       if (!error) {
@@ -449,7 +448,7 @@ export function BugWorkspace() {
 
           {/* Main Content */}
           <main className="no-scrollbar flex-1 min-w-0 overflow-y-auto bg-[#030303] px-5 py-8 transition-colors duration-300 sm:px-8 lg:px-12">
-            {!isAuthLoading && !user ? (
+            {!isAuthLoading && !user && !isLoggingOut ? (
               <div className="flex flex-1 items-center justify-center px-8 py-12">
                 <div className="w-full max-w-md rounded-[18px] border border-white/10 bg-[linear-gradient(145deg,rgba(24,24,27,0.92),rgba(11,11,13,0.96))] p-6 text-center shadow-[0_30px_100px_rgba(0,0,0,0.45)]">
                   <h2 className="text-lg font-semibold text-white">Sign in required</h2>
@@ -466,19 +465,19 @@ export function BugWorkspace() {
               </div>
             ) : (
               <div className="mx-auto flex w-full max-w-[1660px] flex-col gap-6">
-                <section className="flex items-center justify-between rounded-[14px] border border-white/[0.09] bg-[linear-gradient(145deg,rgba(24,24,27,0.92),rgba(13,13,16,0.96))] px-8 py-7 shadow-[0_22px_90px_rgba(0,0,0,0.42)]">
-                  <div className="flex items-center gap-6">
-                    <div className="grid h-[74px] w-[74px] place-items-center rounded-[10px] border border-violet-500/45 bg-violet-500/10 text-violet-400 shadow-[0_0_40px_rgba(124,58,237,0.14)]">
+                <section className="flex flex-col sm:flex-row sm:items-center justify-between rounded-[14px] border border-white/[0.09] bg-[linear-gradient(145deg,rgba(24,24,27,0.92),rgba(13,13,16,0.96))] px-5 py-6 sm:px-8 sm:py-7 gap-6 shadow-[0_22px_90px_rgba(0,0,0,0.42)]">
+                  <div className="flex items-center gap-4 sm:gap-6">
+                    <div className="grid h-[60px] w-[60px] sm:h-[74px] sm:w-[74px] shrink-0 place-items-center rounded-[10px] border border-violet-500/45 bg-violet-500/10 text-violet-400 shadow-[0_0_40px_rgba(124,58,237,0.14)]">
                       <Icons.Bug />
                     </div>
                     <div>
-                      <h1 className="text-[26px] font-bold tracking-tight text-white">Bug Dashboard</h1>
-                      <p className="mt-2 text-[15px] text-slate-300">Track, manage and resolve bugs efficiently.</p>
+                      <h1 className="text-xl sm:text-[26px] font-bold tracking-tight text-white">Bug Dashboard</h1>
+                      <p className="mt-1 sm:mt-2 text-xs sm:text-[15px] text-slate-300">Track, manage and resolve bugs efficiently.</p>
                     </div>
                   </div>
                   <button
                     onClick={openCreateDrawer}
-                    className="inline-flex h-[54px] items-center gap-3 rounded-[8px] border border-violet-500/55 bg-violet-500/10 px-6 text-[15px] font-semibold text-violet-300 shadow-[0_0_26px_rgba(124,58,237,0.13)] transition hover:border-violet-400 hover:bg-violet-500/20 hover:text-violet-100"
+                    className="inline-flex h-[48px] sm:h-[54px] items-center justify-center gap-3 rounded-[8px] border border-violet-500/55 bg-violet-500/10 px-6 text-[14px] sm:text-[15px] font-semibold text-violet-300 shadow-[0_0_26px_rgba(124,58,237,0.13)] transition hover:border-violet-400 hover:bg-violet-500/20 hover:text-violet-100 w-full sm:w-auto shrink-0"
                   >
                     <Icons.PlusSquare />
                     Report new bug
@@ -523,8 +522,8 @@ export function BugWorkspace() {
                     </label>
                   </div>
 
-                  <div className="overflow-hidden rounded-[12px] border border-white/[0.07] bg-[#141418]/75">
-                    <table className="w-full text-left text-sm">
+                  <div className="overflow-x-auto rounded-[12px] border border-white/[0.07] bg-[#141418]/75">
+                    <table className="w-full min-w-[800px] text-left text-sm">
                       <thead className="border-b border-white/[0.08] bg-white/[0.02] text-white">
                         <tr>
                           <th className="px-7 py-5 font-semibold">Id</th>
@@ -573,7 +572,7 @@ export function BugWorkspace() {
                               <td className="px-7 py-5 text-right">
                                 <button
                                   onClick={() => openViewDrawer(bug)}
-                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] text-slate-400 opacity-0 transition hover:border-violet-400/40 hover:bg-violet-500/10 hover:text-violet-200 group-hover:opacity-100"
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] text-slate-400 transition hover:border-violet-400/40 hover:bg-violet-500/10 hover:text-violet-200"
                                   aria-label="View bug"
                                 >
                                   <Icons.Eye />
@@ -592,7 +591,7 @@ export function BugWorkspace() {
 
           {/* Slide-out Drawer */}
           <div 
-            className={`fixed inset-y-0 right-0 z-50 w-[420px] transform bg-white dark:bg-[#181818] border-l border-slate-200 dark:border-[#262626] shadow-[-10px_0_30px_rgba(0,0,0,0.1)] dark:shadow-[-10px_0_30px_rgba(0,0,0,0.7)] transition-all duration-300 ease-in-out ${
+            className={`fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] transform bg-white dark:bg-[#181818] border-l border-slate-200 dark:border-[#262626] shadow-[-10px_0_30px_rgba(0,0,0,0.1)] dark:shadow-[-10px_0_30px_rgba(0,0,0,0.7)] transition-all duration-300 ease-in-out ${
               isDrawerOpen ? "translate-x-0" : "translate-x-full"
             }`}
           >
@@ -742,7 +741,7 @@ export function BugWorkspace() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="flex flex-col">
                         <label className="text-xs text-slate-500 mb-2 block">Status</label>
                         <div className="h-full rounded border border-slate-300 dark:border-[#333] bg-white dark:bg-[#222] px-3 py-2 text-sm text-slate-700 dark:text-slate-300 flex justify-between items-center transition-colors duration-300">

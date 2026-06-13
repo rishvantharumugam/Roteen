@@ -35,6 +35,10 @@ export function AuthProvider({
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem("roteen_logging_out");
+    }
+
     let isActive = true;
     let previousUserId: string | null = initialUser?.id ?? null;
 
@@ -78,6 +82,7 @@ export function AuthProvider({
       // If the user changed (sign-out, sign-in as different user, token switch)
       // dispatch a custom event so the QueryClient wrapper can clear all cached data.
       if (nextUserId !== previousUserId) {
+        const wasLoggedIn = previousUserId !== null;
         previousUserId = nextUserId;
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("auth-user-changed"));
@@ -97,6 +102,11 @@ export function AuthProvider({
           } catch (e) {
             console.error('Failed to clear video state on user change', e);
           }
+
+          if (wasLoggedIn && !nextUserId) {
+            window.sessionStorage.setItem("roteen_logging_out", "true");
+            window.location.href = "/";
+          }
         }
       }
 
@@ -114,11 +124,19 @@ export function AuthProvider({
   }, [initialUser?.id]);
 
   const signOut = async () => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("roteen_logging_out", "true");
+    }
+
     // Optimistically clear local state for an instant UI update
     setSession(null);
     setUser(null);
 
     const { error } = await supabase.auth.signOut();
+
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
+    }
 
     if (error) {
       return { error: new Error(error.message) };

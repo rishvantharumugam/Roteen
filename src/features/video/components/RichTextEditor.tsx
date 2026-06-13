@@ -245,64 +245,63 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
       ` }} />
 
       <div 
-        className="flex shrink-0 flex-nowrap items-center gap-0.5 border-b border-zinc-800 bg-black px-2 py-1.5 z-10 justify-between w-full"
+        className="flex flex-nowrap shrink-0 items-center gap-2.5 border-b border-zinc-800 bg-black px-2 py-1.5 z-10 justify-start w-full overflow-x-auto no-scrollbar"
       >
         
-        {/* Text Formats */}
-        <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("bold")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.bold ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Bold">
-          <Bold size={14} />
-        </button>
-        <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("italic")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.italic ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Italic">
-          <Italic size={14} />
-        </button>
-        <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("underline")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.underline ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Underline">
-          <Underline size={14} />
-        </button>
+        {/* Text Formats Group */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("bold")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.bold ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Bold">
+            <Bold size={14} />
+          </button>
+          <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("italic")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.italic ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Italic">
+            <Italic size={14} />
+          </button>
+          <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("underline")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.underline ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Underline">
+            <Underline size={14} />
+          </button>
+        </div>
 
-        <div className="mx-0.5 h-5 w-px shrink-0 bg-zinc-700"></div>
+        <div className="h-5 w-px bg-zinc-700 shrink-0"></div>
 
-        {/* Lists & Alignment */}
-        <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("insertUnorderedList")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.unorderedList ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Bullet List">
-          <List size={14} />
-        </button>
-        <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("insertOrderedList")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.orderedList ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Number List">
-          <ListOrdered size={14} />
-        </button>
-        <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("justifyLeft")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.alignLeft ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Align Left">
-          <AlignLeft size={14} />
-        </button>
-        <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("justifyCenter")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.alignCenter ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Align Center">
-          <AlignCenter size={14} />
-        </button>
-        <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("justifyRight")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.alignRight ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Align Right">
-          <AlignRight size={14} />
-        </button>
+        {/* Lists & Alignment Group */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("insertUnorderedList")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.unorderedList ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Bullet List">
+            <List size={14} />
+          </button>
+          <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("insertOrderedList")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.orderedList ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Number List">
+            <ListOrdered size={14} />
+          </button>
+          <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("justifyLeft")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.alignLeft ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Align Left">
+            <AlignLeft size={14} />
+          </button>
+          <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("justifyCenter")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.alignCenter ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Align Center">
+            <AlignCenter size={14} />
+          </button>
+          <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("justifyRight")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.alignRight ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Align Right">
+            <AlignRight size={14} />
+          </button>
+        </div>
 
-        <div className="mx-0.5 h-5 w-px shrink-0 bg-zinc-700"></div>
+        <div className="h-5 w-px bg-zinc-700 shrink-0"></div>
 
-        {/* Size Picker */}
-        <button ref={sizeBtnRef} onMouseDown={(e) => e.preventDefault()} onClick={() => togglePopup('size', sizeBtnRef)} className="flex shrink-0 h-7 items-center justify-center rounded px-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800 hover:text-white" title="Text Size">
-          {SIZES.find(s => s.value === activeFormats.size)?.label || "16"}
-        </button>
+        {/* Size & Color Picker Group */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button ref={sizeBtnRef} onMouseDown={(e) => e.preventDefault()} onClick={() => togglePopup('size', sizeBtnRef)} className="flex shrink-0 h-7 items-center justify-center rounded px-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800 hover:text-white" title="Text Size">
+            {SIZES.find(s => s.value === activeFormats.size)?.label || "16"}
+          </button>
+          
+          <div className="mx-0.5 h-5 w-px bg-zinc-700 shrink-0"></div>
 
-        <div className="mx-0.5 h-5 w-px shrink-0 bg-zinc-700"></div>
-
-        {/* Text Color Picker */}
-        <button ref={colorBtnRef} onMouseDown={(e) => e.preventDefault()} onClick={() => togglePopup('color', colorBtnRef)} className="flex shrink-0 h-7 w-7 items-center justify-center rounded text-zinc-400 transition hover:bg-zinc-800 hover:text-white" title="Text Color">
-          <Palette size={14} />
-        </button>
-
-        {/* Highlight Color Picker */}
-        <button ref={hiliteBtnRef} onMouseDown={(e) => e.preventDefault()} onClick={() => togglePopup('hilite', hiliteBtnRef)} className="flex shrink-0 h-7 w-7 items-center justify-center rounded text-zinc-400 transition hover:bg-zinc-800 hover:text-white" title="Text Highlight Color">
-          <Highlighter size={14} />
-        </button>
-
-        <div className="mx-0.5 h-5 w-px shrink-0 bg-zinc-700"></div>
-
-        {/* Box Color Picker */}
-        <button ref={boxBtnRef} onMouseDown={(e) => e.preventDefault()} onClick={() => togglePopup('box', boxBtnRef)} className="flex shrink-0 h-7 w-7 items-center justify-center rounded text-zinc-400 transition hover:bg-zinc-800 hover:text-white" title="Box Background Color">
-          <PaintBucket size={14} />
-        </button>
+          <button ref={colorBtnRef} onMouseDown={(e) => e.preventDefault()} onClick={() => togglePopup('color', colorBtnRef)} className="flex shrink-0 h-7 w-7 items-center justify-center rounded text-zinc-400 transition hover:bg-zinc-800 hover:text-white" title="Text Color">
+            <Palette size={14} />
+          </button>
+          <button ref={hiliteBtnRef} onMouseDown={(e) => e.preventDefault()} onClick={() => togglePopup('hilite', hiliteBtnRef)} className="flex shrink-0 h-7 w-7 items-center justify-center rounded text-zinc-400 transition hover:bg-zinc-800 hover:text-white" title="Text Highlight Color">
+            <Highlighter size={14} />
+          </button>
+          <button ref={boxBtnRef} onMouseDown={(e) => e.preventDefault()} onClick={() => togglePopup('box', boxBtnRef)} className="flex shrink-0 h-7 w-7 items-center justify-center rounded text-zinc-400 transition hover:bg-zinc-800 hover:text-white" title="Box Background Color">
+            <PaintBucket size={14} />
+          </button>
+        </div>
       </div>
 
       {/* Popups Rendered Relative to Editor Container to Avoid Clipping */}

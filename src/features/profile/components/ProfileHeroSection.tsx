@@ -13,22 +13,24 @@ interface ProfileHeroSectionProps {
 
 export const ProfileHeroSection: React.FC<ProfileHeroSectionProps> = ({ profile }) => {
   return (
-    <ProfileCard className="flex flex-col md:flex-row items-center justify-between p-8">
-      <div className="flex items-center gap-8">
-        <ProfileAvatar src={profile.avatar_url} alt={profile.full_name} size={140} />
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-white tracking-wide">{profile.full_name}</h1>
+    <ProfileCard className="flex flex-col md:flex-row items-center justify-between p-5 sm:p-8">
+      <div className="flex items-center gap-4 sm:gap-8 w-full md:w-auto">
+        <ProfileAvatar src={profile.avatar_url} alt={profile.full_name} />
+        <div className="flex flex-col gap-1 min-w-0 flex-1">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <h1 className="text-xl sm:text-3xl font-bold text-white tracking-wide truncate max-w-full" title={profile.full_name}>
+              {profile.full_name}
+            </h1>
             {profile.is_verified && <UserBadge />}
           </div>
-          <div className="flex items-center gap-2 text-[#A1A1AA] mt-2">
-            <Calendar size={16} />
-            <span className="text-sm">Joined {profile.joined_date}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[#A1A1AA] mt-1">
+            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span className="text-xs sm:text-sm truncate">Joined {profile.joined_date}</span>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 mt-6 md:mt-0">
+      <div className="flex flex-col gap-4 mt-6 md:mt-0 w-full md:w-auto">
         <ReferralCard code={profile.referral_code} />
       </div>
     </ProfileCard>

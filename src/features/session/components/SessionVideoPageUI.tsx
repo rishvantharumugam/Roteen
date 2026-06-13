@@ -16,7 +16,7 @@ export function SessionVideoPageUI({ record, isLoading, errorMessage }: SessionV
     return (
       <main className="bg-black min-h-screen  px-4 py-6 text-slate-950 md:px-8">
         <div className="mx-auto grid max-w-6xl gap-6">
-          <div className={`"rounded-lg border border-white/10 bg-[#0e1226] p-5 text-sm text-slate-400 lg:col-span-2" lg:col-span-1`}>Loading session video...</div>
+          <div className="rounded-lg border border-white/10 bg-[#0e1226] p-5 text-sm text-slate-400 lg:col-span-2">Loading session video...</div>
         </div>
       </main>
     );

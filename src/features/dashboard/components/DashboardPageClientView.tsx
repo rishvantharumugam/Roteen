@@ -8,8 +8,11 @@ import { ExploreCourseCard } from "@/features/dashboard/components/ExploreCourse
 import { OngoingVideoCard, type OngoingVideo } from "@/features/dashboard/components/OngoingVideoCard";
 import { RevealBlock } from "@/features/dashboard/components/RevealBlock";
 import { SearchIcon } from "@/features/dashboard/components/SearchIcon";
-import { ChevronRight, ChevronDown, Atom, Code2, Database, LayoutTemplate, Box, Clock, Target, Hourglass, Pencil } from "lucide-react";
+import { ChevronRight, ChevronDown, Atom, Code2, Database, LayoutTemplate, Box, Clock, Target, Hourglass, Pencil, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { appRoutes } from "@/constants/AppRoutes";
+import { useAuth } from "@/providers/AuthProvider";
 import { titleToSubjectSlug, prefetchSubjectPanelData } from "@/features/video/services/videoSubjectService";
 import { setSelectedVideoSubject } from "@/features/video/components/videoSubjectStore";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -29,6 +32,7 @@ export function DashboardPageClientView({
   progressData = [],
 }: DashboardPageClientViewProps) {
   const router = useRouter();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { exploreSubjects, isSearching, searchTerm, setSearchTerm } =
     useDashboardPageController(initialExploreSubjects);
 
@@ -39,6 +43,7 @@ export function DashboardPageClientView({
   const [isMounted, setIsMounted] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [goalMinutesInput, setGoalMinutesInput] = useState("");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const timeSpentSeconds = useStudyTimerStore((s) => s.timeSpentSeconds);
   const dailyGoalSeconds = useStudyTimerStore((s) => s.dailyGoalSeconds);
@@ -51,6 +56,10 @@ export function DashboardPageClientView({
     const saved = localStorage.getItem("roteen_todays_learning_collapsed");
     if (saved === "true") {
       setIsCollapsed(true);
+    }
+
+    if (typeof window !== "undefined") {
+      setIsLoggingOut(window.sessionStorage.getItem("roteen_logging_out") === "true");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -164,11 +173,13 @@ export function DashboardPageClientView({
     };
   });
 
+  const showLoginOverlay = !isAuthLoading && !user && !isLoggingOut;
+
   return (
-    <main className={`bg-black text-zinc-200 min-h-screen dark h-screen overflow-y-auto overflow-x-hidden no-scrollbar  text-slate-100`}>
+    <main className={`bg-black text-zinc-200 min-h-screen dark h-screen ${showLoginOverlay ? "overflow-hidden" : "overflow-y-auto"} overflow-x-hidden no-scrollbar text-slate-100 relative`}>
       <DashboardHeader activeLabel="Dashboard" />
 
-      <div className="mx-auto max-w-[1560px] px-4 pt-3 pb-8 lg:px-6 lg:pt-4 lg:pb-10">
+      <div className={`mx-auto max-w-[1560px] px-4 pt-3 pb-8 lg:px-6 lg:pt-4 lg:pb-10 transition-all duration-300 ${showLoginOverlay ? "filter blur-md pointer-events-none select-none" : ""}`}>
         {/* Ongoing Courses */}
         {ongoingVideos.length > 0 && (
           <RevealBlock delayMs={80}>
@@ -541,6 +552,50 @@ export function DashboardPageClientView({
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showLoginOverlay && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            
+            {/* Modal Dialog */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="relative z-10 w-full max-w-[460px] rounded-[24px] border border-white/[0.08] bg-[#0E0E10] px-8 py-8 text-center shadow-[0_30px_100px_rgba(0,0,0,0.85)] flex flex-col items-center gap-5"
+            >
+              {/* Alert Icon Container */}
+              <div className="flex items-center justify-center w-20 h-20 rounded-[24px] bg-[#181524]/60 border border-violet-500/20 text-violet-400 mt-2">
+                <AlertTriangle size={36} className="text-violet-400" strokeWidth={1.8} />
+              </div>
+
+              <div className="flex flex-col gap-2.5 mt-2">
+                <h2 className="text-[22px] font-bold text-white tracking-tight leading-snug">
+                  Login/Sign up to access <span className="text-violet-400">Roteen</span>
+                </h2>
+                <p className="text-[14px] text-zinc-400 max-w-[280px] mx-auto leading-relaxed">
+                  Unlock full access to premium features
+                </p>
+              </div>
+
+              <Link
+                href={appRoutes.signIn}
+                className="mt-3 mb-2 rounded-xl border border-violet-500/50 bg-violet-600 hover:bg-violet-500 px-8 py-2.5 text-sm font-semibold text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] transition active:scale-95 duration-200 cursor-pointer min-w-[150px]"
+              >
+                Login
+              </Link>
             </motion.div>
           </div>
         )}
