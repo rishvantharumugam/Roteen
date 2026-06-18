@@ -15,6 +15,7 @@ export interface UserProfile {
   school_type: string;
   medium: string;
   referral_code: string;
+  referral_count: number;
   avatar_url: string;
   joined_date: string;
   is_verified: boolean;
@@ -32,11 +33,32 @@ export const ProfileService = {
 
       const { data, error } = await supabase
         .from('users')
-        .select('id, name, created_at, gmail, dob, phone_number, gender, district, standard, school_name, school_type, medium_of_education, referral_code')
+        .select('id, name, created_at, gmail, dob, phone_number, gender, district, standard, school_name, school_type, medium_of_education, referral_code, referral_count')
         .eq('id', resolvedUserId)
         .single();
 
       if (error) {
+        if (error.code === 'PGRST116') {
+          return {
+            id: resolvedUserId,
+            full_name: authData.user?.user_metadata?.full_name || authData.user?.user_metadata?.name || 'Guest User',
+            email: authData.user?.email || '',
+            phone: '',
+            dob: '',
+            gender: '',
+            location: '',
+            standard: '',
+            school_name: '',
+            district: '',
+            school_type: '',
+            medium: '',
+            referral_code: 'RTN-PENDING',
+            referral_count: 0,
+            avatar_url: authData.user?.user_metadata?.avatar_url || '',
+            joined_date: new Date().toLocaleDateString(),
+            is_verified: false,
+          };
+        }
         throw error;
       }
 
@@ -63,6 +85,7 @@ export const ProfileService = {
           school_type: data.school_type || '',
           medium: data.medium_of_education || '',
           referral_code: data.referral_code || 'RTN-PENDING',
+          referral_count: data.referral_count || 0,
           avatar_url: '',
           joined_date: data.created_at
             ? new Intl.DateTimeFormat('en', {

@@ -277,7 +277,7 @@ export async function fetchSubjectPanelData(
     const buildQuestionQuery = () => {
       const query = supabase
         .from("questions")
-        .select("*")
+        .select("id, chapter_id, mode, standard, question_marks, questions_marks, question_name, title, question, question_text, name, text")
         .eq("subject_id", subjectId)
         .order("chapter_id", { ascending: true })
         .order("id", { ascending: true });

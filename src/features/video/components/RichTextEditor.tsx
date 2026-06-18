@@ -1,10 +1,10 @@
 import React, { useRef, useEffect, useState } from "react";
-import { 
-  Bold, 
-  Italic, 
-  Underline, 
-  Palette, 
-  PaintBucket, 
+import {
+  Bold,
+  Italic,
+  Underline,
+  Palette,
+  PaintBucket,
   Highlighter,
   List,
   ListOrdered,
@@ -65,7 +65,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const containerId = "rte-" + React.useId().replace(/:/g, "");
-  
+
   // Refs for buttons
   const sizeBtnRef = useRef<HTMLButtonElement>(null);
   const colorBtnRef = useRef<HTMLButtonElement>(null);
@@ -194,19 +194,19 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
       setPopupConfig(null);
       return;
     }
-    
+
     if (ref.current && containerRef.current) {
       const buttonRect = ref.current.getBoundingClientRect();
       const containerRect = containerRef.current.getBoundingClientRect();
-      
+
       let left = buttonRect.left - containerRect.left;
-      
+
       // Prevent overflow on the right side
       if (left + 225 > containerRect.width) {
         left = containerRect.width - 225;
       }
       if (left < 4) left = 4;
-      
+
       setPopupConfig({
         type,
         top: buttonRect.bottom - containerRect.top + 8,
@@ -244,10 +244,10 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
         #${containerId} font[size="7"] { font-size: 32px !important; }
       ` }} />
 
-      <div 
+      <div
         className="flex flex-nowrap shrink-0 items-center gap-2.5 border-b border-zinc-800 bg-black px-2 py-1.5 z-10 justify-start w-full overflow-x-auto no-scrollbar"
       >
-        
+
         {/* Text Formats Group */}
         <div className="flex items-center gap-0.5 shrink-0">
           <button onMouseDown={(e) => e.preventDefault()} onClick={() => execCommand("bold")} className={`flex shrink-0 h-7 w-7 items-center justify-center rounded transition ${activeFormats.bold ? "bg-purple-500/20 text-purple-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"}`} title="Bold">
@@ -289,7 +289,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           <button ref={sizeBtnRef} onMouseDown={(e) => e.preventDefault()} onClick={() => togglePopup('size', sizeBtnRef)} className="flex shrink-0 h-7 items-center justify-center rounded px-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800 hover:text-white" title="Text Size">
             {SIZES.find(s => s.value === activeFormats.size)?.label || "16"}
           </button>
-          
+
           <div className="mx-0.5 h-5 w-px bg-zinc-700 shrink-0"></div>
 
           <button ref={colorBtnRef} onMouseDown={(e) => e.preventDefault()} onClick={() => togglePopup('color', colorBtnRef)} className="flex shrink-0 h-7 w-7 items-center justify-center rounded text-zinc-400 transition hover:bg-zinc-800 hover:text-white" title="Text Color">
@@ -306,7 +306,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
 
       {/* Popups Rendered Relative to Editor Container to Avoid Clipping */}
       {popupConfig && (
-        <div 
+        <div
           ref={popupRef}
           style={{ top: popupConfig.top, left: popupConfig.left }}
           className="absolute z-[999] flex gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 p-2 shadow-xl"

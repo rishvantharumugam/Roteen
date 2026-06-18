@@ -178,7 +178,7 @@ export const VideoBookmarkService = {
 
     const { data: existingRows, error: existingError } = await supabase
       .from("quickrevision_lists_Items")
-      .select("*")
+      .select("id")
       .eq("quickrevision_lists_id", playlistId)
       .eq("questions_id", context.questionId)
       .limit(1);

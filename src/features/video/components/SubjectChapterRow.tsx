@@ -29,7 +29,7 @@ const SubjectChapterRow = memo(function SubjectChapterRow({
       whileTap={{ scale: 0.98 }}
       className={`group relative flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all duration-300 ${
         active || isOpen
-          ? "border-purple-500/30 bg-transparent shadow-[0_4px_20px_rgba(124,58,237,0.1)]"
+          ? "border-transparent bg-transparent"
           : "border-transparent hover:border-zinc-800/80 bg-transparent"
       }`}
     >

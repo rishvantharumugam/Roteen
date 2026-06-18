@@ -256,7 +256,7 @@ export async function fetchSubjectChaptersQuestionsByMode(
 
   const { data: questionRows, error: questionError } = await supabase
     .from("questions")
-    .select("*")
+    .select("id, chapter_id, mode, standard, question_name, title, question, question_text, name, text")
     .eq("subject_id", subjectId)
     .order("chapter_id", { ascending: true })
     .order("id", { ascending: true });
@@ -378,7 +378,7 @@ export async function getSubjectsAndChapters(
 
   const { data: subjects, error: subjectError } = await supabase
     .from("subjects")
-    .select("*");
+    .select("id, standard, name, subject, subject_name");
 
   if (subjectError) {
     throw new Error(`Failed to fetch subjects: ${subjectError.message}`);
@@ -407,7 +407,7 @@ export async function getSubjectsAndChapters(
 
   const { data: chapterRows, error: chapterError } = await supabase
     .from("chapters")
-    .select("*")
+    .select("id, subject_id, chapter_no, title, chapter_title, chapter_name, name, completion, completion_percentage, progress")
     .eq("subject_id", subjectId)
     .order("chapter_no", { ascending: true });
 
@@ -420,7 +420,7 @@ export async function getSubjectsAndChapters(
 
   const { data: questionRows, error: questionError } = await supabase
     .from("questions")
-    .select("*")
+    .select("id, chapter_id, question_name, title, question, question_text, topic_title, name, mark, marks")
     .eq("subject_id", subjectId)
     .eq("mode", mode)
     .order("chapter_id", { ascending: true })
@@ -493,7 +493,7 @@ export async function getQuestionsByMode(mode: QuestionMode): Promise<Chapter[]>
 
   const { data: questionRows, error } = await supabase
     .from("questions")
-    .select("*")
+    .select("id, chapter_id, question_name, title, question, question_text, topic_title, name, mark, marks")
     .eq("subject_id", subjectId)
     .eq("mode", mode)
     .order("chapter_id", { ascending: true })
@@ -577,7 +577,7 @@ export async function getStandardTenMathChapters(): Promise<Chapter[]> {
 
   const { data: questionRows, error } = await supabase
     .from("questions")
-    .select("*")
+    .select("id, chapter_id, question_name, title, question, question_text, topic_title, name, mark, marks")
     .eq("subject_id", subjectId)
     .order("chapter_id", { ascending: true })
     .order("id", { ascending: true });

@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Circle,
   FileText,
+  ChevronLeft,
 } from "lucide-react";
 import { supabase } from '@/lib/supabase/client';
 
@@ -17,6 +18,7 @@ interface PlaylistSidebarProps {
   completedQuestions: string[];
   onQuestionSelect: (questionId: string) => void;
   onQuestionsLoaded?: (questions: { chapterId: string; questionId: string; questionTitle: string }[]) => void;
+  onCollapse?: () => void;
 }
 
 export default function PlaylistSidebar({
@@ -27,6 +29,7 @@ export default function PlaylistSidebar({
   completedQuestions,
   onQuestionSelect,
   onQuestionsLoaded,
+  onCollapse,
 }: PlaylistSidebarProps) {
   const [questions, setQuestions] = useState<
     { id: string; title: string }[]
@@ -168,8 +171,18 @@ export default function PlaylistSidebar({
     <aside className={`w-full h-full min-w-[200px] rounded-2xl border border-zinc-800 bg-[#121212] p-2.5 shadow-[0_18px_36px_rgba(0,0,0,0.42)]`}>
       <div className="flex h-full flex-col gap-2.5 overflow-hidden">
         <div className="rounded-xl border border-zinc-700/60 bg-zinc-950/35 px-3 py-2.5">
-          <div className="min-w-0">
+          <div className="min-w-0 flex items-center justify-between">
             <h2 className="truncate text-lg font-semibold tracking-tight text-white">{playlistTitle}</h2>
+            {onCollapse && (
+              <button
+                type="button"
+                onClick={onCollapse}
+                className="hidden lg:flex items-center justify-center p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                title="Minimize Playlist Panel"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
           <div className="mt-3 flex items-center justify-between text-zinc-300">
@@ -216,11 +229,10 @@ export default function PlaylistSidebar({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 4 }}
                       transition={{ delay: index * 0.015 }}
-                      className={`group relative w-full rounded-md border px-1.5 py-1.5 text-left transition-all duration-200 ${
-                        isSelected
-                          ? "border-purple-500/60 bg-gradient-to-r from-purple-500/20 to-indigo-500/15 shadow-[0_0_18px_rgba(168,85,247,0.2)]"
-                          : "border-zinc-800/60 bg-zinc-900/35 hover:border-zinc-700/80 hover:bg-zinc-900/50"
-                      }`}
+                      className={`group relative w-full rounded-md border px-1.5 py-1.5 text-left transition-all duration-200 ${isSelected
+                        ? "border-purple-500/60 bg-gradient-to-r from-purple-500/20 to-indigo-500/15 shadow-[0_0_18px_rgba(168,85,247,0.2)]"
+                        : "border-zinc-800/60 bg-zinc-900/35 hover:border-zinc-700/80 hover:bg-zinc-900/50"
+                        }`}
                     >
                       <div className="flex items-center gap-1.5">
                         <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-zinc-700 bg-zinc-900/70 text-purple-300">

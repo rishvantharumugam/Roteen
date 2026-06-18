@@ -922,19 +922,26 @@ export default function VideoClient() {
   const activeQuestionIndex = orderedQuestions.findIndex((item) => item.questionId === state.selectedQuestionId);
 
   const handleQuizSelect = useCallback((quizId: string) => {
-    setRestoredLearningState(null);
+    if (state.selectedQuizId === quizId && state.selectedQuestionId === null) {
+      return; // Already viewing this quiz, prevent glitch
+    }
+
+    if (state.selectedQuizId !== quizId) {
+      setRestoredLearningState(null);
+      setChapterQuizPhase("landing");
+      setQuizQuestionIndex(0);
+      setQuizAnswers({});
+      setVisitedQuizQuestions([0]);
+      setMarkedQuizQuestions([]);
+      setQuizQuestions([]);
+    }
+
     setState((prev) => ({
       ...prev,
       selectedQuizId: quizId,
       selectedQuestionId: null,
     }));
-    setChapterQuizPhase("landing");
-    setQuizQuestionIndex(0);
-    setQuizAnswers({});
-    setVisitedQuizQuestions([0]);
-    setMarkedQuizQuestions([]);
-    setQuizQuestions([]);
-  }, []);
+  }, [state.selectedQuizId, state.selectedQuestionId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -989,8 +996,12 @@ export default function VideoClient() {
     (seconds: number) => {
       setVideoPosition(seconds);
       videoPositionRef.current = seconds;
+
+      if (user?.id && state.selectedQuestionId) {
+        void updateVideoWatchedSeconds(user.id, state.selectedQuestionId, videoId, Math.floor(seconds), false);
+      }
     },
-    []
+    [user?.id, state.selectedQuestionId, videoId]
   );
 
   const saveWatchedSeconds = useCallback(async (seconds: number) => {
@@ -1003,7 +1014,7 @@ export default function VideoClient() {
     }
     lastSavedPositionRef.current = watchedSeconds;
 
-    await updateVideoWatchedSeconds(user.id, state.selectedQuestionId, videoId, watchedSeconds);
+    await updateVideoWatchedSeconds(user.id, state.selectedQuestionId, videoId, watchedSeconds, true);
   }, [user?.id, state.selectedQuestionId, videoId]);
 
   const handleVideoPlay = useCallback(() => {
@@ -1044,7 +1055,7 @@ export default function VideoClient() {
       }
       lastSavedPositionRef.current = currentSecs;
 
-      void updateVideoWatchedSeconds(user.id, state.selectedQuestionId, videoId, currentSecs);
+      void updateVideoWatchedSeconds(user.id, state.selectedQuestionId, videoId, currentSecs, true);
     };
 
     const handleBeforeUnload = () => {
@@ -1069,7 +1080,7 @@ export default function VideoClient() {
         const currentSecs = Math.floor(videoPositionRef.current);
         if (currentSecs > 0 && lastSavedPositionRef.current !== currentSecs) {
           lastSavedPositionRef.current = currentSecs;
-          void updateVideoWatchedSeconds(user.id, state.selectedQuestionId, videoId, currentSecs);
+          void updateVideoWatchedSeconds(user.id, state.selectedQuestionId, videoId, currentSecs, true);
         }
       }
     };

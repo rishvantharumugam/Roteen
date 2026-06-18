@@ -46,16 +46,16 @@ export async function getCachedAuthenticatedUserId(): Promise<string> {
 
   inFlightUserIdPromise = (async () => {
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError) {
+    if (userError) {
       clearUserCache();
-      throw new Error(`Failed to resolve authenticated user: ${sessionError.message}`);
+      throw new Error(`Failed to resolve authenticated user: ${userError.message}`);
     }
 
-    const userId = session?.user?.id ?? null;
+    const userId = user?.id ?? null;
     if (!userId) {
       clearUserCache();
       throw new Error("No authenticated user found.");

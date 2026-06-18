@@ -1,6 +1,8 @@
  "use client";
 
 import { useTheme } from "next-themes";
+import Link from "next/link";
+import { appRoutes } from "@/constants/AppRoutes";
 
 import { HeaderSettingsMenu } from "@/components/layout/HeaderSettingsMenu";
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
@@ -22,19 +24,31 @@ export default function Navbar({ brand, menu }: NavbarProps) {
         <h1 className="text-lg font-semibold tracking-tight text-[#a855f7]">{brand}</h1>
       </div>
       <nav className="flex items-center gap-6">
-        {menu.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={
-              item.label === "Dashboard"
-                ? "rounded-full border border-zinc-800 bg-white/5 px-5 py-1.5 text-sm font-medium text-white"
-                : "rounded-full px-4 py-1.5 text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
-            }
-          >
-            {item.label}
-          </button>
-        ))}
+        {menu.map((item) => {
+          let href = "#";
+          switch (item.label.toLowerCase()) {
+            case "home": href = appRoutes.home; break;
+            case "dashboard": href = appRoutes.dashboard; break;
+            case "notes": href = appRoutes.notes; break;
+            case "revision": href = appRoutes.revision; break;
+            case "sessions": href = appRoutes.sessions; break;
+            case "profile": href = appRoutes.profile; break;
+          }
+
+          return (
+            <a
+              key={item.id}
+              href={href}
+              className={
+                item.label === "Dashboard"
+                  ? "rounded-full border border-zinc-800 bg-white/5 px-5 py-1.5 text-sm font-medium text-white"
+                  : "rounded-full px-4 py-1.5 text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
+              }
+            >
+              {item.label}
+            </a>
+          );
+        })}
       </nav>
       <div className="flex items-center gap-3">
         <button

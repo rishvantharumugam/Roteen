@@ -34,8 +34,8 @@ export function ProfileStore() {
           <>
             <ProfileHeroSection profile={profile} />
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <PersonalDetailsSection profile={profile} onEdit={() => setIsEditModalOpen(true)} />
-              <EducationDetailsSection profile={profile} onEdit={() => setIsEditModalOpen(true)} />
+              <PersonalDetailsSection profile={profile} />
+              <EducationDetailsSection profile={profile} />
             </div>
             <UpdateProfileSection onUpdate={() => setIsEditModalOpen(true)} />
             

@@ -46,21 +46,57 @@ export function AuthProvider({
       setIsLoading(true);
 
       try {
-        const { data, error } = await supabase.auth.getSession();
+        const [sessionResult, userResult] = await Promise.all([
+          supabase.auth.getSession(),
+          supabase.auth.getUser(),
+        ]);
 
         if (!isActive) {
           return;
         }
 
-        if (error) {
+        if (sessionResult.error) {
           setSession(null);
           setUser(null);
           setIsLoading(false);
           return;
         }
 
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
+        const sessionUser = userResult.data.user;
+        if (sessionUser) {
+          // Check if profile exists in users table
+          const { data: userProfile, error: profileError } = await supabase
+            .from("users")
+            .select("id")
+            .eq("id", sessionUser.id)
+            .maybeSingle();
+
+          if (!profileError && !userProfile) {
+            // Profile does not exist. Check if there is an active onboarding session draft.
+            let hasActiveDraft = false;
+            try {
+              const draft = window.localStorage.getItem("routeen-auth-flow-draft");
+              if (draft) {
+                const parsed = JSON.parse(draft);
+                if (parsed.expiresAt && Date.now() < parsed.expiresAt) {
+                  hasActiveDraft = true;
+                }
+              }
+            } catch {}
+
+            if (!hasActiveDraft) {
+              // No active onboarding draft. Sign out to clear dangling auth session.
+              await supabase.auth.signOut();
+              setSession(null);
+              setUser(null);
+              setIsLoading(false);
+              return;
+            }
+          }
+        }
+
+        setSession(sessionResult.data.session);
+        setUser(sessionUser);
       } catch {
         // Transient network error (e.g. "Failed to fetch" on tab wake-up).
         // Supabase auth-js retries automatically; keep whatever session state

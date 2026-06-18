@@ -10,6 +10,7 @@ export type AuthFlowDraft = {
   signUpStep?: 1 | 2 | 3;
   signUpEmail?: string;
   signUpOtp?: string;
+  signUpFullName?: string;
   signUpPhone?: string;
   signUpStandard?: string;
   signUpSchoolType?: string;

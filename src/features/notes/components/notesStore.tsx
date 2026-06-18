@@ -94,7 +94,16 @@ export const NoteCard = ({
           />
         </div>
       </div>
-      <p className="text-[14px] text-[#94A3B8] leading-relaxed min-h-[96px] font-medium flex-1">{NoteService.stripHtml(note.description)}</p>
+      {(() => {
+        const stripped = NoteService.stripHtml(note.description);
+        return stripped ? (
+          <p className="text-[14px] text-[#94A3B8] leading-relaxed min-h-[96px] font-medium flex-1">{stripped}</p>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center opacity-60 min-h-[96px]">
+            <p className="text-[13px] font-medium text-zinc-500 italic">Empty Note</p>
+          </div>
+        );
+      })()}
       <div className="text-[11px] font-bold text-gray-400 mt-4 tracking-widest mt-auto">{note.date}</div>
       </div>
 
@@ -223,11 +232,29 @@ export const NotePreviewModal = ({ isOpen, note, onClose, onEdit }: NotePreviewM
               <style dangerouslySetInnerHTML={{ __html: `
                 ${TEXT_COLORS.map(c => `font[color="${c.value}"] { color: ${c.value} !important; }`).join('\n')}
               ` }} />
-              <div
-                className="note-preview-content"
-                style={{ color: note.textColor }}
-                dangerouslySetInnerHTML={{ __html: (note.description || "").replace(/^<!--boxColor:[^>]+-->/, "") }}
-              />
+              {(() => {
+                const htmlContent = (note.description || "").replace(/^<!--boxColor:[^>]+-->/, "").trim();
+                const cleanText = htmlContent.replace(/<[^>]+>/g, '').trim();
+                const isEmpty = !cleanText && !htmlContent.includes('<img');
+
+                if (isEmpty) {
+                  return (
+                    <div className="flex h-full min-h-[60vh] flex-col items-center justify-center text-center text-zinc-500/70">
+                      <FileText className="mb-4 h-12 w-12 opacity-40" />
+                      <p className="text-lg font-medium">Empty Note</p>
+                      <p className="text-sm mt-1">This note does not have any content yet.</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div
+                    className="note-preview-content"
+                    style={{ color: note.textColor }}
+                    dangerouslySetInnerHTML={{ __html: htmlContent }}
+                  />
+                );
+              })()}
             </div>
           </div>
         </motion.div>

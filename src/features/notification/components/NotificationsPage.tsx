@@ -20,15 +20,13 @@ export function NotificationsPage({
       <div className="hidden" />
       <div className="hidden" />
       <NotificationsHeaderStore />
-      <main className="w-full max-w-5xl mx-auto px-6 py-8">
-        <div className="flex flex-col gap-4">
-          <NotificationContainer>
-            <NotificationContentSection
-              pageData={pageData}
-              onNotificationSelect={onNotificationSelect}
-            />
-          </NotificationContainer>
-        </div>
+      <main className="mx-auto flex w-full max-w-[1260px] flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+        <NotificationContainer>
+          <NotificationContentSection
+            pageData={pageData}
+            onNotificationSelect={onNotificationSelect}
+          />
+        </NotificationContainer>
       </main>
     </div>
   );

@@ -11,7 +11,7 @@ export default function NewsCard({ item, onClick }: NewsCardProps) {
   return (
     <button
       type="button"
-      className="group relative flex w-full items-center gap-4 rounded-xl border border-zinc-800 bg-[#121212] p-4 transition duration-300 hover:border-zinc-700 text-left"
+      className="group relative flex w-full items-center gap-4 rounded-xl border border-zinc-800 bg-[#101114] p-4 transition duration-300 hover:border-zinc-700 text-left"
       onClick={() => onClick(item)}
     >
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-zinc-800 bg-transparent text-[#7C3AED]">

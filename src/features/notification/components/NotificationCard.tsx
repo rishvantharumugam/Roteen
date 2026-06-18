@@ -25,7 +25,7 @@ export function NotificationCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.32, delay: index * 0.035 }}
-      className="group relative overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#0A0A0A] p-5 transition duration-300 hover:border-[#7C3AED]/30"
+      className="group relative overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#101114] p-5 transition duration-300 hover:border-[#7C3AED]/30"
     >
       <button
         type="button"

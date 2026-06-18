@@ -1,7 +1,9 @@
 "use client";
 
 import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
-import { useState, useEffect } from "react";import {
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import {
   CheckCircle2,
   ClipboardList,
   List,
@@ -73,7 +75,7 @@ export default function ChapterQuizPanel({
   }, [currentQuestionIndex]);
   if (loading) {
     return (
-      <div className="flex h-full w-full flex-col lg:flex-row min-h-[420px] rounded-2xl border border-zinc-800 bg-[#161616] overflow-hidden">
+      <div className="flex h-full w-full flex-col lg:flex-row min-h-[420px] rounded-2xl border border-zinc-800 bg-[#121212] overflow-hidden">
         {/* Left Side: Question Card & Options */}
         <div className="flex-1 p-6 flex flex-col border-b lg:border-b-0 lg:border-r border-zinc-800">
            {/* Quiz Header & Progress */}
@@ -116,7 +118,7 @@ export default function ChapterQuizPanel({
 
   if (notFound || !quiz) {
     return (
-      <div className="flex h-full w-full min-h-[420px] flex-col items-center justify-center rounded-2xl border border-zinc-800 bg-[#161616] px-6 text-center">
+      <div className="flex h-full w-full min-h-[420px] flex-col items-center justify-center rounded-2xl border border-zinc-800 bg-[#121212] px-6 text-center">
         <ClipboardList className="mb-4 h-10 w-10 text-zinc-500" />
         <p className="text-base font-medium text-zinc-300">No quiz available for this chapter.</p>
       </div>
@@ -125,7 +127,7 @@ export default function ChapterQuizPanel({
 
   if (errorMessage) {
     return (
-      <div className="flex h-full w-full min-h-[420px] flex-col items-center justify-center rounded-2xl border border-zinc-800 bg-[#161616] px-6 text-center">
+      <div className="flex h-full w-full min-h-[420px] flex-col items-center justify-center rounded-2xl border border-zinc-800 bg-[#121212] px-6 text-center">
         <p className="text-sm text-red-400">{errorMessage}</p>
       </div>
     );
@@ -135,7 +137,7 @@ export default function ChapterQuizPanel({
     const totalQuestions = quiz.totalQuestions > 0 ? quiz.totalQuestions : questions.length;
 
     return (
-      <div className="flex h-full w-full min-h-[420px] flex-col rounded-2xl border border-zinc-800/80 bg-[#161616] p-6 md:p-8">
+      <div className="flex h-full w-full min-h-[420px] flex-col rounded-2xl border border-zinc-800/80 bg-[#121212] p-6 md:p-8">
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <div className="mb-6 relative flex flex-col items-center justify-center">
             <div className="relative">
@@ -201,7 +203,7 @@ export default function ChapterQuizPanel({
     const currentQuestion = questions[currentQuestionIndex];
     if (!currentQuestion) {
       return (
-        <div className="flex h-full w-full min-h-[420px] items-center justify-center rounded-2xl border border-zinc-800 bg-[#161616]">
+        <div className="flex h-full w-full min-h-[420px] items-center justify-center rounded-2xl border border-zinc-800 bg-[#121212]">
           <p className="text-sm text-zinc-400">No quiz questions available.</p>
         </div>
       );
@@ -211,9 +213,9 @@ export default function ChapterQuizPanel({
     const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
     return (
-      <div className="flex h-full w-full min-h-[420px] flex-col rounded-2xl border border-zinc-800 bg-[#161616] overflow-hidden">
+      <div className="flex h-full w-full min-h-[420px] flex-col rounded-2xl border border-zinc-800 bg-[#121212] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800 bg-[#1c1c1c] px-6 py-4">
+        <div className="flex items-center justify-between border-b border-zinc-800 bg-transparent px-6 py-4">
           <p className="text-sm font-semibold text-white">Quiz {chapterTitle || quiz.title}</p>
           <button
             onClick={onRetryQuiz}
@@ -263,7 +265,7 @@ export default function ChapterQuizPanel({
             <div className="flex flex-1 min-h-0 flex-col md:flex-row gap-4">
               
               {/* Left Column (Question Area) */}
-              <div className="flex flex-1 flex-col rounded-xl border border-zinc-800 bg-[#1a1a1a] p-4">
+              <div className="flex flex-1 flex-col rounded-xl border border-zinc-800 bg-transparent p-4">
                 <h4 className="mb-3 text-sm font-bold text-white">Question {currentQuestionIndex + 1}</h4>
                 
                 <div className="min-h-0 flex-1 overflow-y-auto pr-1">
@@ -326,7 +328,7 @@ export default function ChapterQuizPanel({
               </div>
 
               {/* Right Column (Question Palette) */}
-              <div className="flex w-full flex-col rounded-xl border border-zinc-800 bg-[#1a1a1a] p-4 md:w-52 shrink-0">
+              <div className="flex w-full flex-col rounded-xl border border-zinc-800 bg-transparent p-4 md:w-52 shrink-0">
                 <p className="mb-4 text-xs font-medium text-zinc-400">Question palette</p>
                 <div className="grid grid-cols-4 gap-2">
                   {questions.map((q, idx) => {
@@ -353,7 +355,7 @@ export default function ChapterQuizPanel({
         </div>
 
         {/* Footer Navigation */}
-        <div className="flex shrink-0 items-center justify-end border-t border-zinc-800 bg-[#161616] px-3 py-1.5">
+        <div className="flex shrink-0 items-center justify-end border-t border-zinc-800 bg-transparent px-3 py-1.5">
           <div className="flex items-center gap-3">
             <button
               onClick={onGlobalPrevious}
@@ -381,7 +383,7 @@ export default function ChapterQuizPanel({
   const currentQuestion = questions[currentQuestionIndex];
   if (!currentQuestion) {
     return (
-      <div className="flex h-full w-full min-h-[420px] items-center justify-center rounded-2xl border border-zinc-800 bg-[#161616]">
+      <div className="flex h-full w-full min-h-[420px] items-center justify-center rounded-2xl border border-zinc-800 bg-[#121212]">
         <p className="text-sm text-zinc-400">No quiz questions available.</p>
       </div>
     );
@@ -399,13 +401,13 @@ export default function ChapterQuizPanel({
 
   return (
     <>
-      <div className="flex h-full w-full min-h-[420px] flex-col rounded-2xl border border-zinc-800 bg-[#161616] overflow-hidden">
-        <div className="flex items-center justify-between border-b border-zinc-800 bg-[#1c1c1c] px-6 py-4">
+      <div className="flex h-full w-full min-h-[420px] flex-col rounded-2xl border border-zinc-800 bg-[#121212] overflow-hidden">
+        <div className="flex items-center justify-between border-b border-zinc-800 bg-transparent px-6 py-4">
           <p className="text-sm font-semibold text-white">Quiz {chapterTitle || quiz.title}</p>
         </div>
 
         <div className="flex flex-1 min-h-0 flex-col md:flex-row gap-6 p-6">
-          <div className="flex flex-1 flex-col rounded-xl border border-zinc-800 bg-[#1a1a1a] p-6">
+          <div className="flex flex-1 flex-col rounded-xl border border-zinc-800 bg-transparent p-6">
             <h3 className="mb-6 text-sm font-bold text-white">
               Question {currentQuestionIndex + 1}
             </h3>
@@ -463,7 +465,7 @@ export default function ChapterQuizPanel({
             </div>
           </div>
 
-          <div className="flex w-full flex-col rounded-xl border border-zinc-800 bg-[#1a1a1a] p-5 md:w-80 shrink-0">
+          <div className="flex w-full flex-col rounded-xl border border-zinc-800 bg-transparent p-5 md:w-80 shrink-0">
             <h3 className="mb-4 text-xs font-bold text-white">Overview</h3>
             <p className="mb-3 text-xs text-zinc-500">Answer Summary</p>
             
@@ -521,8 +523,8 @@ export default function ChapterQuizPanel({
         </div>
       </div>
 
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      {showConfirmModal && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="w-[400px] rounded-xl border border-zinc-800 bg-[#121212] shadow-2xl">
             <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-5">
               <h3 className="text-base font-bold text-white">Confirm submission?</h3>
@@ -555,7 +557,8 @@ export default function ChapterQuizPanel({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

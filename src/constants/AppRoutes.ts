@@ -4,6 +4,8 @@ export const appRoutes = {
   authCallback: "/auth/callback",
   dashboard: "/dashboard",
   profile: "/profile",
+  progress: "/progress",
+  refer: "/refer",
   account: "/account",
   notes: "/notes",
   revision: "/revision",

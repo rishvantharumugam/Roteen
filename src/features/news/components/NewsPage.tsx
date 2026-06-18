@@ -10,6 +10,7 @@ import { prefetchCoreRoutes } from "@/constants/prefetch";
 import type { NewsItem } from "@/features/news/services/newsService";
 import NewsList from "@/features/news/components/NewsList";
 import NewsModal from "@/features/news/components/NewsModal";
+import { NewsHeroSection } from "@/features/news/components/NewsHeroSection";
 import { HeaderSettingsMenu } from "@/components/layout/HeaderSettingsMenu";
 import { applyRouteThemeClass } from "@/lib/RouteThemeScope";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
@@ -149,15 +150,11 @@ export default function NewsPage() {
   }, [items, searchTerm]);
 
   return (
-    <main className={`bg-black text-zinc-200 min-h-screen news-page-theme h-screen overflow-hidden  text-white`}>
+    <main className="bg-black text-zinc-200 min-h-screen news-page-theme text-white">
       <DashboardHeader activeLabel="News" />
 
-      <div className="w-full max-w-5xl mx-auto px-6 py-8 h-[calc(100vh-72px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white inline-block border-b-2 border-[#7C3AED] pb-1">
-            News
-          </h2>
-        </div>
+      <div className="mx-auto flex w-full max-w-[1260px] flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+        <NewsHeroSection />
 
         <NewsList items={filteredItems} onSelect={handleOpenModal} isLoading={isLoading} />
       </div>

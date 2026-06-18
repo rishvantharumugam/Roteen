@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft } from "lucide-react";
 import { type Chapter, type QuestionMode } from "@/features/video/services/video";
 import {
   fetchSubjectPanelData,
@@ -32,6 +33,17 @@ interface SubjectBarProps {
   onSubjectResolved?: (subject: { id: string; name: string; standard: string | null }) => void;
   mode: QuestionMode;
   onModeChange: (mode: QuestionMode) => void;
+  onCollapse?: () => void;
+}
+
+function formatSubjectName(value: string) {
+  if (!value) return "";
+  return value
+    .replace(/[_-]+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
 }
 
 export default function SubjectBar(props: SubjectBarProps) {
@@ -50,6 +62,7 @@ export default function SubjectBar(props: SubjectBarProps) {
     onSubjectResolved,
     mode,
     onModeChange,
+    onCollapse,
   } = props;
 
   const markOptions = ["All", "2M", "3M", "5M", "7M", "10M"];
@@ -72,8 +85,8 @@ export default function SubjectBar(props: SubjectBarProps) {
         if (typeof parsed.selectedMark === "string") setSelectedMark(parsed.selectedMark);
         if (typeof parsed.selectedLevel === "string") setSelectedLevel(parsed.selectedLevel);
       }
-    } catch {}
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    } catch { }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [persistKey]);
 
   const normalizeMode = (value: unknown): string => {
@@ -112,21 +125,25 @@ export default function SubjectBar(props: SubjectBarProps) {
   useEffect(() => {
     try {
       localStorage.setItem(persistKey, JSON.stringify({ selectedMark, selectedLevel }));
-    } catch {}
+    } catch { }
   }, [selectedMark, selectedLevel, persistKey]);
 
   useEffect(() => {
     let mounted = true;
 
     const loadSubjectData = async () => {
-      const hasCache = Boolean(readSubjectPanelCache(cacheKey));
-      if (!hasCache) {
+      const cached = readSubjectPanelCache(cacheKey);
+      if (cached) {
+        setRawData(cached);
+        setLoading(false);
+        onSubjectResolved?.({ id: cached.subjectId, name: cached.subject, standard: cached.standard });
+      } else {
         setLoading(true);
       }
       setError(null);
 
       try {
-        const data = await fetchSubjectPanelData(subjectFilter ?? {}, { forceRefresh: true });
+        const data = await fetchSubjectPanelData(subjectFilter ?? {}, { forceRefresh: !cached });
         if (!mounted) {
           return;
         }
@@ -150,9 +167,7 @@ export default function SubjectBar(props: SubjectBarProps) {
           setError(errorMsg);
         }
       } finally {
-        if (mounted && !readSubjectPanelCache(cacheKey)) {
-          setLoading(false);
-        } else if (mounted) {
+        if (mounted) {
           setLoading(false);
         }
       }
@@ -364,18 +379,24 @@ export default function SubjectBar(props: SubjectBarProps) {
     onQuestionSelect(questionId);
   }, [onQuestionSelect]);
 
+  const isLongSubject = useMemo(() => {
+    return formatSubjectName(panelData.subject).length > 10;
+  }, [panelData.subject]);
+
   return (
-    <aside className="animate-fade-in-left flex h-full w-full min-w-0 shrink flex-col rounded-2xl border border-zinc-800/80 bg-[#161616] p-4 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+    <aside className={`animate-fade-in-left flex h-full w-full min-w-0 shrink flex-col rounded-2xl border border-zinc-800/80 bg-[#121212] ${isLongSubject ? "p-4 lg:px-3 lg:py-4" : "p-4"} shadow-[0_0_20px_rgba(0,0,0,0.5)]`}>
       {!isPlaylistMode && <SubjectModeToggle mode={mode} onChange={onModeChange} />}
 
-      <motion.div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+      <motion.div className={`flex flex-nowrap items-center justify-between border-b border-zinc-800 pb-3 ${isLongSubject ? "gap-2" : "gap-3"}`}>
         {!isPlaylistMode && (
           <>
-            <h2 className="text-base font-semibold text-white flex items-center gap-2">
-              {panelData.subject}
-              <span className="text-xs font-normal text-zinc-400">{chapterCounter}</span>
+            <h2 className={`font-semibold text-white flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isLongSubject ? "text-sm" : "text-base"}`}>
+              <span title={formatSubjectName(panelData.subject)}>
+                {formatSubjectName(panelData.subject)}
+              </span>
+              <span className="text-xs font-normal text-zinc-400 shrink-0">{chapterCounter}</span>
             </h2>
-            <div className="flex items-center gap-2">
+            <div className={`flex items-center shrink-0 ml-auto flex-nowrap ${isLongSubject ? "gap-1.5" : "gap-2"}`}>
               <MarkFilterDropdown
                 options={markOptions}
                 selected={selectedMark}
@@ -388,6 +409,16 @@ export default function SubjectBar(props: SubjectBarProps) {
                 onChange={setSelectedLevel}
                 placeholder="Level"
               />
+              {onCollapse && (
+                <button
+                  type="button"
+                  onClick={onCollapse}
+                  className="hidden lg:flex items-center justify-center p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                  title="Minimize Subject Panel"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+              )}
             </div>
           </>
         )}
@@ -438,11 +469,10 @@ export default function SubjectBar(props: SubjectBarProps) {
                               <motion.div key={topic.id} className="group/question relative pl-4">
                                 <span
                                   aria-hidden="true"
-                                  className={`pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-bl-md border-b border-l transition-colors duration-200 ease-in-out ${
-                                    isActiveQuestion
-                                      ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
-                                      : "border-zinc-700"
-                                  }`}
+                                  className={`pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-bl-md border-b border-l transition-colors duration-200 ease-in-out ${isActiveQuestion
+                                    ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+                                    : "border-zinc-700"
+                                    }`}
                                 />
                                 <SubjectQuestionRow
                                   topicId={topic.id}

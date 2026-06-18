@@ -1,20 +1,24 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { X, ChevronDown } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { X, ChevronDown, Search, Loader2 } from 'lucide-react';
 import { UserProfile, ProfileService } from '../services/profile.service';
 import { districtOptions } from '@/lib/sign-up-options';
+import { School, fetchSchools, getSchoolsSync } from '@/lib/mock-schools';
+import { SearchableSelect } from '@/components/ui/SearchableSelect';
 
-const CustomSelect = ({ 
-  name, 
-  value, 
-  options, 
-  onChange, 
-  placeholder 
-}: { 
-  name: string, 
-  value: string, 
-  options: { label: string, value: string }[], 
+const CustomSelect = ({
+  name,
+  value,
+  options,
+  onChange,
+  placeholder,
+  dropUp = false
+}: {
+  name: string,
+  value: string,
+  options: { label: string, value: string }[],
   onChange: (e: any) => void,
-  placeholder: string
+  placeholder: string,
+  dropUp?: boolean
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -50,9 +54,8 @@ const CustomSelect = ({
             <button
               key={option.value}
               type="button"
-              className={`w-full text-left px-4 py-2.5 hover:bg-[#2A2A2A] transition-colors text-sm ${
-                value === option.value ? 'bg-[#8B5CF6]/10 text-[#8B5CF6]' : 'text-white'
-              }`}
+              className={`w-full text-left px-4 py-2.5 hover:bg-[#2A2A2A] transition-colors text-sm ${value === option.value ? 'bg-[#8B5CF6]/10 text-[#8B5CF6]' : 'text-white'
+                }`}
               onClick={() => {
                 onChange({ target: { name, value: option.value } });
                 setIsOpen(false);
@@ -89,17 +92,55 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ profile, onC
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [schools, setSchools] = useState<{label: string, value: string}[]>([]);
+  const [isLoadingSchools, setIsLoadingSchools] = useState(false);
+  const [otherSchoolText, setOtherSchoolText] = useState("");
+
+  useEffect(() => {
+    if (formData.district && formData.school_type) {
+      const data = getSchoolsSync(formData.district, formData.school_type);
+      const fetchedOptions = data.map(s => ({ label: s.name, value: s.name }));
+      fetchedOptions.push({ label: "Other School (Not Listed)", value: "OTHER" });
+      setSchools(fetchedOptions);
+      
+      if (profile.school_name && !fetchedOptions.find(o => o.value === profile.school_name)) {
+        setOtherSchoolText(profile.school_name);
+        setFormData(prev => ({ ...prev, school_name: "OTHER" }));
+      }
+    } else {
+      setSchools([]);
+    }
+  }, [formData.district, formData.school_type, profile.school_name]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string, value: string } }) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const next = { ...prev, [name]: value };
+      if (name === "district" || name === "school_type") {
+        next.school_name = "";
+        setOtherSchoolText("");
+      }
+      return next;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.school_name === "OTHER") {
+      if (otherSchoolText.trim().length < 3 || otherSchoolText.trim().length > 120) {
+        setError("Custom school name must be between 3 and 120 characters.");
+        return;
+      }
+    }
+
     setIsSaving(true);
     setError(null);
     try {
-      await ProfileService.updateProfile(profile.id, formData);
+      const finalData = { ...formData };
+      if (finalData.school_name === "OTHER") {
+        finalData.school_name = otherSchoolText.trim();
+      }
+      await ProfileService.updateProfile(profile.id, finalData);
       onSave();
       onClose();
     } catch (err: any) {
@@ -136,7 +177,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ profile, onC
       <div className="bg-[#141414] border border-[#202024] rounded-2xl w-full max-w-2xl shadow-2xl relative flex flex-col max-h-[calc(100vh-2rem)] overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-[#202024] shrink-0">
           <h2 className="text-xl font-bold text-white tracking-wide">Edit Profile</h2>
-          <button 
+          <button
             onClick={onClose}
             className="text-[#A1A1AA] hover:text-white transition-colors"
           >
@@ -145,7 +186,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ profile, onC
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-6 min-h-0 no-scrollbar">
+          <div className="flex-1 overflow-y-auto p-6 pb-48 min-h-0 no-scrollbar">
             {error && (
               <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
                 {error}
@@ -163,7 +204,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ profile, onC
                   className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#8B5CF6] transition-colors"
                 />
               </div>
-              
+
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-[#A1A1AA]">Email</label>
                 <input
@@ -220,28 +261,6 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ profile, onC
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-[#A1A1AA]">Standard</label>
-                <CustomSelect
-                  name="standard"
-                  value={formData.standard || ''}
-                  options={standardOptions}
-                  onChange={handleChange}
-                  placeholder="Select standard"
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-[#A1A1AA]">School Name</label>
-                <input
-                  type="text"
-                  name="school_name"
-                  value={formData.school_name || ''}
-                  onChange={handleChange}
-                  className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#8B5CF6] transition-colors"
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-[#A1A1AA]">School Type</label>
                 <CustomSelect
                   name="school_type"
@@ -253,6 +272,45 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ profile, onC
               </div>
 
               <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#A1A1AA]">School Name</label>
+                <SearchableSelect
+                  name="school_name"
+                  value={formData.school_name || ''}
+                  options={schools}
+                  onChange={handleChange}
+                  placeholder={
+                    !formData.district || !formData.school_type
+                      ? "Select district and type first"
+                      : "Search for your school"
+                  }
+                  disabled={!formData.district || !formData.school_type}
+                  loading={isLoadingSchools}
+                  dropUp={false}
+                />
+                {formData.school_name === "OTHER" && (
+                  <input
+                    type="text"
+                    value={otherSchoolText}
+                    onChange={(e) => setOtherSchoolText(e.target.value)}
+                    placeholder="Enter your school name"
+                    className="mt-2 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#8B5CF6] transition-colors text-sm"
+                  />
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#A1A1AA]">Standard</label>
+                <CustomSelect
+                  name="standard"
+                  value={formData.standard || ''}
+                  options={standardOptions}
+                  onChange={handleChange}
+                  placeholder="Select standard"
+                  dropUp={true}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-[#A1A1AA]">Medium of Study</label>
                 <CustomSelect
                   name="medium"
@@ -260,6 +318,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ profile, onC
                   options={mediumOptions}
                   onChange={handleChange}
                   placeholder="Select medium"
+                  dropUp={true}
                 />
               </div>
             </div>

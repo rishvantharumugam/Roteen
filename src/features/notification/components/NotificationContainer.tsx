@@ -8,7 +8,7 @@ export interface NotificationContainerProps {
 
 export function NotificationContainer({ children }: NotificationContainerProps) {
   return (
-    <section className={"w-full max-w-2xl mx-auto space-y-4"}>
+    <section className="w-full space-y-6">
       <div className="hidden" />
       <div className="relative">{children}</div>
     </section>

@@ -78,7 +78,7 @@ export default function DiscussionContent({
       try {
         let query = supabase
           .from("discussion")
-          .select("*")
+          .select("id, user_id, question_id, video_id, content, parent_id, created_at, subject_id")
           .order("created_at", { ascending: true });
 
         if (videoId) {
@@ -96,7 +96,7 @@ export default function DiscussionContent({
         if (error && (error.code === "42703" || error.code === "PGRST204")) {
           const fallbackResult = await supabase
             .from("discussion")
-            .select("*")
+            .select("id, user_id, question_id, video_id, content, parent_id, created_at, subject_id")
             .eq("question_id", questionId)
             .order("created_at", { ascending: true });
           data = fallbackResult.data;

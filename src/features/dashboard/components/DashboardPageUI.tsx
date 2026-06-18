@@ -22,8 +22,8 @@ async function fetchDashboardClientData() {
     throw new Error(error.message);
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id;
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
   
   let progressData: CourseProgressItem[] = [];
   if (userId) {
@@ -40,11 +40,21 @@ async function fetchDashboardClientData() {
 
 import Loading from "@/app/dashboard/loading";
 
-export default function DashboardPageUI() {
+interface DashboardPageUIProps {
+  initialExploreSubjects?: DashboardSubjectRecord[];
+  progressData?: CourseProgressItem[];
+}
+
+export default function DashboardPageUI({ initialExploreSubjects, progressData }: DashboardPageUIProps) {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard-bootstrap"],
     queryFn: fetchDashboardClientData,
-    staleTime: 0,
+    initialData: initialExploreSubjects && progressData ? {
+      ongoingCourses: processDashboardMetrics(initialExploreSubjects),
+      initialExploreSubjects,
+      progressData,
+    } : undefined,
+    staleTime: 60_000, // Cache is fresh for 1 minute, preventing duplicate load
     gcTime: 15 * 60_000,
   });
 

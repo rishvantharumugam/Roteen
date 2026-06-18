@@ -1,5 +1,10 @@
 import { supabase } from "@/lib/supabase/client";
 
+const quizQuestionsCache = new Map<string, QuizQuestionRecord[]>();
+const chapterQuizzesCache = new Map<string, ChapterQuizRecord[]>();
+const quizByIdCache = new Map<string, ChapterQuizRecord | null>();
+const quizProgressCache = new Map<string, QuizProgressRecord | null>();
+
 function getRowValue(row: Record<string, unknown>, keys: string[]): unknown {
   for (const key of keys) {
     if (row[key] !== undefined && row[key] !== null && row[key] !== "") {
@@ -222,6 +227,11 @@ export async function fetchChapterQuizzes(
     return [];
   }
 
+  const cacheKey = `${subjectId}_${chapterId}`;
+  if (chapterQuizzesCache.has(cacheKey)) {
+    return chapterQuizzesCache.get(cacheKey)!;
+  }
+
   const { data, error } = await supabase
     .from("quizzes")
     .select("id, subject_id, chapter_id, title, total_questions, mode")
@@ -233,14 +243,21 @@ export async function fetchChapterQuizzes(
     throw error;
   }
 
-  return (data ?? [])
+  const results = (data ?? [])
     .map((row) => normalizeQuizRow(row as RowRecord))
     .filter((row): row is ChapterQuizRecord => row !== null);
+
+  chapterQuizzesCache.set(cacheKey, results);
+  return results;
 }
 
 export async function fetchQuizById(quizId: string): Promise<ChapterQuizRecord | null> {
   if (!quizId) {
     return null;
+  }
+
+  if (quizByIdCache.has(quizId)) {
+    return quizByIdCache.get(quizId)!;
   }
 
   const { data, error } = await supabase
@@ -255,10 +272,13 @@ export async function fetchQuizById(quizId: string): Promise<ChapterQuizRecord |
 
   const row = (data ?? [])[0] as RowRecord | undefined;
   if (!row) {
+    quizByIdCache.set(quizId, null);
     return null;
   }
 
-  return normalizeQuizRow(row);
+  const quiz = normalizeQuizRow(row);
+  quizByIdCache.set(quizId, quiz);
+  return quiz;
 }
 
 export async function fetchQuizQuestions(quizId: string): Promise<QuizQuestionRecord[]> {
@@ -266,9 +286,15 @@ export async function fetchQuizQuestions(quizId: string): Promise<QuizQuestionRe
     return [];
   }
 
+  if (quizQuestionsCache.has(quizId)) {
+    return quizQuestionsCache.get(quizId)!;
+  }
+
+  const columns = "id, question_text, option_a, option_b, option_c, option_d, option_e, option_f, correct_answer, correct_option, answer, correct, options, choices, question_no, quizzes_id";
+
   const primary = await supabase
     .from("quiz_questions")
-    .select("*")
+    .select(columns)
     .eq("quizzes_id", quizId)
     .order("question_no", { ascending: true });
 
@@ -276,7 +302,10 @@ export async function fetchQuizQuestions(quizId: string): Promise<QuizQuestionRe
   let error = primary.error;
 
   if (error && (error.code === "42703" || error.code === "PGRST204")) {
-    const fallback = await supabase.from("quiz_questions").select("*").eq("quizzes_id", quizId);
+    const fallback = await supabase
+      .from("quiz_questions")
+      .select(columns)
+      .eq("quizzes_id", quizId);
     rows = fallback.data;
     error = fallback.error;
   }
@@ -285,9 +314,12 @@ export async function fetchQuizQuestions(quizId: string): Promise<QuizQuestionRe
     throw error;
   }
 
-  return (rows ?? [])
+  const results = (rows ?? [])
     .map((row, index) => normalizeQuizQuestionRow(row, index))
     .filter((row): row is QuizQuestionRecord => row !== null);
+
+  quizQuestionsCache.set(quizId, results);
+  return results;
 }
 
 export async function saveQuizAnswers(
@@ -369,10 +401,15 @@ export async function fetchQuizProgress(
 ): Promise<QuizProgressRecord | null> {
   if (!userId || !quizId) return null;
 
+  const cacheKey = `${userId}_${quizId}`;
+  if (quizProgressCache.has(cacheKey)) {
+    return quizProgressCache.get(cacheKey)!;
+  }
+
   // Fetch the latest RESOLVED quiz progress so the UI shows the overview of the last completed attempt
   const { data, error } = await supabase
     .from("user_quiz_progress")
-    .select("*")
+    .select("id, users_id, quizzes_id, score, iscompleted, started_at, completed_at")
     .eq("users_id", userId)
     .eq("quizzes_id", quizId)
     .eq("iscompleted", "Resolved")
@@ -384,9 +421,12 @@ export async function fetchQuizProgress(
   }
   
   const latest = data?.[0];
-  if (!latest) return null;
+  if (!latest) {
+    quizProgressCache.set(cacheKey, null);
+    return null;
+  }
 
-  return {
+  const progress = {
     id: latest.id,
     usersId: latest.users_id,
     quizzesId: latest.quizzes_id,
@@ -395,6 +435,9 @@ export async function fetchQuizProgress(
     startedAt: latest.started_at,
     completedAt: latest.completed_at,
   };
+
+  quizProgressCache.set(cacheKey, progress);
+  return progress;
 }
 
 export async function insertQuizProgress(
@@ -406,6 +449,9 @@ export async function insertQuizProgress(
   completedAt?: string
 ): Promise<QuizProgressRecord | null> {
   if (!userId || !quizId) return null;
+
+  const cacheKey = `${userId}_${quizId}`;
+  quizProgressCache.delete(cacheKey); // Invalidate cache
 
   const payload: QuizProgressPayload = {
     users_id: userId,
@@ -448,6 +494,9 @@ export async function updateQuizProgress(
   completedAt?: string
 ): Promise<QuizProgressRecord | null> {
   if (!userId || !quizId) return null;
+
+  const cacheKey = `${userId}_${quizId}`;
+  quizProgressCache.delete(cacheKey); // Invalidate cache
 
   const payload: QuizProgressPayload = { score, iscompleted };
 

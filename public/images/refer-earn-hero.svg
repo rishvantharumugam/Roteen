@@ -1,0 +1,93 @@
+<svg width="728" height="158" viewBox="0 0 728 158" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="1" y="1" width="726" height="156" rx="6" fill="url(#bg)" stroke="#3A2464"/>
+  <ellipse cx="390" cy="96" rx="196" ry="90" fill="#7C3AED" fill-opacity="0.13"/>
+  <ellipse cx="126" cy="78" rx="94" ry="64" fill="#7C3AED" fill-opacity="0.1"/>
+
+  <g opacity="0.95">
+    <circle cx="76" cy="33" r="6" fill="#F472B6"/>
+    <circle cx="135" cy="35" r="11" fill="#FBBF24"/>
+    <circle cx="135" cy="35" r="6" fill="#F59E0B"/>
+    <circle cx="62" cy="100" r="7" fill="#FBBF24"/>
+    <circle cx="63" cy="100" r="3" fill="#F59E0B"/>
+    <circle cx="114" cy="113" r="4" fill="#F59E0B"/>
+    <circle cx="57" cy="27" r="2.5" fill="#34D399"/>
+    <circle cx="164" cy="63" r="2.5" fill="#34D399"/>
+    <rect x="38" y="46" width="4" height="4" rx="1" transform="rotate(-30 38 46)" fill="#8B5CF6"/>
+    <rect x="85" y="132" width="4" height="4" rx="1" transform="rotate(28 85 132)" fill="#F97316"/>
+    <rect x="151" y="75" width="3" height="3" rx="1" transform="rotate(28 151 75)" fill="#F97316"/>
+  </g>
+
+  <g transform="translate(48 47)">
+    <rect x="11" y="18" width="69" height="58" rx="9" transform="rotate(-17 11 18)" fill="url(#giftBox)"/>
+    <rect x="40" y="10" width="11" height="70" rx="3" transform="rotate(-17 40 10)" fill="#B794FF" fill-opacity="0.65"/>
+    <rect x="14" y="43" width="69" height="11" rx="3" transform="rotate(-17 14 43)" fill="#B794FF" fill-opacity="0.65"/>
+    <path d="M36 12C26 0 8 8 19 22C25 29 37 26 43 23C40 20 39 16 36 12Z" fill="#B794FF"/>
+    <path d="M51 8C57 -7 77 -2 72 15C69 24 57 24 49 22C51 18 49 13 51 8Z" fill="#B794FF"/>
+    <circle cx="80" cy="78" r="32" fill="#6D28D9"/>
+    <circle cx="80" cy="78" r="25" fill="#8B5CF6"/>
+    <circle cx="80" cy="69" r="8" fill="#B794FF"/>
+    <path d="M63 95C65 84 72 79 80 79C88 79 95 84 97 95" stroke="#B794FF" stroke-width="7" stroke-linecap="round"/>
+  </g>
+
+  <text x="286" y="67" text-anchor="middle" fill="white" font-family="Inter, Arial, sans-serif" font-size="37" font-weight="900">Refer</text>
+  <text x="357" y="67" text-anchor="middle" fill="#8B5CF6" font-family="Inter, Arial, sans-serif" font-size="37" font-weight="900">&amp;</text>
+  <text x="425" y="67" text-anchor="middle" fill="white" font-family="Inter, Arial, sans-serif" font-size="37" font-weight="900">Earn</text>
+  <text x="304" y="101" fill="#D7D1E8" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="500">Invite your friends and earn rewards</text>
+  <text x="304" y="124" fill="#D7D1E8" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="500">when they join Roteen.</text>
+
+  <g transform="translate(420 26)">
+    <circle cx="22" cy="58" r="19" fill="#2F155D" stroke="#7C3AED" stroke-width="4"/>
+    <circle cx="22" cy="53" r="5" fill="#8B5CF6"/>
+    <path d="M12 69C13.4 62.5 17.2 59.5 22 59.5C26.8 59.5 30.6 62.5 32 69" stroke="#8B5CF6" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(453 30)">
+    <path d="M65 44C71 38 72 30 67 24C58 12 37 12 29 26C24 35 29 46 39 51L65 44Z" fill="#3B2A24"/>
+    <circle cx="49" cy="42" r="25" fill="#E7B28D"/>
+    <path d="M26 43C30 22 48 19 71 25C63 6 29 3 18 25C13 35 18 47 26 51V43Z" fill="#2B211E"/>
+    <circle cx="57" cy="42" r="3" fill="#1B1614"/>
+    <path d="M65 53C61 58 55 59 50 55" stroke="#5B2F23" stroke-width="3" stroke-linecap="round"/>
+    <path d="M31 98C31 65 48 50 66 52C88 54 102 72 101 112H31V98Z" fill="#7C3AED"/>
+    <path d="M48 76V109" stroke="#B794FF" stroke-width="3" stroke-linecap="round"/>
+    <path d="M68 74V109" stroke="#B794FF" stroke-width="3" stroke-linecap="round"/>
+    <path d="M90 63C109 49 125 35 137 18" stroke="#7C3AED" stroke-width="17" stroke-linecap="round"/>
+    <path d="M137 18L145 8" stroke="#E7B28D" stroke-width="16" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(562 31)">
+    <path d="M67 44C73 38 74 30 69 24C60 12 39 12 31 26C26 35 31 46 41 51L67 44Z" fill="#2B211E"/>
+    <circle cx="51" cy="42" r="25" fill="#E1A982"/>
+    <path d="M28 43C32 22 50 19 73 25C65 6 31 3 20 25C15 35 20 47 28 51V43Z" fill="#1C1917"/>
+    <circle cx="59" cy="42" r="3" fill="#15110F"/>
+    <path d="M67 53C63 58 57 59 52 55" stroke="#5B2F23" stroke-width="3" stroke-linecap="round"/>
+    <path d="M28 98C28 65 45 50 63 52C86 54 99 72 99 112H28V98Z" fill="#191919"/>
+    <path d="M44 76V109" stroke="#343434" stroke-width="3" stroke-linecap="round"/>
+    <path d="M64 74V109" stroke="#343434" stroke-width="3" stroke-linecap="round"/>
+    <path d="M35 63C16 49 0 35 -12 18" stroke="#191919" stroke-width="17" stroke-linecap="round"/>
+    <path d="M-12 18L-20 8" stroke="#E1A982" stroke-width="16" stroke-linecap="round"/>
+  </g>
+
+  <g stroke="#8B5CF6" stroke-width="5" stroke-linecap="round">
+    <path d="M568 14V2"/>
+    <path d="M588 20L597 8"/>
+    <path d="M548 20L539 8"/>
+  </g>
+
+  <g transform="translate(665 49)">
+    <circle cx="22" cy="22" r="19" fill="#2F155D" stroke="#7C3AED" stroke-width="4"/>
+    <circle cx="22" cy="17" r="5" fill="#8B5CF6"/>
+    <path d="M12 33C13.4 26.5 17.2 23.5 22 23.5C26.8 23.5 30.6 26.5 32 33" stroke="#8B5CF6" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="728" y2="158" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#120B24"/>
+      <stop offset="0.47" stop-color="#08070D"/>
+      <stop offset="1" stop-color="#161027"/>
+    </linearGradient>
+    <linearGradient id="giftBox" x1="28" y1="16" x2="78" y2="86" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A855F7"/>
+      <stop offset="1" stop-color="#4C1D95"/>
+    </linearGradient>
+  </defs>
+</svg>

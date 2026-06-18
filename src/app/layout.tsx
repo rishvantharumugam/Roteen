@@ -20,7 +20,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const supabase = await createServerSupabaseClient();
-  const { data: sessionData } = await supabase.auth.getSession();
+  const [sessionResult, userResult] = await Promise.all([
+    supabase.auth.getSession(),
+    supabase.auth.getUser(),
+  ]);
+
+  const session = sessionResult.data.session;
+  const user = userResult.data.user;
 
   return (
     <html lang="en" className={`h-full antialiased ${inter.variable}`} suppressHydrationWarning>
@@ -29,7 +35,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `(() => {
   const pathname = window.location.pathname || "";
-  const darkRoutes = ["/", "/video", "/news", "/dashboard", "/bug", "/notes", "/revision", "/session", "/profile", "/feedback", "/notification", "/notifications", "/terms", "/tutorial"];
+  const darkRoutes = ["/", "/video", "/news", "/dashboard", "/bug", "/notes", "/revision", "/session", "/profile", "/progress", "/refer", "/feedback", "/notification", "/notifications", "/terms", "/tutorial"];
   const shouldUseLegacyDark = darkRoutes.some((route) => pathname === route || pathname.startsWith(route + "/"));
   document.body.classList.toggle("legacy-dark-route", shouldUseLegacyDark);
   document.documentElement.classList.toggle("dark", shouldUseLegacyDark);
@@ -40,8 +46,8 @@ export default async function RootLayout({
         <RouteThemeScope />
         <Providers>
           <AuthProvider
-            initialSession={sessionData.session}
-            initialUser={sessionData.session?.user ?? null}
+            initialSession={session}
+            initialUser={user}
           >
             {children}
           </AuthProvider>

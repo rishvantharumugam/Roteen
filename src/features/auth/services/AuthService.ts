@@ -17,6 +17,7 @@ export type UserProfileDetails = {
   gender?: string;
   medium?: string;
   userType?: string;
+  referredByCode?: string;
 };
 
 export type UserRecord = {
@@ -184,33 +185,28 @@ export async function ensureUserRecord(
     };
   }
 
-  const payload = {
+  const mockProfile: UserRecord = {
     id: user.id,
-    gmail: normalizedEmail,
     name: getDisplayName(user),
+    gmail: normalizedEmail,
     avatar_url: getAvatarUrl(user),
+    gender: null,
+    phone_number: null,
+    dob: null,
+    user_type: null,
+    district: null,
+    school_name: null,
+    school_type: null,
+    medium_of_education: null,
+    standard: null,
+    created_at: new Date().toISOString(),
+    referral_code: null,
   };
 
-  const { data: insertedProfile, error: insertError } = await supabaseClient
-    .from("users")
-    .insert(payload)
-    .select(
-      "id, name, gmail, avatar_url, gender, phone_number, dob, user_type, district, school_name, school_type, medium_of_education, standard, created_at, referral_code",
-    )
-    .single<UserRecord>();
-
-  if (insertedProfile && !insertedProfile.referral_code && !insertError) {
-    try {
-      insertedProfile.referral_code = await assignUniqueReferralCode(user.id, supabaseClient);
-    } catch (err) {
-      console.error('Failed to assign referral code to new user:', err);
-    }
-  }
-
   return {
-    profile: insertedProfile ?? null,
+    profile: mockProfile,
     isNewUser: true,
-    error: insertError,
+    error: null,
   };
 }
 
@@ -260,7 +256,7 @@ export async function updateUserProfile(
     return { profile: null, error: new Error("Unable to read the account email address.") };
   }
 
-  const payload = {
+  const payload: Record<string, unknown> = {
     id: user.id,
     gmail: normalizedEmail,
     name:
@@ -283,6 +279,38 @@ export async function updateUserProfile(
     user_type: normalizeOptionalText(profile.userType),
   };
 
+  // Resolve referral code → referrer's user ID
+  if (profile.referredByCode && profile.referredByCode.trim()) {
+    let code = profile.referredByCode.trim().toUpperCase();
+    if (!code.startsWith("RTN-")) {
+      code = `RTN-${code}`;
+    }
+
+    // 1. Fetch referrer row
+    const { data: referrerRow, error: referrerError } = await supabaseClient
+      .from("users")
+      .select("id")
+      .eq("referral_code", code)
+      .maybeSingle();
+
+    if (referrerError) {
+      return { profile: null, error: new Error(`Failed to validate referral code: ${referrerError.message}`) };
+    }
+
+    if (!referrerRow) {
+      return { profile: null, error: new Error("Invalid referral code") };
+    }
+
+    // 2. Check if user tries their own referral code
+    if (referrerRow.id === user.id) {
+      return { profile: null, error: new Error("You cannot use your own referral code") };
+    }
+
+    payload.referred_by = referrerRow.id;
+  } else {
+    payload.referred_by = null;
+  }
+
   const { data, error } = await supabaseClient
     .from("users")
     .upsert(payload, { onConflict: "id" })
@@ -291,7 +319,34 @@ export async function updateUserProfile(
     )
     .single<UserRecord>();
 
-  return { profile: data ?? null, error };
+  let finalProfile = data;
+  if (finalProfile && !finalProfile.referral_code && !error) {
+    try {
+      const refCode = await assignUniqueReferralCode(user.id, supabaseClient);
+      finalProfile = { ...finalProfile, referral_code: refCode };
+    } catch (err) {
+      console.error('Failed to assign referral code during update:', err);
+    }
+  }
+
+  if (!error && finalProfile) {
+    // Also sync the data to auth.users metadata so it's globally available in the session
+    await supabaseClient.auth.updateUser({
+      data: {
+        phone_number: payload.phone_number,
+        standard: payload.standard,
+        school_type: payload.school_type,
+        school_name: payload.school_name,
+        dob: payload.dob,
+        district: payload.district,
+        gender: payload.gender,
+        medium_of_education: payload.medium_of_education,
+        user_type: payload.user_type,
+      }
+    });
+  }
+
+  return { profile: finalProfile ?? null, error };
 }
 
 function mapSignUpErrorMessage(message: string | undefined) {

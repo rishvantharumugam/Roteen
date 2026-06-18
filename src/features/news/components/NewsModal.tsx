@@ -12,7 +12,7 @@ export default function NewsModal({ data, onClose }: NewsModalProps) {
     <div className="fixed inset-0 z-[120]" onClick={onClose} role="presentation">
       <div className="flex h-full w-full items-center justify-center bg-black/70 px-4 py-8 backdrop-blur-sm">
         <section
-          className="relative flex w-full max-w-4xl min-h-[420px] flex-col rounded-xl border border-zinc-800 bg-[#121212] p-8 shadow-[0_0_30px_rgba(0,0,0,0.5)]"
+          className="relative flex w-full max-w-4xl min-h-[420px] flex-col rounded-xl border border-zinc-800 bg-[#101114] p-8 shadow-[0_0_30px_rgba(0,0,0,0.5)]"
           role="dialog"
           aria-modal="true"
           aria-labelledby="news-modal-title"

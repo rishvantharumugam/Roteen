@@ -97,65 +97,75 @@ export function mapSubjectToExploreCard(subject: DashboardSubjectRecord, index: 
   };
 }
 
-export async function countRowsForChapters(
-  supabaseClient: SupabaseClient,
-  tableNames: string[],
-  chapterIds: string[],
-) {
-  if (chapterIds.length === 0) {
-    return 0;
-  }
-
+async function resolveTableName(supabaseClient: SupabaseClient, tableNames: string[]): Promise<string> {
   const tableKey = tableNames.join("|");
   const cachedTable = resolvedCountTableCache.get(tableKey);
-
-  if (cachedTable) {
-    const { count, error } = await supabaseClient
-      .from(cachedTable)
-      .select("id", { count: "exact", head: true })
-      .in("chapter_id", chapterIds);
-
-    if (!error) {
-      return count ?? 0;
-    }
-
-    resolvedCountTableCache.delete(tableKey);
-  }
+  if (cachedTable) return cachedTable;
 
   for (const tableName of tableNames) {
-    const { count, error } = await supabaseClient
+    const { error } = await supabaseClient
       .from(tableName)
-      .select("id", { count: "exact", head: true })
-      .in("chapter_id", chapterIds);
-
+      .select("id")
+      .limit(1);
     if (!error) {
       resolvedCountTableCache.set(tableKey, tableName);
-      return count ?? 0;
+      return tableName;
     }
   }
-
-  return 0;
+  return tableNames[0];
 }
 
 export async function withQuestionCounts(
   supabaseClient: SupabaseClient,
   subjects: DashboardSubjectRecord[],
 ) {
-  return Promise.all(
-    subjects.map(async (subject) => {
-      const chapterIds = (subject.chapters ?? []).map((chapter) => chapter.id);
-      const [questionCount, quizCount] = await Promise.all([
-        countRowsForChapters(supabaseClient, ["questions", "quiz_questions"], chapterIds),
-        countRowsForChapters(supabaseClient, ["quizzes"], chapterIds),
-      ]);
+  const allChapterIds = subjects.flatMap((s) => (s.chapters ?? []).map((c) => c.id));
+  if (allChapterIds.length === 0) {
+    return subjects.map((s) => ({ ...s, questionCount: 0, quizCount: 0 }));
+  }
 
-      return {
-        ...subject,
-        questionCount,
-        quizCount,
-      };
-    }),
-  );
+  // Resolve tables in parallel
+  const [questionTable, quizTable] = await Promise.all([
+    resolveTableName(supabaseClient, ["questions", "quiz_questions"]),
+    resolveTableName(supabaseClient, ["quizzes"]),
+  ]);
+
+  // Fetch all chapter mappings in parallel
+  const [questionsResult, quizzesResult] = await Promise.all([
+    supabaseClient.from(questionTable).select("chapter_id").in("chapter_id", allChapterIds),
+    supabaseClient.from(quizTable).select("chapter_id").in("chapter_id", allChapterIds),
+  ]);
+
+  const questionCounts = new Map<string, number>();
+  if (questionsResult.data) {
+    for (const row of questionsResult.data as any[]) {
+      const cid = String(row.chapter_id);
+      questionCounts.set(cid, (questionCounts.get(cid) || 0) + 1);
+    }
+  }
+
+  const quizCounts = new Map<string, number>();
+  if (quizzesResult.data) {
+    for (const row of quizzesResult.data as any[]) {
+      const cid = String(row.chapter_id);
+      quizCounts.set(cid, (quizCounts.get(cid) || 0) + 1);
+    }
+  }
+
+  return subjects.map((subject) => {
+    let questionCount = 0;
+    let quizCount = 0;
+    for (const chapter of subject.chapters ?? []) {
+      const cid = String(chapter.id);
+      questionCount += questionCounts.get(cid) || 0;
+      quizCount += quizCounts.get(cid) || 0;
+    }
+    return {
+      ...subject,
+      questionCount,
+      quizCount,
+    };
+  });
 }
 
 export type CourseProgressItem = {

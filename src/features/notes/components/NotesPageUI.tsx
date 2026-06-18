@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navbar, NoteCard, SearchBar, Note, NewNoteDraft, NewNoteModal, NotePreviewModal } from '@/features/notes/components/notesStore';
+import { NoteService } from '@/features/notes/services/notesService';
 import { Plus } from 'lucide-react';
 import { Toaster } from 'sonner';
 
@@ -78,7 +79,10 @@ export const NotesPageUI: React.FC<NotesPageUIProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,240px))] gap-5 justify-start">
-            {notes.map(note => (
+            {notes.filter(note => {
+              const stripped = NoteService.stripHtml(note.description || "");
+              return stripped && stripped.trim().length > 0;
+            }).map(note => (
               <NoteCard 
                 key={note.id} 
                 note={note} 

@@ -34,7 +34,7 @@ export function NotificationIcon({ tone }: NotificationIconProps) {
   const Icon = config.icon;
 
   return (
-    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#0A0A0A] text-[#7C3AED]">
+    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#101114] text-[#7C3AED]">
       <Icon className="h-5 w-5" strokeWidth={2} />
     </span>
   );

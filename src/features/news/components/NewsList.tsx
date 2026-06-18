@@ -15,7 +15,7 @@ function NewsList({ items, onSelect, isLoading }: NewsListProps) {
   }
 
   if (items.length === 0) {
-    return <div className="rounded-2xl border border-zinc-800 bg-[#121212] px-5 py-12 text-center text-zinc-400">No news available.</div>;
+    return <div className="rounded-2xl border border-zinc-800 bg-[#101114] px-5 py-12 text-center text-zinc-400">No news available.</div>;
   }
 
   return (

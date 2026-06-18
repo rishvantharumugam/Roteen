@@ -46,7 +46,7 @@ export function NotificationDetailBox({
         animate={{ opacity: 1, y: "-50%", x: "-50%", scale: 1 }}
         exit={{ opacity: 0, y: 18, x: "-50%", scale: 0.98 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
-        className="fixed left-1/2 top-1/2 z-50 flex w-[min(calc(100vw-2.5rem),36rem)] flex-col rounded-2xl border border-[#7C3AED]/30 bg-[#0A0A0A] p-6 text-left shadow-[0_0_80px_rgba(124,58,237,0.15)]"
+        className="fixed left-1/2 top-1/2 z-50 flex w-[min(calc(100vw-2.5rem),36rem)] flex-col rounded-2xl border border-[#7C3AED]/30 bg-[#101114] p-6 text-left shadow-[0_0_80px_rgba(124,58,237,0.15)]"
       >
         <div className="flex items-center justify-between mb-4">
           {/* Invisible spacer to maintain center alignment of the icon */}
@@ -81,7 +81,7 @@ export function NotificationDetailBox({
           </p>
         </div>
 
-        <div className="rounded-xl border border-[#27272A] bg-[#121212] p-6 mb-6">
+        <div className="rounded-xl border border-[#27272A] bg-[#101114] p-6 mb-6">
           {notification.description.split('\n').map((paragraph, index) => (
              <p key={index} className="text-sm leading-6 text-[#A1A1AA] mb-4 last:mb-0">
                {paragraph}

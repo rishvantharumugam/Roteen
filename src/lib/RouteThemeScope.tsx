@@ -13,6 +13,7 @@ const LEGACY_DARK_ROUTES = [
   "/revision",
   "/session",
   "/profile",
+  "/progress",
   "/feedback",
   "/notification",
   "/notifications",

@@ -37,7 +37,7 @@ export function HeaderSettingsMenu() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [dynamicName, setDynamicName] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  
+
   useEffect(() => {
     async function fetchName() {
       if (!user?.id) return;
@@ -161,9 +161,9 @@ export function HeaderSettingsMenu() {
             </Link>
 
             <Link
-              href={appRoutes.dashboard}
+              href={appRoutes.progress}
               prefetch
-              onClick={() => handleNavigate(appRoutes.dashboard)}
+              onClick={() => handleNavigate(appRoutes.progress)}
               className="group flex items-center gap-3.5 px-4 py-2.5 text-[14px] font-medium text-[#b0b0b0] transition-colors hover:bg-white/5 hover:text-zinc-100"
             >
               <span className="text-[#888888] transition-colors group-hover:text-zinc-300">
@@ -173,6 +173,24 @@ export function HeaderSettingsMenu() {
                 </svg>
               </span>
               Progress
+            </Link>
+
+            <Link
+              href={appRoutes.refer}
+              prefetch
+              onClick={() => handleNavigate(appRoutes.refer)}
+              className="group flex items-center gap-3.5 px-4 py-2.5 text-[14px] font-medium text-[#b0b0b0] transition-colors hover:bg-white/5 hover:text-zinc-100"
+            >
+              <span className="text-[#888888] transition-colors group-hover:text-zinc-300">
+                <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="8" width="18" height="4" rx="1" />
+                  <path d="M12 8v13" />
+                  <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
+                  <path d="M7.5 8a2.5 2.5 0 1 1 4.5-1.5V8" />
+                  <path d="M16.5 8A2.5 2.5 0 1 0 12 6.5V8" />
+                </svg>
+              </span>
+              Refer &amp; Earn
             </Link>
 
             <Link

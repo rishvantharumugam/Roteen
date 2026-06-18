@@ -66,10 +66,49 @@ export async function fetchQuestionLevel(questionId: string): Promise<number> {
   return 0;
 }
 
+const resolvedVideoCache = new Map<string, ResolvedVideo>();
+const progressMemoryCache = new Map<string, number>();
+const lastSupabaseSaveTime = new Map<string, number>();
+
+function getProgressCacheKey(userId: string, questionId: string): string {
+  return `roteen_video_progress_${userId}_${questionId}`;
+}
+
+export function readProgressFromCache(userId: string, questionId: string): number | null {
+  const key = getProgressCacheKey(userId, questionId);
+  if (progressMemoryCache.has(key)) {
+    return progressMemoryCache.get(key)!;
+  }
+  if (typeof window !== "undefined") {
+    const val = localStorage.getItem(key);
+    if (val !== null) {
+      const parsed = parseFloat(val);
+      if (!isNaN(parsed)) {
+        progressMemoryCache.set(key, parsed);
+        return parsed;
+      }
+    }
+  }
+  return null;
+}
+
+export function writeProgressToCache(userId: string, questionId: string, seconds: number) {
+  const key = getProgressCacheKey(userId, questionId);
+  progressMemoryCache.set(key, seconds);
+  if (typeof window !== "undefined") {
+    localStorage.setItem(key, String(seconds));
+  }
+}
+
 export async function fetchVideoUrlFromSupabase(
   questionId: string,
   subjectId: string | null
 ): Promise<ResolvedVideo> {
+  const cacheKey = `${questionId}_${subjectId || "any"}`;
+  if (resolvedVideoCache.has(cacheKey)) {
+    return resolvedVideoCache.get(cacheKey)!;
+  }
+
   console.log("[fetchVideoUrlFromSupabase] starting with:", { questionId, subjectId });
   const candidates = getQuestionIdCandidates(questionId);
   if (candidates.length === 0) {
@@ -178,7 +217,9 @@ export async function fetchVideoUrlFromSupabase(
   const [videosResult, questionsResult] = await Promise.all([videosPromise, questionsPromise]);
   console.log("[fetchVideoUrlFromSupabase] final results:", { videosResult, questionsResult });
 
-  return videosResult || questionsResult || { url: null, videoId: null };
+  const result = videosResult || questionsResult || { url: null, videoId: null };
+  resolvedVideoCache.set(cacheKey, result);
+  return result;
 }
 
 export async function trackVideoEngagement(
@@ -260,6 +301,11 @@ export async function fetchVideoWatchedSeconds(
 ): Promise<number> {
   if (!userId || !questionId) return 0;
 
+  const cached = readProgressFromCache(userId, questionId);
+  if (cached !== null) {
+    return cached;
+  }
+
   try {
     const query = supabase
       .from("user_questions_progress")
@@ -271,7 +317,9 @@ export async function fetchVideoWatchedSeconds(
     if (error) throw error;
 
     if (data && data.length > 0 && data[0].watched_seconds !== null) {
-      return Number(data[0].watched_seconds);
+      const seconds = Number(data[0].watched_seconds);
+      writeProgressToCache(userId, questionId, seconds);
+      return seconds;
     }
   } catch (err) {
     console.error("Failed to fetch video watched seconds from Supabase:", err);
@@ -283,9 +331,23 @@ export async function updateVideoWatchedSeconds(
   userId: string,
   questionId: string,
   videoId: string | null,
-  watchedSeconds: number
+  watchedSeconds: number,
+  immediate = false
 ): Promise<void> {
   if (!userId || !questionId) return;
+
+  writeProgressToCache(userId, questionId, watchedSeconds);
+
+  const key = getProgressCacheKey(userId, questionId);
+  const nowTime = Date.now();
+  const lastSave = lastSupabaseSaveTime.get(key) || 0;
+
+  if (!immediate && nowTime - lastSave < 20000) {
+    // Throttled: Skip Supabase save if it's not immediate and was updated less than 20 seconds ago
+    return;
+  }
+
+  lastSupabaseSaveTime.set(key, nowTime);
 
   try {
     const now = new Date().toISOString();
