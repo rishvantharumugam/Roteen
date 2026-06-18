@@ -290,13 +290,13 @@ export async function fetchQuizQuestions(quizId: string): Promise<QuizQuestionRe
     return quizQuestionsCache.get(quizId)!;
   }
 
-  const columns = "id, question_text, option_a, option_b, option_c, option_d, option_e, option_f, correct_answer, correct_option, answer, correct, options, choices, question_no, quizzes_id";
+  const columns = "id, question, option_a, option_b, option_c, option_d, correct_option, quizzes_id, created_at";
 
   const primary = await supabase
     .from("quiz_questions")
     .select(columns)
     .eq("quizzes_id", quizId)
-    .order("question_no", { ascending: true });
+    .order("created_at", { ascending: true });
 
   let rows = primary.data;
   let error = primary.error;
