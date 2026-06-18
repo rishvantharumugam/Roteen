@@ -43,7 +43,7 @@ function formatNewsDateTime(date: Date): { date: string; time: string; published
 export async function fetchNewsFromDB(): Promise<NewsItem[]> {
   const { data, error } = await supabase
     .from("news")
-    .select("id, title, content, created_at");
+    .select("id, title, content, posted_at");
 
   if (error) {
     throw new Error(`Failed to fetch news: ${error.message}`);

@@ -114,7 +114,7 @@ function toTopic(row: RowRecord, index: number): Topic {
   const topicTitle = String(
     getRowValue(row, ["question_name", "title", "question", "question_text", "topic_title", "name"]) ?? `Question ${index + 1}`,
   );
-  const markValue = getRowValue(row, ["mark", "marks"]);
+  const markValue = getRowValue(row, ["mark", "marks", "questions_sections"]);
 
   return {
     id: topicId,
@@ -180,7 +180,8 @@ interface ChapterRow {
 interface QuestionRow {
   id: string | number;
   chapter_id: string | number | null;
-  question_name: string | null;
+  question_name?: string | null;
+  question?: string | null;
   mode: string | null;
   standard?: number | string | null;
 }
@@ -256,7 +257,7 @@ export async function fetchSubjectChaptersQuestionsByMode(
 
   const { data: questionRows, error: questionError } = await supabase
     .from("questions")
-    .select("id, chapter_id, mode, standard, question_name, title, question, question_text, name, text")
+    .select("id, chapter_id, mode, standard, question, questions_sections")
     .eq("subject_id", subjectId)
     .order("chapter_id", { ascending: true })
     .order("id", { ascending: true });
@@ -420,7 +421,7 @@ export async function getSubjectsAndChapters(
 
   const { data: questionRows, error: questionError } = await supabase
     .from("questions")
-    .select("id, chapter_id, question_name, title, question, question_text, topic_title, name, mark, marks")
+    .select("id, chapter_id, question, questions_sections")
     .eq("subject_id", subjectId)
     .eq("mode", mode)
     .order("chapter_id", { ascending: true })
@@ -493,7 +494,7 @@ export async function getQuestionsByMode(mode: QuestionMode): Promise<Chapter[]>
 
   const { data: questionRows, error } = await supabase
     .from("questions")
-    .select("id, chapter_id, question_name, title, question, question_text, topic_title, name, mark, marks")
+    .select("id, chapter_id, question, questions_sections")
     .eq("subject_id", subjectId)
     .eq("mode", mode)
     .order("chapter_id", { ascending: true })
@@ -577,7 +578,7 @@ export async function getStandardTenMathChapters(): Promise<Chapter[]> {
 
   const { data: questionRows, error } = await supabase
     .from("questions")
-    .select("id, chapter_id, question_name, title, question, question_text, topic_title, name, mark, marks")
+    .select("id, chapter_id, question, questions_sections")
     .eq("subject_id", subjectId)
     .order("chapter_id", { ascending: true })
     .order("id", { ascending: true });

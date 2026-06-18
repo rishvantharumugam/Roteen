@@ -277,7 +277,7 @@ export async function fetchSubjectPanelData(
     const buildQuestionQuery = () => {
       const query = supabase
         .from("questions")
-        .select("id, chapter_id, mode, standard, question_marks, questions_marks, question_name, title, question, question_text, name, text")
+        .select("id, chapter_id, mode, standard, questions_sections, question, level")
         .eq("subject_id", subjectId)
         .order("chapter_id", { ascending: true })
         .order("id", { ascending: true });
@@ -324,6 +324,8 @@ export async function fetchSubjectPanelData(
     // rows by id so the UI can render real chapter names instead of synthetic labels.
     const normalizedQuestionRows = (questionRows ?? []).map((row: any) => ({
       ...row,
+      question_marks: row.questions_sections || null,
+      questions_marks: row.questions_sections || null,
       question_name: row.question_name || row.title || row.question || row.question_text || row.name || row.text || `Question ${row.id}`,
     })) as unknown as SubjectPanelCacheData["questions"];
     const existingChapterIds = new Set((chapterRows ?? []).map((chapter: any) => String(chapter.id)));
