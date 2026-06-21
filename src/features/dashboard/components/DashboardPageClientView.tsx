@@ -8,7 +8,7 @@ import { ExploreCourseCard } from "@/features/dashboard/components/ExploreCourse
 import { OngoingVideoCard, type OngoingVideo } from "@/features/dashboard/components/OngoingVideoCard";
 import { RevealBlock } from "@/features/dashboard/components/RevealBlock";
 import { SearchIcon } from "@/features/dashboard/components/SearchIcon";
-import { ChevronRight, ChevronDown, Atom, Code2, Database, LayoutTemplate, Box, Clock, Target, Hourglass, Pencil, AlertTriangle } from "lucide-react";
+import { ChevronRight, ChevronDown, Atom, Code2, Database, LayoutTemplate, Box, Clock, Target, Hourglass, Pencil, AlertTriangle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { appRoutes } from "@/constants/AppRoutes";
@@ -173,6 +173,16 @@ export function DashboardPageClientView({
     };
   });
 
+  if (isAuthLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-black text-white">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+          <p className="text-[14px] text-zinc-400 font-medium">Checking session...</p>
+        </div>
+      </div>
+    );
+  }
   const showLoginOverlay = !isAuthLoading && !user && !isLoggingOut;
 
   return (
@@ -591,7 +601,7 @@ export function DashboardPageClientView({
               </div>
 
               <Link
-                href={appRoutes.signIn}
+                href={`${appRoutes.signIn}?next=${encodeURIComponent(appRoutes.dashboard)}`}
                 className="mt-3 mb-2 rounded-xl border border-violet-500/50 bg-violet-600 hover:bg-violet-500 px-8 py-2.5 text-sm font-semibold text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] transition active:scale-95 duration-200 cursor-pointer min-w-[150px]"
               >
                 Login

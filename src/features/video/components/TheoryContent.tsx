@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from '@/lib/supabase/client';
-
+import { type QuestionMode } from "@/features/video/services/video";
 
 interface TheoryContentProps {
   questionId: string | null;
@@ -13,9 +13,9 @@ interface TheoryContentProps {
   language: "English" | "Tamil";
   fullScreen?: boolean;
   type?: "theory" | "quick_revision";
+  mode: QuestionMode;
 }
 
-const notesMetadataCache = new Map<string, any[]>();
 const markdownCache = new Map<string, string>();
 
 export default function TheoryContent({
@@ -24,11 +24,11 @@ export default function TheoryContent({
   language,
   fullScreen,
   type = "theory",
+  mode,
 }: TheoryContentProps) {
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [transitioning, setTransitioning] = useState<boolean>(true);
   const [contentVersion, setContentVersion] = useState<number>(0);
 
   useEffect(() => {
@@ -40,110 +40,55 @@ export default function TheoryContent({
            setContent("");
            setError(null);
            setLoading(false);
-           setTransitioning(false);
          }
          return;
       }
 
       setLoading(true);
       setError(null);
-      setTransitioning(true);
 
       try {
-        const cacheKey = `${questionId}-${subjectId || 'no-subject'}`;
-        let notesData = notesMetadataCache.get(cacheKey);
+        const cacheKey = `${questionId}-${mode}-${type}-${language}`;
+        let text = markdownCache.get(cacheKey);
 
-        if (!notesData) {
-          let notesQuery = supabase
+        if (!text) {
+          const targetAnswerType = type === "quick_revision"
+            ? (language === "English" ? "Eng quick_recall" : "Tam quick_recall")
+            : (language === "English" ? "Eng answer" : "Tam answer");
+
+          const { data, error: dbError } = await supabase
             .from("admin_notes")
-            .select("note_url, path, answer_type")
-            .eq("question_id", questionId);
-
-          if (subjectId) {
-            notesQuery = notesQuery.eq("subject_id", subjectId);
-          }
-
-          let { data, error: dbError } = await notesQuery;
-
-          if (dbError && subjectId && (dbError.code === "PGRST204" || dbError.code === "42703")) {
-            const fallbackResult = await supabase
-              .from("admin_notes")
-              .select("note_url, path, answer_type")
-              .eq("question_id", questionId);
-            data = fallbackResult.data;
-            dbError = fallbackResult.error;
-          }
+            .select("id, question_id, note_url, answer_type, path, Mode_type")
+            .eq("question_id", questionId)
+            .eq("answer_type", targetAnswerType)
+            .eq("Mode_type", mode)
+            .maybeSingle();
 
           if (dbError) throw dbError;
-          if (!data || data.length === 0) {
-            throw new Error(`No ${type === "quick_revision" ? "quick revision" : "theory"} available`);
+
+          if (!data) {
+            const noMessage = type === "quick_revision" ? "No Quick Revision Available" : "No Theory Available";
+            throw new Error(noMessage);
           }
-          
-          notesData = data;
-          notesMetadataCache.set(cacheKey, data);
-        }
 
-        let matchedNote;
-        if (type === "quick_revision") {
-          const targetAnswerType = language === "English" ? "Eng quick_recall" : "Tam quick_recall";
-          matchedNote = notesData.find((note: any) => note.answer_type === targetAnswerType);
-        } else {
-          const prefix = language === "English" ? "/E_" : "/T_";
-          matchedNote = notesData.find(note => 
-            note.path && note.path.includes(prefix) &&
-            !(note.answer_type && note.answer_type.includes("quick_recall"))
-          );
-        }
-
-        if (!matchedNote) {
-          throw new Error(`No ${type === "quick_revision" ? "quick revision" : "theory"} available in ${language}`);
-        }
-
-        const rawUrl = matchedNote.note_url.replace("github.com", "raw.githubusercontent.com");
-        const finalUrl = rawUrl.replace("/blob/", "/");
-
-        let text = markdownCache.get(finalUrl);
-        if (!text) {
-          const response = await fetch(finalUrl);
+          const rawUrl = data.note_url.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/");
+          const response = await fetch(rawUrl);
           if (!response.ok) {
-             throw new Error("Failed to load content");
+            throw new Error("Failed to load content");
           }
           text = await response.text();
-          markdownCache.set(finalUrl, text);
+          markdownCache.set(cacheKey, text);
         }
-        
+
         if (mounted) {
           setContent(text);
           setContentVersion((previous) => previous + 1);
-          setTransitioning(false);
-
-          // Background prefetching of other related notes for instant toggling
-          setTimeout(() => {
-            notesData?.forEach((note: any) => {
-              if (note && note.note_url) {
-                const rUrl = note.note_url.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/");
-                if (rUrl && !markdownCache.has(rUrl)) {
-                  fetch(rUrl)
-                    .then(res => res.text())
-                    .then(fetchedText => {
-                      markdownCache.set(rUrl, fetchedText);
-                    })
-                    .catch(() => {});
-                }
-              }
-            });
-          }, 300);
         }
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Failed to load content";
         if (mounted) {
           setContent("");
-          setError(
-            message.includes("No")
-              ? message
-              : "Failed to load content"
-          );
-          setTransitioning(false);
+          setError(message);
         }
       } finally {
         if (mounted) setLoading(false);
@@ -153,7 +98,7 @@ export default function TheoryContent({
     fetchTheory();
 
     return () => { mounted = false; };
-  }, [language, questionId, subjectId, type]);
+  }, [language, questionId, subjectId, type, mode]);
 
   if (questionId === null) {
     return (

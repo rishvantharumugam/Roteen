@@ -80,6 +80,7 @@ import {
   fetchVideoWatchedSeconds,
   updateVideoWatchedSeconds,
 } from "@/features/video/services/videoProgressService";
+import { supabase } from '@/lib/supabase/client';
 
 function normalizeErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -109,20 +110,30 @@ function isExpectedTransientError(error: unknown): boolean {
 function resolveEffectiveSubjectFilter(
   queryFilter: VideoSubjectFilter,
   cachedSubject: SelectedVideoSubject | null,
+  userStandard: string | null,
 ): VideoSubjectFilter {
   if (queryFilter.subjectId || queryFilter.subjectSlug || queryFilter.standard) {
+    // Standard already specified in URL — use as-is, but inject userStandard if standard is missing
+    if (!queryFilter.standard && userStandard) {
+      return { ...queryFilter, standard: userStandard };
+    }
     return queryFilter;
   }
 
-  if (!cachedSubject) {
-    return queryFilter;
+  if (cachedSubject) {
+    return {
+      subjectId: cachedSubject.id,
+      subjectSlug: cachedSubject.slug,
+      standard: cachedSubject.standard ?? userStandard,
+    };
   }
 
-  return {
-    subjectId: cachedSubject.id,
-    subjectSlug: cachedSubject.slug,
-    standard: cachedSubject.standard,
-  };
+  // No URL params, no cached subject — use userStandard as the default filter
+  if (userStandard) {
+    return { ...queryFilter, standard: userStandard };
+  }
+
+  return queryFilter;
 }
 
 export default function VideoClient() {
@@ -132,9 +143,11 @@ export default function VideoClient() {
   const playlistContext = useVideoPlaylistContext();
   const querySubjectFilter = useMemo(() => parseVideoSubjectFilter(searchParams), [searchParams]);
   const cachedSelectedSubject = useSelectedVideoSubject();
+  // userStandard must be declared before subjectFilter so it can be injected when URL has no standard
+  const [userStandard, setUserStandard] = useState<string | null>(null);
   const subjectFilter = useMemo(
-    () => resolveEffectiveSubjectFilter(querySubjectFilter, cachedSelectedSubject),
-    [cachedSelectedSubject, querySubjectFilter],
+    () => resolveEffectiveSubjectFilter(querySubjectFilter, cachedSelectedSubject, userStandard),
+    [cachedSelectedSubject, querySubjectFilter, userStandard],
   );
   const isSubjectFiltered = hasActiveVideoSubjectFilter(subjectFilter);
 
@@ -195,7 +208,7 @@ export default function VideoClient() {
   const [quizStartTime, setQuizStartTime] = useState<string | null>(null);
   const [learningStateHydrated, setLearningStateHydrated] = useState(false);
   const [restoredLearningState, setRestoredLearningState] = useState<LearningState | null>(null);
-  const [subjectMode, setSubjectMode] = useState<LearningMode>("Bookback");
+  const [subjectMode, setSubjectMode] = useState<LearningMode>("book-back");
   const [theoryLanguage, setTheoryLanguage] = useState<LearningLanguage>("English");
   const [sidebarScrollPosition, setSidebarScrollPosition] = useState(0);
   const [videoPosition, setVideoPosition] = useState(0);
@@ -275,6 +288,31 @@ export default function VideoClient() {
       standard: selectedSubjectStandard ?? null,
     });
   }, [resolvedSubject?.id, resolvedSubject?.name, selectedSubjectStandard, subjectFilter.subjectId, subjectFilter.subjectSlug]);
+
+  // Fetch the logged-in user's standard from their profile.
+  // This is used as the default when no standard is present in URL params.
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+
+    const fetchStandard = async () => {
+      try {
+        const { data } = await supabase
+          .from("users")
+          .select("standard")
+          .eq("id", user.id)
+          .single();
+        if (!cancelled && data?.standard) {
+          setUserStandard(String(data.standard));
+        }
+      } catch {
+        // Silently ignore — standard will stay null
+      }
+    };
+
+    void fetchStandard();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   useEffect(() => {
     if (isSubjectFiltered) {
@@ -1439,7 +1477,7 @@ export default function VideoClient() {
       autoSaveEnabled={autoSaveEnabled}
       noteSaveStatus={noteSaveStatus}
       onAutoSaveEnabledChange={setAutoSaveEnabled}
-      mode={subjectMode as "Bookback" | "Interior"}
+      mode={subjectMode as "book-back" | "interior"}
       onModeChange={handleModeChange as any}
       isBookmarked={isBookmarked}
       onBookmarkClick={handleOpenBookmarkModal}

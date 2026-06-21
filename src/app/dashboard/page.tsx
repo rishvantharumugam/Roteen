@@ -12,19 +12,31 @@ export const revalidate = 0;
 export default async function Page() {
   const serverSupabase = await createServerSupabaseClient();
   
-  const subjectsQuery = serverSupabase
+  const userResult = await serverSupabase.auth.getUser();
+  const userId = userResult.data.user?.id;
+
+  // Fetch user's standard from the users table
+  let userStandard: string | null = null;
+  if (userId) {
+    const { data: userRow } = await serverSupabase
+      .from("users")
+      .select("standard")
+      .eq("id", userId)
+      .single();
+    userStandard = userRow?.standard ?? null;
+  }
+
+  // Build subjects query — filter by the user's standard if available
+  let subjectsQuery = serverSupabase
     .from("subjects")
     .select("id, standard, subject_name, chapters(id, name)")
     .order("created_at", { ascending: true });
 
-  const userQuery = serverSupabase.auth.getUser();
+  if (userStandard) {
+    subjectsQuery = subjectsQuery.eq("standard", userStandard);
+  }
 
-  const [subjectsResult, userResult] = await Promise.all([
-    subjectsQuery,
-    userQuery,
-  ]);
-
-  const userId = userResult.data.user?.id;
+  const [subjectsResult] = await Promise.all([subjectsQuery]);
   
   let progressData: CourseProgressItem[] = [];
   if (userId) {

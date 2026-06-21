@@ -19,6 +19,7 @@ const headerNavItems = [
   { label: "Notes", href: appRoutes.notes },
   { label: "Revision", href: appRoutes.revision },
   { label: "Sessions", href: appRoutes.sessions },
+  { label: "PYQs", href: appRoutes.pyqs },
 ] as const;
 
 export function DashboardHeader({ activeLabel }: DashboardHeaderProps) {
@@ -60,6 +61,7 @@ export function DashboardHeader({ activeLabel }: DashboardHeaderProps) {
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            suppressHydrationWarning
             className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#121212] border border-zinc-800 text-[#A1A1AA] hover:text-white hover:bg-zinc-800 transition-colors"
             aria-label="Navigation menu"
           >

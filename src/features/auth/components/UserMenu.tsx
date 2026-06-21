@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { appRoutes } from "@/constants/AppRoutes";
 import { useAuth } from "@/providers/AuthProvider";
 import { HeaderSettingsMenu } from "@/components/layout/HeaderSettingsMenu";
@@ -17,6 +18,7 @@ export function UserMenu({
   onLoginClick,
 }: UserMenuProps) {
   const { user, isLoading } = useAuth();
+  const pathname = usePathname();
 
   if (isLoading && !user) {
     return null;
@@ -35,9 +37,13 @@ export function UserMenu({
       );
     }
 
+    const signInHref = pathname && pathname !== "/"
+      ? `${appRoutes.signIn}?next=${encodeURIComponent(pathname)}`
+      : appRoutes.signIn;
+
     return (
       <Link
-        href={appRoutes.signIn}
+        href={signInHref}
         className={`rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.18)] transition hover:bg-slate-800 ${loginClassName}`}
       >
         {loginLabel}

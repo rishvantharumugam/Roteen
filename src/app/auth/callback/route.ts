@@ -38,7 +38,8 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data: exchangeData, error } = await supabase.auth.exchangeCodeForSession(code);
+  const session = exchangeData?.session;
 
   if (error) {
     return respondWithError(error.message);
@@ -68,10 +69,15 @@ export async function GET(request: Request) {
     : resolution.route;
     
   if (isPopup) {
+    const sessionString = session ? JSON.stringify(session) : 'null';
     return new NextResponse(`
       <html><body><script>
         if (window.opener) {
-          window.opener.postMessage({ type: 'GOOGLE_SIGN_IN_SUCCESS', url: '${finalRoute}' }, '*');
+          window.opener.postMessage({ 
+            type: 'GOOGLE_SIGN_IN_SUCCESS', 
+            url: '${finalRoute}',
+            session: ${sessionString}
+          }, window.location.origin);
           window.close();
         }
       </script></body></html>

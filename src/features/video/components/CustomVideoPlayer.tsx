@@ -99,6 +99,10 @@ export default function CustomVideoPlayer({
   const ytPlayerRef = useRef<HTMLDivElement>(null);
   const [ytPlayer, setYtPlayer] = useState<any>(null);
 
+  // Always keep latest initialProgress accessible inside YT callbacks (closure-safe)
+  const initialProgressRef = useRef(initialProgress);
+  useEffect(() => { initialProgressRef.current = initialProgress; }, [initialProgress]);
+
   const hasResumedRef = useRef(false);
   const isInitialSeekRef = useRef(false);
   const isInitialPauseRef = useRef(false);
@@ -109,16 +113,6 @@ export default function CustomVideoPlayer({
     isInitialSeekRef.current = false;
     isInitialPauseRef.current = false;
   }, [url, videoId]);
-
-  useEffect(() => {
-    if (isReady && !hasResumedRef.current) {
-      hasResumedRef.current = true;
-      if (initialProgress > 0) {
-        isInitialSeekRef.current = true;
-        seekTo(initialProgress);
-      }
-    }
-  }, [isReady, initialProgress, url, videoId]);
 
   useEffect(() => {
     return () => {
@@ -169,20 +163,33 @@ export default function CustomVideoPlayer({
           events: {
             onReady: (event: any) => {
               if (!isMounted) return;
-              setYtPlayer(event.target);
-              setDuration(event.target.getDuration() || 0);
+              const p = event.target;
+
+              p.setVolume(volume * 100);
+              if (isMuted) p.mute();
+              else p.unMute();
+
+              // Position at saved progress WITHOUT playing.
+              // cueVideoById() puts the player into CUED state (5) at the given
+              // startSeconds — it NEVER triggers a PLAYING event, so no 1-second flash.
+              const savedProgress = initialProgressRef.current;
+              if (savedProgress > 0) {
+                p.cueVideoById({ videoId: youtubeId, startSeconds: Math.floor(savedProgress) });
+                setCurrentTime(savedProgress); // show correct progress bar position immediately
+              }
+
+              setYtPlayer(p);
+              setDuration(p.getDuration() || 0);
               setIsReady(true);
-              event.target.setVolume(volume * 100);
-              if (isMuted) event.target.mute();
-              else event.target.unMute();
+              hasResumedRef.current = true;
             },
-             onStateChange: (event: any) => {
+            onStateChange: (event: any) => {
               if (!isMounted) return;
               // YT.PlayerState: PLAYING = 1, PAUSED = 2, ENDED = 0, BUFFERING = 3, CUED = 5, UNSTARTED = -1
               if (event.data === 1) {
-                if (isInitialSeekRef.current) {
+                // Block any PLAYING event that fires while guards are active
+                if (isInitialSeekRef.current || isInitialPauseRef.current) {
                   isInitialSeekRef.current = false;
-                  isInitialPauseRef.current = true;
                   event.target.pauseVideo();
                   setIsPlaying(false);
                   return;
@@ -193,7 +200,7 @@ export default function CustomVideoPlayer({
                 setIsPlaying(false);
                 if (event.data === 2) {
                   if (isInitialPauseRef.current) {
-                    isInitialPauseRef.current = false;
+                    // suppressed — don't reset here; the seek-effect timeout resets it
                   } else {
                     onPause?.(event.target.getCurrentTime() || 0);
                   }

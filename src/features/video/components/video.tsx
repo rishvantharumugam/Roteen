@@ -12,7 +12,6 @@ import SubjectBar from "@/features/video/components/SubjectBar";
 import PlaylistSidebar from "@/features/video/components/PlaylistSidebar";
 import { HeaderSettingsMenu } from "@/components/layout/HeaderSettingsMenu";
 import { NotificationDropdown } from "@/components/layout/NotificationDropdown";
-import { supabase } from '@/lib/supabase/client';
 import { applyRouteThemeClass } from "@/lib/RouteThemeScope";
 import dynamic from "next/dynamic";
 const TheoryContent = dynamic(() => import("@/features/video/components/TheoryContent"), { ssr: false });
@@ -148,7 +147,6 @@ export default function VideoPageUI({
   isPlaylistMode = false,
   selectedSubjectId = null,
   isSubjectFiltered = false,
-  pageHeading = null,
   onSubjectResolved,
   onChapterSelect,
   onQuestionSelect,
@@ -165,7 +163,6 @@ export default function VideoPageUI({
   onCloseTheoryView,
   noteLoading,
   autoSaveEnabled,
-  noteSaveStatus = "idle",
   onAutoSaveEnabledChange,
   isChapterQuizView = false,
   chapterQuizPhase = "landing",
@@ -251,11 +248,6 @@ export default function VideoPageUI({
 
   const handleQuestionSelect = (questionId: string) => {
     onQuestionSelect(questionId);
-    setActiveMobileTab("video");
-  };
-
-  const handleQuizSelect = (quizId: string) => {
-    onQuizSelect(quizId);
     setActiveMobileTab("video");
   };
 
@@ -376,6 +368,7 @@ export default function VideoPageUI({
     videos: "/video",
     news: "/news",
     "sessions-link": "/session",
+    "pyqs-link": "/pyq",
   };
 
   return (
@@ -508,10 +501,10 @@ export default function VideoPageUI({
         </button>
       </div>
 
-      <motion.div className="box-border flex flex-col lg:flex-row flex-1 min-w-0 overflow-hidden px-4 pb-4 pt-4">
+      <motion.div className="box-border flex flex-col lg:flex-row flex-1 min-h-0 min-w-0 overflow-hidden px-4 pb-4 pt-4">
         {/* Subject Panel / Playlist Panel */}
         <div
-          className={`transition-all duration-300 ease-in-out flex shrink-0 
+          className={`transition-all duration-300 ease-in-out flex h-full min-h-0 shrink-0 
             ${theoryViewEnabled
               ? "w-0 opacity-0 -translate-x-8 overflow-hidden pointer-events-none"
               : isSubjectPanelCollapsed
@@ -600,7 +593,7 @@ export default function VideoPageUI({
           <>
             <div
               ref={splitContainerRef}
-              className={`relative min-w-0 flex-1 ${theoryViewEnabled
+              className={`relative min-h-0 min-w-0 flex-1 ${theoryViewEnabled
                 ? "flex"
                 : `flex-col md:flex-row ${activeMobileTab === "index" ? "hidden lg:flex" : "flex"}`
                 } ${isResizingTheoryPanel ? "select-none" : ""}`}
@@ -608,7 +601,7 @@ export default function VideoPageUI({
             >
               {/* Center Panel (Video/Notes) */}
               <div
-                className={`relative flex min-w-0 shrink-0 transition-all duration-300 ease-in-out 
+                className={`relative flex h-full min-h-0 min-w-0 shrink-0 transition-all duration-300 ease-in-out 
             ${theoryViewEnabled
                     ? "w-0 opacity-0 -translate-x-8 overflow-hidden pointer-events-none"
                     : `w-full md:w-[var(--video-panel-width)] md:basis-[var(--video-panel-width)] opacity-100 translate-x-0 md:pr-2 ${activeMobileTab === "video" ? "flex" : "hidden md:flex"}`
@@ -798,7 +791,7 @@ export default function VideoPageUI({
 
               {/* Right Panel (Theory) */}
               <div
-                className={`transition-all duration-300 ease-in-out flex shrink-0 
+                className={`transition-all duration-300 ease-in-out flex h-full min-h-0 shrink-0 
             ${theoryViewEnabled
                     ? "w-full"
                     : `w-full md:w-[var(--theory-panel-width)] md:basis-[var(--theory-panel-width)] ${activeMobileTab === "theory" ? "flex" : "hidden md:flex"} lg:flex`
@@ -903,9 +896,25 @@ export default function VideoPageUI({
                   <div ref={theoryScrollRef} className={`custom-scrollbar min-h-0 flex-1 overflow-y-scroll transition-all duration-300`}>
                     <div className={`transition-all duration-300 w-full max-w-none px-4 pt-2 pb-8 lg:px-6 min-h-full flex flex-col`}>
                       {state.activeRightTab === "theory" ? (
-                        <TheoryContent key={`${selectedSubjectId}-${state.selectedQuestionId}-${theoryLanguage}-theory`} questionId={state.selectedQuestionId} subjectId={selectedSubjectId} language={theoryLanguage} fullScreen={theoryViewEnabled} type="theory" />
+                        <TheoryContent
+                          key={`${selectedSubjectId}-${state.selectedQuestionId}-${theoryLanguage}-${mode}-theory`}
+                          questionId={state.selectedQuestionId}
+                          subjectId={selectedSubjectId}
+                          language={theoryLanguage}
+                          fullScreen={theoryViewEnabled}
+                          type="theory"
+                          mode={mode}
+                        />
                       ) : state.activeRightTab === "quick_revision" ? (
-                        <TheoryContent key={`${selectedSubjectId}-${state.selectedQuestionId}-${theoryLanguage}-qr`} questionId={state.selectedQuestionId} subjectId={selectedSubjectId} language={theoryLanguage} fullScreen={theoryViewEnabled} type="quick_revision" />
+                        <TheoryContent
+                          key={`${selectedSubjectId}-${state.selectedQuestionId}-${theoryLanguage}-${mode}-qr`}
+                          questionId={state.selectedQuestionId}
+                          subjectId={selectedSubjectId}
+                          language={theoryLanguage}
+                          fullScreen={theoryViewEnabled}
+                          type="quick_revision"
+                          mode={mode}
+                        />
                       ) : (
                         <DiscussionContent
                           questionId={state.selectedQuestionId}

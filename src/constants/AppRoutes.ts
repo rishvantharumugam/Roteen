@@ -10,6 +10,7 @@ export const appRoutes = {
   notes: "/notes",
   revision: "/revision",
   sessions: "/session",
+  pyqs: "/pyq",
   news: "/news",
   notifications: "/notification",
   feedback: "/feedback",
@@ -35,5 +36,6 @@ export const dashboardNavigation = [
   { label: "Notes", href: appRoutes.notes },
   { label: "Revision", href: appRoutes.revision },
   { label: "Sessions", href: appRoutes.sessions },
+  { label: "PYQs", href: appRoutes.pyqs },
   { label: "News", href: appRoutes.news },
 ] as const;

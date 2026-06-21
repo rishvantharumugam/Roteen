@@ -20,13 +20,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const supabase = await createServerSupabaseClient();
-  const [sessionResult, userResult] = await Promise.all([
-    supabase.auth.getSession(),
-    supabase.auth.getUser(),
-  ]);
-
+  const sessionResult = await supabase.auth.getSession();
   const session = sessionResult.data.session;
-  const user = userResult.data.user;
+  let user = null;
+
+  if (session) {
+    const userResult = await supabase.auth.getUser();
+    user = userResult.data.user;
+  }
 
   return (
     <html lang="en" className={`h-full antialiased ${inter.variable}`} suppressHydrationWarning>

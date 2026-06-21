@@ -315,6 +315,20 @@ export const notificationsService = {
       message: "Notifications loaded from Supabase.",
     };
   },
+
+  async markAsRead(notificationId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch(`${notificationsApiPath}?id=${encodeURIComponent(notificationId)}`, {
+        method: "PATCH",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to mark notification as read.");
+      }
+      return (await response.json()) as { success: boolean; error?: string };
+    } catch (err: any) {
+      return { success: false, error: err?.message || "Failed to mark notification as read." };
+    }
+  },
 };
 
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { MessageSquare, Calendar, CheckCircle, Bell, Loader2 } from "lucide-react";
 import { appRoutes } from "@/constants/AppRoutes";
 import { useQuery } from "@tanstack/react-query";
@@ -13,6 +14,25 @@ export function NotificationDropdown() {
   const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number; width: number; maxHeight: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const pathname = usePathname();
+  const [lastViewedTime, setLastViewedTime] = useState<number>(0);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = window.localStorage.getItem("roteen_notifications_last_viewed_time");
+      if (stored) {
+        setLastViewedTime(parseInt(stored, 10));
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (pathname === appRoutes.notifications || pathname === "/notifications") {
+      const now = Date.now();
+      window.localStorage.setItem("roteen_notifications_last_viewed_time", now.toString());
+      setLastViewedTime(now);
+    }
+  }, [pathname]);
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.notifications,
@@ -22,6 +42,9 @@ export function NotificationDropdown() {
 
   const notifications = data?.data?.notifications ?? [];
   const unreadCount = data?.data?.unreadCount ?? 0;
+  const filteredUnreadCount = notifications.filter(
+    (n) => !n.isRead && new Date(n.createdAt).getTime() > lastViewedTime
+  ).length;
 
   const open = () => {
     if (buttonRef.current) {
@@ -162,12 +185,13 @@ export function NotificationDropdown() {
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={toggle}
+        suppressHydrationWarning
         className="relative text-[#A1A1AA] transition-colors hover:text-white"
       >
         <Bell className="h-5 w-5" />
-        {unreadCount > 0 && (
+        {filteredUnreadCount > 0 && (
           <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
-            {unreadCount > 9 ? "9+" : unreadCount}
+            {filteredUnreadCount > 9 ? "9+" : filteredUnreadCount}
           </span>
         )}
       </button>
@@ -195,15 +219,20 @@ export function NotificationDropdown() {
             <div className="flex items-center justify-between border-b border-zinc-800/50 px-4 py-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-white">Notifications</span>
-                {unreadCount > 0 && (
+                {filteredUnreadCount > 0 && (
                   <span className="flex h-5 items-center justify-center rounded-full bg-[#7C3AED] px-2 text-[11px] font-bold text-white">
-                    {unreadCount}
+                    {filteredUnreadCount}
                   </span>
                 )}
               </div>
               <Link
                 href={appRoutes.notifications}
-                onClick={close}
+                onClick={() => {
+                  const now = Date.now();
+                  window.localStorage.setItem("roteen_notifications_last_viewed_time", now.toString());
+                  setLastViewedTime(now);
+                  close();
+                }}
                 className="text-xs font-medium text-[#7C3AED] hover:text-[#9353d3] transition-colors"
               >
                 View all

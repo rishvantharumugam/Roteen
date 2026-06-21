@@ -7,6 +7,7 @@ const PREFETCH_ROUTES = [
   appRoutes.notes,
   appRoutes.revision,
   appRoutes.sessions,
+  appRoutes.pyqs,
   appRoutes.bugReport,
   "/video",
 ] as const;

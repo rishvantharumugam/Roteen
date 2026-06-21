@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type LearningMode = "Bookback" | "Interior";
+export type LearningMode = "book-back" | "interior";
 export type LearningLanguage = "English" | "Tamil" | string;
 
 export interface LearningState {

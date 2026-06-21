@@ -16,8 +16,8 @@ export interface MeetingEnrollment {
 }
 
 export async function getCurrentUserId(): Promise<string | null> {
-  const { data: userData } = await supabase.auth.getUser();
-  let userId = userData?.user?.id;
+  const { data: { session } } = await supabase.auth.getSession();
+  let userId = session?.user?.id;
 
   if (!userId) {
     const { data: users } = await supabase.from("users").select("id").limit(1).maybeSingle();

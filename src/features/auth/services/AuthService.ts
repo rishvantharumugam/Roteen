@@ -330,6 +330,30 @@ export async function updateUserProfile(
   }
 
   if (!error && finalProfile) {
+    if (payload.referred_by) {
+      try {
+        const { data: existingReferral, error: checkError } = await supabaseClient
+          .from("referrals")
+          .select("id")
+          .eq("referred", user.id)
+          .maybeSingle();
+
+        if (!checkError && !existingReferral) {
+          const { error: insertError } = await supabaseClient
+            .from("referrals")
+            .insert({
+              referrer: payload.referred_by,
+              referred: user.id,
+            });
+          if (insertError) {
+            console.error("Error inserting into referrals table:", insertError);
+          }
+        }
+      } catch (err) {
+        console.error("Exception checking/inserting into referrals table:", err);
+      }
+    }
+
     // Also sync the data to auth.users metadata so it's globally available in the session
     await supabaseClient.auth.updateUser({
       data: {
@@ -364,9 +388,73 @@ function mapSignUpErrorMessage(message: string | undefined) {
   return message ?? "Unable to create your account right now.";
 }
 
-export async function signInWithGoogle(redirectTo?: string) {
-  const popupRedirect = redirectTo || `${getSiteUrl()}${appRoutes.authCallback}`;
-  const url = new URL(popupRedirect);
+export async function signInWithGoogle(
+  redirectTo?: string,
+): Promise<{ error: Error | null; popupWindow: Window | null; redirected?: boolean }> {
+  const isMobile =
+    typeof window !== "undefined" &&
+    (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      window.navigator.userAgent,
+    ) ||
+      (window.navigator.maxTouchPoints > 0 && /Macintosh/i.test(window.navigator.userAgent)) ||
+      window.innerWidth < 1024 ||
+      window.screen.width < 1024);
+
+  const baseRedirect = redirectTo || `${getSiteUrl()}${appRoutes.authCallback}`;
+
+  if (isMobile) {
+    // Mobile flow: Direct redirect (No popup)
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: baseRedirect,
+        queryParams: {
+          access_type: "offline",
+          prompt: "select_account",
+        },
+      },
+    });
+    return { error: error ? new Error(error.message) : null, popupWindow: null, redirected: true };
+  }
+
+  // Desktop flow: Synchronously open a blank popup immediately to prevent browser blocking
+  let popupWindow: Window | null = null;
+  const width = 500;
+  const height = 600;
+  const left = window.screenX + (window.outerWidth - width) / 2;
+  const top = window.screenY + (window.outerHeight - height) / 2;
+  try {
+    popupWindow = window.open(
+      "about:blank",
+      "google_oauth",
+      `width=${width},height=${height},left=${left},top=${top}`,
+    );
+  } catch (e) {
+    console.error("Popup blocked synchronously:", e);
+  }
+
+  // If popup window is null, or closed immediately (blocked by browser settings)
+  if ((!popupWindow || popupWindow.closed || typeof popupWindow.closed === "undefined")) {
+    console.warn("Popup blocked. Falling back to direct redirect.");
+    const { error: redirectError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: baseRedirect,
+        queryParams: {
+          access_type: "offline",
+          prompt: "select_account",
+        },
+      },
+    });
+    return {
+      error: redirectError ? new Error(redirectError.message) : null,
+      popupWindow: null,
+      redirected: true,
+    };
+  }
+
+  // Desktop flow: Attempt popup
+  const url = new URL(baseRedirect);
   url.searchParams.set("popup", "1");
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -375,22 +463,21 @@ export async function signInWithGoogle(redirectTo?: string) {
       redirectTo: url.toString(),
       skipBrowserRedirect: true,
       queryParams: {
-        access_type: 'offline',
-        prompt: 'select_account',
+        access_type: "offline",
+        prompt: "select_account",
       },
     },
   });
 
-  let popupWindow: Window | null = null;
-  if (data?.url) {
-    const width = 500;
-    const height = 600;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-    popupWindow = window.open(data.url, 'google_oauth', `width=${width},height=${height},left=${left},top=${top}`);
+  if (error || !data?.url) {
+    popupWindow.close();
+    return { error: error ? new Error(error.message) : new Error("Failed to get authorization URL"), popupWindow: null };
   }
 
-  return { error, popupWindow };
+  // Navigate the pre-opened popup to the Supabase Google OAuth URL
+  popupWindow.location.href = data.url;
+
+  return { error: null, popupWindow };
 }
 
 export async function sendEmailVerificationOtp(email: string, redirectTo?: string) {

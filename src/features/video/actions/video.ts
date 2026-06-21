@@ -24,11 +24,11 @@ export function getVideoDataResponse(): VideoData {
   return getVideoData();
 }
 
-export async function getSubjectPanelData(mode: QuestionMode = "Bookback"): Promise<SubjectPanelData> {
+export async function getSubjectPanelData(mode: QuestionMode = "book-back"): Promise<SubjectPanelData> {
   const groupedData = await fetchSubjectChaptersQuestionsByMode(mode);
   if (!groupedData) {
     return {
-      subject: "Math",
+      subject: "Mathematics",
       totalQuestions: 0,
       chapters: [],
     };

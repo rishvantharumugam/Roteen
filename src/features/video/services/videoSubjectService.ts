@@ -23,6 +23,7 @@ export type SubjectPanelCacheData = {
     standard?: string | number | null;
     question_marks?: string | null;
     questions_marks?: string | null;
+    category?: string | null;
   }[];
   quizzes?: {
     id: string;
@@ -33,8 +34,8 @@ export type SubjectPanelCacheData = {
 };
 
 const SUBJECT_NAME_ALIASES: Record<string, string> = {
-  math: "Math",
-  mathematics: "Math",
+  math: "Mathematics",
+  mathematics: "Mathematics",
   physics: "Physics",
   chemistry: "Chemistry",
   biology: "Biology",
@@ -48,7 +49,6 @@ const SUBJECT_NAME_ALIASES: Record<string, string> = {
 
 const memoryCache = new Map<string, SubjectPanelCacheData>();
 const inflightSubjectPanelRequests = new Map<string, Promise<SubjectPanelCacheData>>();
-const DEFAULT_STANDARD = 10;
 
 export function titleToSubjectSlug(title: string): string {
   const normalized = title.trim().toLowerCase();
@@ -82,14 +82,14 @@ export function getSubjectPanelCacheKey(filter: VideoSubjectFilter): string {
   const standardSuffix = filter.standard?.trim() ? `|std:${filter.standard.trim()}` : "";
 
   if (filter.subjectId) {
-    return `id:${filter.subjectId}${standardSuffix}_v3`;
+    return `id:${filter.subjectId}${standardSuffix}_v5`;
   }
 
   if (filter.subjectSlug) {
-    return `slug:${filter.subjectSlug.trim().toLowerCase()}${standardSuffix}_v3`;
+    return `slug:${filter.subjectSlug.trim().toLowerCase()}${standardSuffix}_v5`;
   }
 
-  return `default:math${standardSuffix || "|std:10"}_v3`;
+  return `default:math${standardSuffix}_v5`;
 }
 
 export function readSubjectPanelCache(key: string): SubjectPanelCacheData | null {
@@ -158,7 +158,6 @@ function standardMatches(value: unknown, requestedStandard: string | null): bool
 
 async function fetchSubjectRow(filter: VideoSubjectFilter) {
   const requestedStandard = toStandardString(filter.standard);
-  const effectiveStandard = requestedStandard ?? String(DEFAULT_STANDARD);
 
   if (filter.subjectId) {
     let query = supabase
@@ -180,33 +179,35 @@ async function fetchSubjectRow(filter: VideoSubjectFilter) {
       return data;
     }
 
-    throw new Error("Selected subject is invalid for the requested standard.");
-  }
-
-  const slug = filter.subjectSlug?.trim().toLowerCase();
-  if (!slug) {
-    const { data, error } = await supabase
-      .from("subjects")
-      .select("id, subject_name, standard")
-      .eq("subject_name", "Math")
-      .eq("standard", effectiveStandard)
-      .maybeSingle();
-
-    if (error) {
-      throw error;
+    // If subject not found with standard filter, try without it (subject moved standards)
+    if (requestedStandard) {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("subjects")
+        .select("id, subject_name, standard")
+        .eq("id", filter.subjectId)
+        .maybeSingle();
+      if (!fallbackError && fallbackData) {
+        return fallbackData;
+      }
     }
 
-    return data;
+    throw new Error("Selected subject not found.");
   }
+
+  const slug = filter.subjectSlug?.trim().toLowerCase() || "math";
 
   const resolvedName = resolveSubjectNameFromSlug(slug);
   if (resolvedName) {
-    const { data, error } = await supabase
+    let exactQuery = supabase
       .from("subjects")
       .select("id, subject_name, standard")
-      .eq("subject_name", resolvedName)
-      .eq("standard", effectiveStandard)
-      .maybeSingle();
+      .eq("subject_name", resolvedName);
+
+    if (requestedStandard) {
+      exactQuery = exactQuery.eq("standard", requestedStandard);
+    }
+
+    const { data, error } = await exactQuery.maybeSingle();
 
     if (error) {
       throw error;
@@ -218,18 +219,24 @@ async function fetchSubjectRow(filter: VideoSubjectFilter) {
   }
 
   const fuzzyTerm = slug.replace(/-/g, " ");
-  const { data: fuzzyRows, error: fuzzyError } = await supabase
+  let fuzzyQuery = supabase
     .from("subjects")
     .select("id, subject_name, standard")
-    .ilike("subject_name", `%${fuzzyTerm}%`)
-    .eq("standard", effectiveStandard)
-    .limit(5);
+    .ilike("subject_name", `%${fuzzyTerm}%`);
+
+  if (requestedStandard) {
+    fuzzyQuery = fuzzyQuery.eq("standard", requestedStandard);
+  }
+
+  const { data: fuzzyRows, error: fuzzyError } = await fuzzyQuery.limit(5);
 
   if (fuzzyError) {
     throw fuzzyError;
   }
 
-  const fuzzyMatch = fuzzyRows?.find((row: any) => standardMatches(row.standard, effectiveStandard)) ?? fuzzyRows?.[0] ?? null;
+  const fuzzyMatch = requestedStandard
+    ? (fuzzyRows?.find((row: any) => standardMatches(row.standard, requestedStandard)) ?? fuzzyRows?.[0] ?? null)
+    : (fuzzyRows?.[0] ?? null);
 
   if (fuzzyMatch) {
     return fuzzyMatch;
@@ -277,7 +284,7 @@ export async function fetchSubjectPanelData(
     const buildQuestionQuery = () => {
       const query = supabase
         .from("questions")
-        .select("id, chapter_id, mode, standard, questions_sections, question, level")
+        .select("id, chapter_id, mode, standard, questions_sections, question, level, category")
         .eq("subject_id", subjectId)
         .order("chapter_id", { ascending: true })
         .order("id", { ascending: true });
@@ -350,7 +357,7 @@ export async function fetchSubjectPanelData(
     }
 
     const payload: SubjectPanelCacheData = {
-      subject: subject.subject_name || "Math",
+      subject: subject.subject_name || "Mathematics",
       subjectId,
       standard: subjectStandard,
       chapters: chapterRows || [],

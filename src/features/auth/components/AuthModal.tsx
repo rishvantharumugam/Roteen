@@ -84,9 +84,18 @@ function MailVerifyArtwork() {
 }
 
 const slideVariants = {
-  initial: { x: "100%", opacity: 0 },
-  animate: { x: 0, opacity: 1 },
-  exit: { x: "-100%", opacity: 0 }
+  initial: (direction: number) => ({
+    x: direction > 0 ? "100%" : "-100%",
+    opacity: 0
+  }),
+  animate: {
+    x: 0,
+    opacity: 1
+  },
+  exit: (direction: number) => ({
+    x: direction < 0 ? "100%" : "-100%",
+    opacity: 0
+  })
 };
 
 const slideTransition = {
@@ -106,12 +115,13 @@ const secondaryButtonClassName =
 
 interface OnboardingContainerProps {
   children: React.ReactNode;
+  custom?: number;
 }
 
-function OnboardingContainer({ children }: OnboardingContainerProps) {
+function OnboardingContainer({ children, custom }: OnboardingContainerProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black">
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" custom={custom}>
         {children}
       </AnimatePresence>
     </div>
@@ -146,6 +156,7 @@ interface GoogleStepProps {
   handleSignUp: (event: FormEvent<HTMLFormElement>) => void;
   handleGoogleSignIn: () => void;
   handleClose: () => void;
+  custom?: number;
 }
 
 function GoogleStep({
@@ -176,20 +187,25 @@ function GoogleStep({
   handleSignUp,
   handleGoogleSignIn,
   handleClose,
+  custom,
 }: GoogleStepProps) {
   return (
     <motion.div
-      key="google"
       variants={slideVariants}
+      custom={custom}
       initial="initial"
       animate="animate"
       exit="exit"
       transition={slideTransition}
       className="relative z-10 w-[95%] max-w-[25rem] max-h-[calc(100vh-2rem)] flex flex-col rounded-xl border border-[#161616] bg-[#0a0a0a] shadow-2xl overflow-hidden"
     >
-      <div className="flex flex-col overflow-y-auto custom-scrollbar">
+      <div className="relative flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar flex-1 px-7 py-9">
+        {/* Floating decorative background blobs */}
+        <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-violet-600/10 blur-3xl animate-float" />
+        <div className="pointer-events-none absolute -right-16 -bottom-16 h-48 w-48 rounded-full bg-fuchsia-600/10 blur-3xl animate-float" style={{ animationDelay: "2s" }} />
+
         {activeMode === "signIn" && signInStep === 1 ? (
-          <div className="flex flex-1 flex-col rounded-xl px-7 py-9">
+          <div className="flex flex-1 flex-col w-full relative z-10">
             <div className="flex flex-col items-center mb-6">
               <div className="mb-7 flex items-center justify-center mt-2">
                 <span className="relative inline-flex items-end font-heading text-[30px] font-black italic leading-none tracking-normal sm:text-[34px]">
@@ -209,15 +225,24 @@ function GoogleStep({
             </div>
 
             <form className="space-y-4" onSubmit={handleSignIn}>
-              <input
-                suppressHydrationWarning
-                type="email"
-                placeholder="example@gmail.com"
-                value={signInEmail}
-                onChange={(event) => setSignInEmail(event.target.value)}
-                required
-                className={inputClassName}
-              />
+              <div className="relative">
+                <input
+                  id="signInEmail"
+                  suppressHydrationWarning
+                  type="email"
+                  placeholder=" "
+                  value={signInEmail}
+                  onChange={(event) => setSignInEmail(event.target.value)}
+                  required
+                  className="peer w-full rounded-md border border-[#2a2a2a] bg-[#1a1a1a] px-4 pt-5 pb-2 text-[14px] text-zinc-200 outline-none transition focus:border-[#4a4a4a] focus:bg-[#202020]"
+                />
+                <label
+                  htmlFor="signInEmail"
+                  className="absolute left-4 top-3.5 z-10 origin-left -translate-y-2.5 scale-75 transform text-[12px] text-zinc-500 duration-150 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:text-[14px] peer-focus:-translate-y-2.5 peer-focus:scale-75 peer-focus:text-violet-400 pointer-events-none"
+                >
+                  Email Address
+                </label>
+              </div>
 
               {errorMessage ? (
                 <p className="rounded-lg bg-red-950/30 px-4 py-3 text-[13px] text-red-500 border border-red-900/50">
@@ -265,7 +290,7 @@ function GoogleStep({
             </div>
           </div>
         ) : activeMode === "signIn" && signInStep === 2 ? (
-          <div className="flex flex-1 flex-col rounded-xl px-7 py-9">
+          <div className="flex flex-1 flex-col w-full relative z-10">
             <div className="flex flex-col items-center mb-6">
               <div className="mb-7 flex items-center justify-center mt-2">
                 <span className="relative inline-flex items-end font-heading text-[30px] font-black italic leading-none tracking-normal sm:text-[34px]">
@@ -301,21 +326,30 @@ function GoogleStep({
                 </p>
               </div>
 
-              <input
-                suppressHydrationWarning
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                placeholder="Enter 6-digit OTP"
-                value={signInOtp}
-                onChange={(event) =>
-                  setSignInOtp(
-                    event.target.value.replace(/\D/g, "").slice(0, 6),
-                  )
-                }
-                required
-                className={otpInputClassName}
-              />
+              <div className="relative">
+                <input
+                  id="signInOtp"
+                  suppressHydrationWarning
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder=" "
+                  value={signInOtp}
+                  onChange={(event) =>
+                    setSignInOtp(
+                      event.target.value.replace(/\D/g, "").slice(0, 6),
+                    )
+                  }
+                  required
+                  className="peer w-full rounded-md border border-[#2a2a2a] bg-[#1a1a1a] px-4 pt-5 pb-2 text-center text-[14px] tracking-[0.35em] text-zinc-200 outline-none transition focus:border-[#4a4a4a] focus:bg-[#202020] placeholder:tracking-normal"
+                />
+                <label
+                  htmlFor="signInOtp"
+                  className="absolute left-1/2 -translate-x-1/2 top-3.5 z-10 origin-center -translate-y-2.5 scale-75 transform text-[12px] text-zinc-500 duration-150 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:text-[14px] peer-focus:-translate-y-2.5 peer-focus:scale-75 peer-focus:text-violet-400 pointer-events-none"
+                >
+                  6-digit OTP
+                </label>
+              </div>
 
               {errorMessage ? (
                 <p className="rounded-lg bg-red-950/30 px-4 py-3 text-[13px] text-red-500 border border-red-900/50">
@@ -384,7 +418,7 @@ function GoogleStep({
             </div>
           </div>
         ) : activeMode === "signUp" && signUpStep === 1 ? (
-          <div className="flex flex-1 flex-col rounded-xl px-7 py-9">
+          <div className="flex flex-1 flex-col w-full relative z-10">
             <div className="flex flex-col items-center mb-6">
               <div className="mb-7 flex items-center justify-center mt-2">
                 <span className="relative inline-flex items-end font-heading text-[30px] font-black italic leading-none tracking-normal sm:text-[34px]">
@@ -404,15 +438,24 @@ function GoogleStep({
             </div>
 
             <form className="space-y-4" onSubmit={handleSignUp}>
-              <input
-                suppressHydrationWarning
-                type="email"
-                placeholder="Enter your email"
-                value={signUpEmail}
-                onChange={(event) => setSignUpEmail(event.target.value)}
-                required
-                className={inputClassName}
-              />
+              <div className="relative">
+                <input
+                  id="signUpEmail"
+                  suppressHydrationWarning
+                  type="email"
+                  placeholder=" "
+                  value={signUpEmail}
+                  onChange={(event) => setSignUpEmail(event.target.value)}
+                  required
+                  className="peer w-full rounded-md border border-[#2a2a2a] bg-[#1a1a1a] px-4 pt-5 pb-2 text-[14px] text-zinc-200 outline-none transition focus:border-[#4a4a4a] focus:bg-[#202020]"
+                />
+                <label
+                  htmlFor="signUpEmail"
+                  className="absolute left-4 top-3.5 z-10 origin-left -translate-y-2.5 scale-75 transform text-[12px] text-zinc-500 duration-150 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:text-[14px] peer-focus:-translate-y-2.5 peer-focus:scale-75 peer-focus:text-violet-400 pointer-events-none"
+                >
+                  Email Address
+                </label>
+              </div>
 
               {errorMessage ? (
                 <p className="rounded-lg bg-red-950/30 px-4 py-3 text-[13px] text-red-500 border border-red-900/50">
@@ -460,7 +503,7 @@ function GoogleStep({
             </div>
           </div>
         ) : (
-          <div className="flex flex-1 flex-col rounded-xl px-7 py-9">
+          <div className="flex flex-1 flex-col w-full relative z-10">
             <div className="flex flex-col items-center mb-6">
               <div className="mb-7 flex items-center justify-center mt-2">
                 <span className="relative inline-flex items-end font-heading text-[30px] font-black italic leading-none tracking-normal sm:text-[34px]">
@@ -496,21 +539,30 @@ function GoogleStep({
                 </p>
               </div>
 
-              <input
-                suppressHydrationWarning
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                placeholder="Enter 6-digit OTP"
-                value={signUpOtp}
-                onChange={(event) =>
-                  setSignUpOtp(
-                    event.target.value.replace(/\D/g, "").slice(0, 6),
-                  )
-                }
-                required
-                className={otpInputClassName}
-              />
+              <div className="relative">
+                <input
+                  id="signUpOtp"
+                  suppressHydrationWarning
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder=" "
+                  value={signUpOtp}
+                  onChange={(event) =>
+                    setSignUpOtp(
+                      event.target.value.replace(/\D/g, "").slice(0, 6),
+                    )
+                  }
+                  required
+                  className="peer w-full rounded-md border border-[#2a2a2a] bg-[#1a1a1a] px-4 pt-5 pb-2 text-center text-[14px] tracking-[0.35em] text-zinc-200 outline-none transition focus:border-[#4a4a4a] focus:bg-[#202020] placeholder:tracking-normal"
+                />
+                <label
+                  htmlFor="signUpOtp"
+                  className="absolute left-1/2 -translate-x-1/2 top-3.5 z-10 origin-center -translate-y-2.5 scale-75 transform text-[12px] text-zinc-500 duration-150 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:text-[14px] peer-focus:-translate-y-2.5 peer-focus:scale-75 peer-focus:text-violet-400 pointer-events-none"
+                >
+                  6-digit OTP
+                </label>
+              </div>
 
               {errorMessage ? (
                 <p className="rounded-lg bg-red-950/30 px-4 py-3 text-[13px] text-red-500 border border-red-900/50">
@@ -624,6 +676,7 @@ interface SignupStepProps {
   setSuccessMessage: (msg: string) => void;
   handleSignUp: (event: FormEvent<HTMLFormElement>) => void;
   handleClose: () => void;
+  custom?: number;
 }
 
 function SignupStep({
@@ -665,18 +718,19 @@ function SignupStep({
   setSuccessMessage,
   handleSignUp,
   handleClose,
+  custom,
 }: SignupStepProps) {
   return (
     <motion.div
-      key="signup"
       variants={slideVariants}
+      custom={custom}
       initial="initial"
       animate="animate"
       exit="exit"
       transition={slideTransition}
       className="relative z-10 w-[95%] max-w-[25rem] max-h-[calc(100vh-2rem)] flex flex-col rounded-xl border border-[#161616] bg-[#0a0a0a] shadow-2xl overflow-hidden"
     >
-      <div className="flex flex-col overflow-y-auto custom-scrollbar">
+      <div className="flex flex-col overflow-y-auto no-scrollbar">
         <div className="flex flex-1 flex-col rounded-xl px-7 py-9">
           <div className="flex flex-col items-center mb-6">
             <div className="mb-7 flex items-center justify-center mt-2">
@@ -808,14 +862,24 @@ function SignupStep({
                 )}
               </div>
 
-              <input
-                suppressHydrationWarning
-                type="date"
-                value={signUpDob}
-                onChange={(event) => setSignUpDob(event.target.value)}
-                required
-                className={inputClassName}
-              />
+              <div className="relative">
+                <input
+                  id="signUpDob"
+                  suppressHydrationWarning
+                  type="date"
+                  value={signUpDob}
+                  onChange={(event) => setSignUpDob(event.target.value)}
+                  required
+                  className="w-full rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] px-4 pt-5 pb-1.5 text-[14px] text-zinc-200 outline-none transition focus:border-[#4a4a4a] focus:bg-[#202020]"
+                  style={{ colorScheme: "dark" }}
+                />
+                <label
+                  htmlFor="signUpDob"
+                  className="absolute left-4 top-1.5 z-10 origin-left scale-75 transform text-[11px] text-zinc-500 pointer-events-none"
+                >
+                  Date of Birth
+                </label>
+              </div>
 
               <SearchableSelect
                 name="signUpGender"
@@ -915,13 +979,14 @@ function SignupStep({
 interface SuccessStepProps {
   wasSignInSuccess: boolean;
   redirectCountdown: number;
+  custom?: number;
 }
 
-function SuccessStep({ wasSignInSuccess, redirectCountdown }: SuccessStepProps) {
+function SuccessStep({ wasSignInSuccess, redirectCountdown, custom }: SuccessStepProps) {
   return (
     <motion.div
-      key="success"
       variants={slideVariants}
+      custom={custom}
       initial="initial"
       animate="animate"
       exit="exit"
@@ -938,9 +1003,9 @@ function SuccessStep({ wasSignInSuccess, redirectCountdown }: SuccessStepProps) 
           <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="3" />
         </svg>
       </motion.div>
-      
+
       <h2 className="mb-4 text-[24px] font-bold text-white tracking-tight">Success!</h2>
-      
+
       <div className="flex items-center justify-center gap-2 mb-8">
         <span className="text-[14px] text-zinc-400">
           {wasSignInSuccess ? "Successfully logged into" : "Account created for"}
@@ -950,7 +1015,7 @@ function SuccessStep({ wasSignInSuccess, redirectCountdown }: SuccessStepProps) 
           <span className="text-violet-400">een</span>
         </span>
       </div>
-      
+
       <p className="text-[13px] text-[#555]">
         Redirecting in {redirectCountdown}s...
       </p>
@@ -1047,9 +1112,26 @@ export function AuthModal({
   const [loginMethod, setLoginMethod] = useState<"otp" | "google">("otp");
   const [wasSignInSuccess, setWasSignInSuccess] = useState(false);
 
-  const [schools, setSchools] = useState<{label: string, value: string}[]>([]);
+  const [schools, setSchools] = useState<{ label: string, value: string }[]>([]);
   const [isLoadingSchools, setIsLoadingSchools] = useState(false);
   const [otherSchoolText, setOtherSchoolText] = useState("");
+  const [slideDirection, setSlideDirection] = useState<number>(1);
+
+  const handleSetSignInStep = (step: 1 | 2) => {
+    setSlideDirection(step === 2 ? 1 : -1);
+    setSignInStep(step);
+  };
+
+  const handleSetSignUpStep = (step: 1 | 2 | 3) => {
+    if (step === 2) {
+      setSlideDirection(signUpStep === 1 ? 1 : -1);
+    } else if (step === 1) {
+      setSlideDirection(-1);
+    } else {
+      setSlideDirection(1);
+    }
+    setSignUpStep(step);
+  };
 
   useEffect(() => {
     if (signUpDistrict && signUpSchoolType) {
@@ -1057,7 +1139,7 @@ export function AuthModal({
       const fetchedOptions = data.map(s => ({ label: s.name, value: s.name }));
       fetchedOptions.push({ label: "Other School (Not Listed)", value: "OTHER" });
       setSchools(fetchedOptions);
-      
+
       if (signUpSchoolName && signUpSchoolName !== "OTHER" && !fetchedOptions.find(o => o.value === signUpSchoolName)) {
         setOtherSchoolText(signUpSchoolName);
         setSignUpSchoolName("OTHER");
@@ -1076,13 +1158,13 @@ export function AuthModal({
           const metadata = user.user_metadata;
           const googleName = metadata?.full_name || metadata?.name || "";
           setSignUpFullName(prev => prev || googleName || "");
-          
+
           const { data: profile } = await supabase
             .from("users")
             .select("name, phone_number, district, standard, school_type, school_name, dob, gender, medium_of_education, user_type")
             .eq("id", user.id)
             .maybeSingle();
-            
+
           if (profile) {
             if (profile.name) setSignUpFullName(prev => prev || profile.name || "");
             if (profile.phone_number) setSignUpPhone(prev => prev || profile.phone_number || "");
@@ -1116,18 +1198,20 @@ export function AuthModal({
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (typeof event.data !== 'object' || event.data === null) return;
-      
+
       if (event.data.type === 'GOOGLE_SIGN_IN_SUCCESS') {
         const parsedUrl = new URL(event.data.url, window.location.origin);
         const successParam = parsedUrl.searchParams.get("google_success") === "1";
         const nextRouteParam = parsedUrl.searchParams.get("next");
         const authParam = parsedUrl.searchParams.get("auth");
         const stepParam = parsedUrl.searchParams.get("step");
-        
+
+        // Synchronously transition to the success page or the profile completion page
+        // immediately to prevent the login modal/form from showing again.
         if (successParam) {
           setPendingRoute(nextRouteParam ?? appRoutes.home);
           setWasSignInSuccess(true);
-          triggerSuccess();
+          setShowSuccess(true);
         } else if (authParam === "signUp" && stepParam === "3") {
           setIsGoogleSubmitting(false);
           setLoginMethod("google");
@@ -1135,13 +1219,23 @@ export function AuthModal({
           setSignUpStep(3);
           setFlowExpiresAt(getAuthFlowExpiryTimestamp());
           setSuccessMessage("Google account verified successfully. Please complete your student details.");
-        } else {
-          setIsGoogleSubmitting(false);
-          clearAuthFlowDraft();
-          onClose();
-          router.push(event.data.url);
-          router.refresh();
         }
+
+        void (async () => {
+          if (event.data.session) {
+            await supabase.auth.setSession(event.data.session);
+          } else {
+            await supabase.auth.getSession();
+          }
+
+          if (!successParam && !(authParam === "signUp" && stepParam === "3")) {
+            setIsGoogleSubmitting(false);
+            clearAuthFlowDraft();
+            onClose();
+            router.push(event.data.url);
+            router.refresh();
+          }
+        })();
       } else if (event.data.type === 'GOOGLE_SIGN_IN_ERROR') {
         setErrorMessage(event.data.error || "An error occurred during Google sign-in.");
         setIsGoogleSubmitting(false);
@@ -1285,7 +1379,7 @@ export function AuthModal({
       }
 
       setFlowExpiresAt(getAuthFlowExpiryTimestamp());
-      setSignInStep(2);
+      handleSetSignInStep(2);
       setIsSubmitting(false);
       setSuccessMessage(
         `We sent a verification code to ${signInEmail.trim().toLowerCase()}.`,
@@ -1332,7 +1426,7 @@ export function AuthModal({
       }
 
       setFlowExpiresAt(getAuthFlowExpiryTimestamp());
-      setSignUpStep(2);
+      handleSetSignUpStep(2);
       setIsSubmitting(false);
       setSuccessMessage(`We sent a verification code to ${signUpEmail.trim().toLowerCase()}.`);
       return;
@@ -1370,7 +1464,7 @@ export function AuthModal({
         return;
       }
 
-      setSignUpStep(3);
+      handleSetSignUpStep(3);
       setSignUpOtp("");
       setIsSubmitting(false);
       setSuccessMessage(
@@ -1411,8 +1505,8 @@ export function AuthModal({
         userType: signUpUserType,
         referredByCode: signUpReferralCode.trim()
           ? (signUpReferralCode.trim().toUpperCase().startsWith("RTN-")
-              ? signUpReferralCode.trim().toUpperCase()
-              : `RTN-${signUpReferralCode.trim().toUpperCase()}`)
+            ? signUpReferralCode.trim().toUpperCase()
+            : `RTN-${signUpReferralCode.trim().toUpperCase()}`)
           : undefined,
       });
 
@@ -1420,6 +1514,10 @@ export function AuthModal({
         setErrorMessage(error.message);
         setIsSubmitting(false);
         return;
+      }
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("roteen-profile-updated"));
       }
 
       setIsSubmitting(false);
@@ -1443,18 +1541,43 @@ export function AuthModal({
     setSuccessMessage("");
 
     const redirectTo = `${getSiteUrl()}${appRoutes.authCallback}`;
-    const { error, popupWindow } = await signInWithGoogle(redirectTo);
+    const { error, popupWindow, redirected } = await signInWithGoogle(redirectTo);
 
     if (error) {
       setErrorMessage(error.message);
       setIsGoogleSubmitting(false);
+    } else if (redirected) {
+      // Direct redirect is in progress, keep the loading spinner active and do nothing else
+      return;
     } else if (popupWindow) {
-      const checkClosed = window.setInterval(() => {
+      const startTime = Date.now();
+      const checkClosed = window.setInterval(async () => {
         if (popupWindow.closed) {
           window.clearInterval(checkClosed);
           setIsGoogleSubmitting(false);
+
+          // If the window is closed in under 350ms, it's almost certainly blocked by a popup blocker
+          const elapsed = Date.now() - startTime;
+          if (elapsed < 350) {
+            console.warn("OAuth popup closed instantly (likely blocked). Redirecting directly...");
+            setIsGoogleSubmitting(true);
+            const { error: redirectError } = await supabase.auth.signInWithOAuth({
+              provider: "google",
+              options: {
+                redirectTo,
+                queryParams: {
+                  access_type: "offline",
+                  prompt: "select_account",
+                },
+              },
+            });
+            if (redirectError) {
+              setErrorMessage(redirectError.message);
+              setIsGoogleSubmitting(false);
+            }
+          }
         }
-      }, 500);
+      }, 100);
     } else {
       setErrorMessage("Please allow popups to sign in with Google.");
       setIsGoogleSubmitting(false);
@@ -1478,15 +1601,15 @@ export function AuthModal({
   }
 
   return (
-    <OnboardingContainer>
+    <OnboardingContainer custom={slideDirection}>
       {currentStep === "google" && (
         <GoogleStep
-          key="google"
+          key={`${activeMode}-${activeMode === "signIn" ? signInStep : signUpStep}`}
           activeMode={activeMode}
           signInStep={signInStep}
-          setSignInStep={setSignInStep}
+          setSignInStep={handleSetSignInStep}
           signUpStep={signUpStep}
-          setSignUpStep={setSignUpStep}
+          setSignUpStep={handleSetSignUpStep}
           signInEmail={signInEmail}
           setSignInEmail={setSignInEmail}
           signInOtp={signInOtp}
@@ -1509,6 +1632,7 @@ export function AuthModal({
           handleSignUp={handleSignUp}
           handleGoogleSignIn={handleGoogleSignIn}
           handleClose={handleClose}
+          custom={slideDirection}
         />
       )}
       {currentStep === "signup" && (
@@ -1547,11 +1671,12 @@ export function AuthModal({
           isSubmitting={isSubmitting}
           isGoogleSubmitting={isGoogleSubmitting}
           loginMethod={loginMethod}
-          setSignUpStep={setSignUpStep}
+          setSignUpStep={handleSetSignUpStep}
           setErrorMessage={setErrorMessage}
           setSuccessMessage={setSuccessMessage}
           handleSignUp={handleSignUp}
           handleClose={handleClose}
+          custom={slideDirection}
         />
       )}
       {currentStep === "success" && (
@@ -1559,6 +1684,7 @@ export function AuthModal({
           key="success"
           wasSignInSuccess={wasSignInSuccess}
           redirectCountdown={redirectCountdown}
+          custom={slideDirection}
         />
       )}
     </OnboardingContainer>

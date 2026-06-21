@@ -456,7 +456,7 @@ export function BugWorkspace() {
                     Please sign in to view and submit your bug reports.
                   </p>
                   <Link
-                    href={appRoutes.signIn}
+                    href={`${appRoutes.signIn}?next=${encodeURIComponent(appRoutes.bugReport)}`}
                     className="mt-4 inline-block rounded-xl border border-violet-400/35 bg-violet-500/10 px-4 py-2 text-sm font-semibold text-violet-100 shadow-[0_0_24px_rgba(124,58,237,0.16)] transition hover:bg-violet-500/20"
                   >
                     Go to sign in

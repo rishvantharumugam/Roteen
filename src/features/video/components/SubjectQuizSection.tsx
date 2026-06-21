@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { fetchChapterQuizzes, type ChapterQuizRecord } from "@/features/video/services/videoQuizService";
 import SubjectQuestionRow from "@/features/video/components/SubjectQuestionRow";
@@ -13,6 +12,7 @@ interface SubjectQuizSectionProps {
   activeQuizId: string | null;
   mode?: string;
   onQuizSelect: (quizId: string) => void;
+  completedQuizzes?: string[];
 }
 
 export default function SubjectQuizSection({
@@ -21,6 +21,7 @@ export default function SubjectQuizSection({
   activeQuizId,
   mode,
   onQuizSelect,
+  completedQuizzes = [],
 }: SubjectQuizSectionProps) {
   const [quizzes, setQuizzes] = useState<ChapterQuizRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,9 +74,10 @@ export default function SubjectQuizSection({
   }
 
   return (
-    <div className="mt-1 flex flex-col gap-1 pb-3 pr-1">
+    <div className="mt-1 flex flex-col gap-1 pb-3">
       {quizzes.map((quiz) => {
         const isActive = activeQuizId === quiz.id;
+        const isQuizCompleted = completedQuizzes.includes(quiz.id);
         return (
           <motion.div key={quiz.id} className="group/item relative pl-4">
             <span
@@ -90,7 +92,7 @@ export default function SubjectQuizSection({
               topicId={quiz.id}
               title="Quiz"
               active={isActive}
-              completed={false}
+              completed={isQuizCompleted}
               onClick={onQuizSelect}
             />
           </motion.div>

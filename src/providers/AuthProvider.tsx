@@ -32,7 +32,7 @@ export function AuthProvider({
 }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(initialSession);
   const [user, setUser] = useState<User | null>(initialUser);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(!initialUser);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -42,65 +42,71 @@ export function AuthProvider({
     let isActive = true;
     let previousUserId: string | null = initialUser?.id ?? null;
 
+    const checkUserProfileAndSetState = async (currentSession: Session | null) => {
+      const currentUser = currentSession?.user ?? null;
+
+      if (currentUser) {
+        // Check if profile exists in users table
+        const { data: userProfile, error: profileError } = await supabase
+          .from("users")
+          .select("id")
+          .eq("id", currentUser.id)
+          .maybeSingle();
+
+        if (!profileError && !userProfile) {
+          // Profile does not exist. Check if there is an active onboarding session draft.
+          let hasActiveDraft = false;
+          try {
+            const draft = window.localStorage.getItem("routeen-auth-flow-draft");
+            if (draft) {
+              const parsed = JSON.parse(draft);
+              if (parsed.expiresAt && Date.now() < parsed.expiresAt) {
+                hasActiveDraft = true;
+              }
+            }
+          } catch { }
+
+          if (!hasActiveDraft) {
+            // No active onboarding draft. Sign out to clear dangling auth session.
+            await supabase.auth.signOut();
+          }
+
+          // In either case, treat them as logged out in context since the profile is incomplete.
+          setSession(null);
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      setSession(currentSession);
+      setUser(currentUser);
+      setIsLoading(false);
+    };
+
     const syncAuthState = async () => {
-      setIsLoading(true);
+      if (!initialUser) {
+        setIsLoading(true);
+      }
 
       try {
-        const [sessionResult, userResult] = await Promise.all([
-          supabase.auth.getSession(),
-          supabase.auth.getUser(),
-        ]);
-
+        const sessionResult = await supabase.auth.getSession();
         if (!isActive) {
           return;
         }
 
         if (sessionResult.error) {
+          await supabase.auth.signOut().catch(() => {});
           setSession(null);
           setUser(null);
           setIsLoading(false);
           return;
         }
 
-        const sessionUser = userResult.data.user;
-        if (sessionUser) {
-          // Check if profile exists in users table
-          const { data: userProfile, error: profileError } = await supabase
-            .from("users")
-            .select("id")
-            .eq("id", sessionUser.id)
-            .maybeSingle();
-
-          if (!profileError && !userProfile) {
-            // Profile does not exist. Check if there is an active onboarding session draft.
-            let hasActiveDraft = false;
-            try {
-              const draft = window.localStorage.getItem("routeen-auth-flow-draft");
-              if (draft) {
-                const parsed = JSON.parse(draft);
-                if (parsed.expiresAt && Date.now() < parsed.expiresAt) {
-                  hasActiveDraft = true;
-                }
-              }
-            } catch {}
-
-            if (!hasActiveDraft) {
-              // No active onboarding draft. Sign out to clear dangling auth session.
-              await supabase.auth.signOut();
-              setSession(null);
-              setUser(null);
-              setIsLoading(false);
-              return;
-            }
-          }
-        }
-
-        setSession(sessionResult.data.session);
-        setUser(sessionUser);
+        const session = sessionResult.data.session;
+        await checkUserProfileAndSetState(session);
       } catch {
-        // Transient network error (e.g. "Failed to fetch" on tab wake-up).
-        // Supabase auth-js retries automatically; keep whatever session state
-        // we already have from initialSession / initialUser props.
+        // Transient network error. Supabase auth-js retries automatically.
       } finally {
         if (isActive) setIsLoading(false);
       }
@@ -113,6 +119,12 @@ export function AuthProvider({
         return;
       }
 
+      // If we are logging out, bypass auth state changes to prevent component layout flicker before redirect
+      const isLoggingOut = typeof window !== "undefined" && window.sessionStorage.getItem("roteen_logging_out") === "true";
+      if (isLoggingOut) {
+        return;
+      }
+
       const nextUserId = nextSession?.user?.id ?? null;
 
       // If the user changed (sign-out, sign-in as different user, token switch)
@@ -122,11 +134,11 @@ export function AuthProvider({
         previousUserId = nextUserId;
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("auth-user-changed"));
-          
+
           try {
             const { clearLocalLearningState } = require('@/features/video/components/learningStateStore');
             clearLocalLearningState();
-            
+
             const keysToRemove: string[] = [];
             for (let i = 0; i < localStorage.length; i++) {
               const key = localStorage.key(i);
@@ -146,16 +158,25 @@ export function AuthProvider({
         }
       }
 
-      setSession(nextSession);
-      setUser(nextSession?.user ?? null);
-      setIsLoading(false);
+      void checkUserProfileAndSetState(nextSession);
     });
+
+    const handleProfileUpdated = () => {
+      void syncAuthState();
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("roteen-profile-updated", handleProfileUpdated);
+    }
 
     void syncAuthState();
 
     return () => {
       isActive = false;
       subscription.unsubscribe();
+      if (typeof window !== "undefined") {
+        window.removeEventListener("roteen-profile-updated", handleProfileUpdated);
+      }
     };
   }, [initialUser?.id]);
 
@@ -163,10 +184,6 @@ export function AuthProvider({
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem("roteen_logging_out", "true");
     }
-
-    // Optimistically clear local state for an instant UI update
-    setSession(null);
-    setUser(null);
 
     const { error } = await supabase.auth.signOut();
 

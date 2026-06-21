@@ -80,7 +80,7 @@ export function HeroSection({
       {/* Premium Glow and Grid */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30" />
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-violet-600 rounded-full blur-[200px] opacity-[0.08] animate-float pointer-events-none" />
-      
+
       <div className="relative mx-auto grid max-w-7xl gap-10 px-6 pb-8 pt-8 lg:min-h-[calc(100vh-7rem)] lg:grid-cols-[0.72fr_1fr] lg:items-center lg:gap-4 lg:px-8 lg:pb-10 lg:pt-6">
         <ScrollReveal direction="up" className="max-w-xl text-zinc-200 lg:pl-8">
           <span className="inline-flex rounded-full border border-violet-500/30 bg-violet-500/10 px-3.5 py-1 text-[11px] font-semibold tracking-tight text-violet-300 shadow-[0_0_24px_rgba(139,92,246,0.15)] backdrop-blur">
@@ -120,18 +120,19 @@ export function HeroSection({
               const suffixMatch = metric.value.match(/[^\d]+/);
               const num = numericMatch ? parseInt(numericMatch[0]) : 0;
               const suffix = suffixMatch ? suffixMatch[0] : "";
-              
+
               return (
-              <div
-                key={metric.label}
-                className="premium-card px-4 py-3"
-              >
-                <p className="font-heading text-[2rem] font-semibold leading-none text-white">
-                  {num > 0 ? <NumberTicker value={num} suffix={suffix} /> : metric.value}
-                </p>
-                <p className="mt-1 text-[0.95rem] text-zinc-500">{metric.label}</p>
-              </div>
-            )})}
+                <div
+                  key={metric.label}
+                  className="premium-card px-4 py-3"
+                >
+                  <p className="font-heading text-[2rem] font-semibold leading-none text-white">
+                    {num > 0 ? <NumberTicker value={num} suffix={suffix} /> : metric.value}
+                  </p>
+                  <p className="mt-1 text-[0.95rem] text-zinc-500">{metric.label}</p>
+                </div>
+              )
+            })}
           </div>
         </ScrollReveal>
 
@@ -488,6 +489,7 @@ export function HeroSection({
                 </div>
                 <button
                   type="button"
+                  suppressHydrationWarning
                   className="w-fit rounded-2xl border border-white/10 bg-zinc-800 px-4 py-3 text-sm font-semibold text-white shadow-lg premium-button-hover"
                 >
                   Newest First

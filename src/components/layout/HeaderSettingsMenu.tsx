@@ -42,7 +42,7 @@ export function HeaderSettingsMenu() {
     async function fetchName() {
       if (!user?.id) return;
       try {
-        const profile = await ProfileService.getProfile(user.id);
+        const profile = await ProfileService.getProfile(user.id, user);
         if (profile && profile.full_name && !profile.full_name.startsWith('Error:')) {
           setDynamicName(profile.full_name);
         }
@@ -51,7 +51,7 @@ export function HeaderSettingsMenu() {
       }
     }
     fetchName();
-  }, [user?.id]);
+  }, [user?.id, user]);
 
   const fallbackName = getDisplayName(
     user?.email,
@@ -101,19 +101,12 @@ export function HeaderSettingsMenu() {
     setIsLoggingOut(true);
     setIsOpen(false);
 
-    // Optimistically route immediately for a snappy user experience
-    applyRouteThemeClass(appRoutes.home);
-    router.replace(appRoutes.home);
-
-    // Run the slow network request in the background
     const { error } = await signOut();
 
     if (error) {
       console.warn("Failed to log out:", error);
+      setIsLoggingOut(false);
     }
-
-    setIsLoggingOut(false);
-    router.refresh();
   };
 
   return (
@@ -124,6 +117,7 @@ export function HeaderSettingsMenu() {
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((value) => !value)}
+        suppressHydrationWarning
         className="group flex items-center gap-1.5 outline-none"
       >
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#3b3b40] text-zinc-300 transition-colors group-hover:bg-[#4a4a50] group-hover:text-white border border-white/5">

@@ -48,7 +48,7 @@ export interface SubjectWithChapters {
   chapters: Chapter[];
 }
 
-export type QuestionMode = "Bookback" | "Interior";
+export type QuestionMode = "book-back" | "interior";
 
 export type VideoAction =
   | { type: "chapter"; payload: string }
@@ -142,9 +142,10 @@ export function getVideoData(): VideoData {
       { id: "notes", label: "Notes" },
       { id: "revision", label: "Revision" },
       { id: "sessions-link", label: "Sessions" },
+      { id: "pyqs-link", label: "PYQs" },
       { id: "profile", label: "Profile" },
     ],
-    subject: "Math",
+    subject: "Mathematics",
     chapterCounter: "1/3",
     chapters: [
       {
@@ -223,7 +224,7 @@ export async function fetchSubjectChaptersQuestionsByMode(
   const { data: subjectRows, error: subjectError } = await supabase
     .from("subjects")
     .select("id, standard, subject_name")
-    .eq("subject_name", "Math");
+    .eq("subject_name", "Mathematics");
 
   if (subjectError) {
     throw new Error(`Failed to fetch subject: ${subjectError.message}`);
@@ -286,7 +287,7 @@ export async function fetchSubjectChaptersQuestionsByMode(
       }
 
       const nextQuestions = accumulator.get(chapterId) ?? [];
-      const normalizedMode: QuestionMode = rowMode === "interior" ? "Interior" : "Bookback";
+      const normalizedMode: QuestionMode = rowMode === "interior" ? "interior" : "book-back";
       
       // Handle varied schema columns for question text
       const rawRow = row as any;
@@ -312,7 +313,7 @@ export async function fetchSubjectChaptersQuestionsByMode(
 
   return {
     subject_id: subjectId,
-    subject_name: String(subject.subject_name ?? "Math"),
+    subject_name: String(subject.subject_name ?? "Mathematics"),
     standard: 10,
     chapters: chaptersWithQuestions,
   };
@@ -322,7 +323,7 @@ export async function fetchStandardTenMathChapters(): Promise<SubjectChapterList
   const { data: subjectRows, error: subjectError } = await supabase
     .from("subjects")
     .select("id, standard, subject_name")
-    .eq("subject_name", "Math");
+    .eq("subject_name", "Mathematics");
 
   if (subjectError) {
     throw new Error(`Failed to fetch subject: ${subjectError.message}`);
@@ -360,16 +361,16 @@ export async function fetchStandardTenMathChapters(): Promise<SubjectChapterList
 
   return {
     subject_id: selectedSubjectId,
-    subject_name: String(subject.subject_name ?? "Math"),
+    subject_name: String(subject.subject_name ?? "Mathematics"),
     standard: 10,
     chapters,
   };
 }
 
 export async function getSubjectsAndChapters(
-  subjectName = "Math",
+  subjectName = "Mathematics",
   standard = 10,
-  mode: QuestionMode = "Bookback",
+  mode: QuestionMode = "book-back",
 ): Promise<SubjectWithChapters> {
   if (!supabase) {
     throw new Error(
@@ -462,7 +463,7 @@ export async function getQuestionsByMode(mode: QuestionMode): Promise<Chapter[]>
   const { data: subjectRows, error: subjectError } = await supabase
     .from("subjects")
     .select("id, standard, subject_name")
-    .eq("subject_name", "Math");
+    .eq("subject_name", "Mathematics");
 
   if (subjectError) {
     throw new Error(`Failed to fetch subject: ${subjectError.message}`);
@@ -546,7 +547,7 @@ export async function getStandardTenMathChapters(): Promise<Chapter[]> {
   const { data: subjectRows, error: subjectError } = await supabase
     .from("subjects")
     .select("id, standard, subject_name")
-    .eq("subject_name", "Math");
+    .eq("subject_name", "Mathematics");
 
   if (subjectError) {
     throw new Error(`Failed to fetch subject: ${subjectError.message}`);

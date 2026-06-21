@@ -16,6 +16,8 @@ import SubjectQuestionRow from "@/features/video/components/SubjectQuestionRow";
 import MarkFilterDropdown from "@/features/video/components/MarkFilterDropdown";
 import { Skeleton } from "@/components/ui/Skeleton";
 import SubjectQuizSection from "@/features/video/components/SubjectQuizSection";
+import { useAuth } from "@/providers/AuthProvider";
+import { supabase } from "@/lib/supabase/client";
 
 interface SubjectBarProps {
   subjectFilter?: VideoSubjectFilter;
@@ -65,6 +67,19 @@ export default function SubjectBar(props: SubjectBarProps) {
     onCollapse,
   } = props;
 
+  const categoryOptions = [
+    "All",
+    "Short Answer",
+    "Detail Answer",
+    "Answer in Detail",
+    "Brief Answer",
+    "Answer Briefly",
+    "Very Short Answer",
+    "Detail",
+    "Numerical Problem",
+    "Hot Questions",
+    "Exercise"
+  ];
   const markOptions = ["All", "2M", "3M", "5M", "7M", "10M"];
   const cacheKey = getSubjectPanelCacheKey(subjectFilter ?? {});
   const persistKey = `roteen_subjectbar_state_${cacheKey}`;
@@ -74,8 +89,45 @@ export default function SubjectBar(props: SubjectBarProps) {
   const [error, setError] = useState<string | null>(null);
   const [openChapterId, setOpenChapterId] = useState<string | null>(activeChapterId);
 
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedMark, setSelectedMark] = useState<string>("All");
   const [selectedLevel, setSelectedLevel] = useState<string>("All");
+
+  const { user } = useAuth();
+  const [completedQuizzes, setCompletedQuizzes] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setCompletedQuizzes([]);
+      return;
+    }
+
+    let mounted = true;
+    const loadCompletedQuizzes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("user_quiz_progress")
+          .select("quizzes_id")
+          .eq("users_id", user.id)
+          .eq("iscompleted", "Resolved");
+
+        if (error) throw error;
+
+        if (mounted && data) {
+          const ids = data.map((row: any) => String(row.quizzes_id));
+          setCompletedQuizzes(ids);
+        }
+      } catch (err) {
+        console.error("Failed to load completed quizzes:", err);
+      }
+    };
+
+    void loadCompletedQuizzes();
+
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id, rawData?.subjectId]);
 
   useEffect(() => {
     try {
@@ -84,6 +136,7 @@ export default function SubjectBar(props: SubjectBarProps) {
         const parsed = JSON.parse(saved);
         if (typeof parsed.selectedMark === "string") setSelectedMark(parsed.selectedMark);
         if (typeof parsed.selectedLevel === "string") setSelectedLevel(parsed.selectedLevel);
+        if (typeof parsed.selectedCategory === "string") setSelectedCategory(parsed.selectedCategory);
       }
     } catch { }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -93,7 +146,7 @@ export default function SubjectBar(props: SubjectBarProps) {
     const normalized = String(value ?? "").trim().toLowerCase();
     if (!normalized) return "";
     if (normalized.includes("interior")) return "interior";
-    if (normalized.includes("bookback")) return "bookback";
+    if (normalized.includes("bookback") || normalized.includes("book-back")) return "book-back";
     return normalized;
   };
 
@@ -121,12 +174,12 @@ export default function SubjectBar(props: SubjectBarProps) {
     }
   }, [cacheKey, onSubjectResolved]);
 
-  // Persist mode + mark + level whenever they change
+  // Persist mode + mark + level + category whenever they change
   useEffect(() => {
     try {
-      localStorage.setItem(persistKey, JSON.stringify({ selectedMark, selectedLevel }));
+      localStorage.setItem(persistKey, JSON.stringify({ selectedMark, selectedLevel, selectedCategory }));
     } catch { }
-  }, [selectedMark, selectedLevel, persistKey]);
+  }, [selectedMark, selectedLevel, selectedCategory, persistKey]);
 
   useEffect(() => {
     let mounted = true;
@@ -143,7 +196,7 @@ export default function SubjectBar(props: SubjectBarProps) {
       setError(null);
 
       try {
-        const data = await fetchSubjectPanelData(subjectFilter ?? {}, { forceRefresh: !cached });
+        const data = await fetchSubjectPanelData(subjectFilter ?? {}, { forceRefresh: true });
         if (!mounted) {
           return;
         }
@@ -186,7 +239,7 @@ export default function SubjectBar(props: SubjectBarProps) {
 
   const panelData = useMemo(() => {
     if (!rawData) {
-      return { subjectId: "", subject: "Math", totalQuestions: 0, chapters: [] as Chapter[] };
+      return { subjectId: "", subject: "Mathematics", totalQuestions: 0, chapters: [] as Chapter[] };
     }
 
     const chaptersMap = new Map<string, Chapter>();
@@ -204,13 +257,17 @@ export default function SubjectBar(props: SubjectBarProps) {
 
     const requestedMode = mode.toLowerCase();
     const requestedMark = selectedMark.toLowerCase();
-    const subjectStandard = normalizeStandard(rawData.standard ?? subjectFilter?.standard ?? "10");
+    const subjectStandard = normalizeStandard(rawData.standard ?? subjectFilter?.standard ?? "");
 
     const standardAlias = new Set([subjectStandard]);
     if (subjectStandard === "10") {
       standardAlias.add("10th");
     } else if (subjectStandard === "10th") {
       standardAlias.add("10");
+    } else if (subjectStandard === "12") {
+      standardAlias.add("12th");
+    } else if (subjectStandard === "12th") {
+      standardAlias.add("12");
     }
 
     const questions = rawData.questions.filter((row) => {
@@ -221,12 +278,10 @@ export default function SubjectBar(props: SubjectBarProps) {
         }
       }
 
-      const rowStandardRaw = String(row.standard ?? "").trim().toLowerCase();
       const rowStandard = normalizeStandard(row.standard);
-      if (rowStandard && !standardAlias.has(rowStandard)) {
-        if (!(subjectStandard === "10" && rowStandardRaw.includes("10th"))) {
-          return false;
-        }
+      // Only apply standard filter when we have a known subject standard
+      if (subjectStandard && rowStandard && !standardAlias.has(rowStandard)) {
+        return false;
       }
 
       // In playlist mode, we show all playlist questions regardless of mode/mark toggles.
@@ -235,6 +290,14 @@ export default function SubjectBar(props: SubjectBarProps) {
         // If mode is missing in DB row, keep it visible instead of dropping it.
         if (rowMode && rowMode !== requestedMode) {
           return false;
+        }
+
+        if (selectedCategory !== "All") {
+          const rowCategory = String((row as any).category ?? "").trim().toLowerCase();
+          const reqCategory = selectedCategory.trim().toLowerCase();
+          if (rowCategory !== reqCategory) {
+            return false;
+          }
         }
 
         if (selectedMark !== "All") {
@@ -303,7 +366,7 @@ export default function SubjectBar(props: SubjectBarProps) {
       totalQuestions: questions.length,
       chapters: chaptersWithQuestions,
     };
-  }, [playlistQuestionIds, rawData, mode, selectedMark, selectedLevel, subjectFilter?.standard]);
+  }, [playlistQuestionIds, rawData, mode, selectedMark, selectedLevel, selectedCategory, subjectFilter?.standard]);
 
   useEffect(() => {
     if (panelData.chapters.length > 0) {
@@ -387,28 +450,17 @@ export default function SubjectBar(props: SubjectBarProps) {
     <aside className={`animate-fade-in-left flex h-full w-full min-w-0 shrink flex-col rounded-2xl border border-zinc-800/80 bg-[#121212] ${isLongSubject ? "p-4 lg:px-3 lg:py-4" : "p-4"} shadow-[0_0_20px_rgba(0,0,0,0.5)]`}>
       {!isPlaylistMode && <SubjectModeToggle mode={mode} onChange={onModeChange} />}
 
-      <motion.div className={`flex flex-nowrap items-center justify-between border-b border-zinc-800 pb-3 ${isLongSubject ? "gap-2" : "gap-3"}`}>
+      <motion.div className="flex flex-col gap-2.5 border-b border-zinc-800 pb-3">
         {!isPlaylistMode && (
           <>
-            <h2 className={`font-semibold text-white flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isLongSubject ? "text-sm" : "text-base"}`}>
-              <span title={formatSubjectName(panelData.subject)}>
-                {formatSubjectName(panelData.subject)}
-              </span>
-              <span className="text-xs font-normal text-zinc-400 shrink-0">{chapterCounter}</span>
-            </h2>
-            <div className={`flex items-center shrink-0 ml-auto flex-nowrap ${isLongSubject ? "gap-1.5" : "gap-2"}`}>
-              <MarkFilterDropdown
-                options={markOptions}
-                selected={selectedMark}
-                onChange={setSelectedMark}
-                placeholder="Marks"
-              />
-              <MarkFilterDropdown
-                options={["All", "1", "2", "3", "4", "5"]}
-                selected={selectedLevel}
-                onChange={setSelectedLevel}
-                placeholder="Level"
-              />
+            {/* Row 1: Header title, Counter and Minimize button */}
+            <div className="flex items-center justify-between w-full">
+              <h2 className={`font-semibold text-white flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isLongSubject ? "text-sm" : "text-base"}`}>
+                <span title={formatSubjectName(panelData.subject)}>
+                  {formatSubjectName(panelData.subject)}
+                </span>
+                <span className="text-xs font-normal text-zinc-400 shrink-0">{chapterCounter}</span>
+              </h2>
               {onCollapse && (
                 <button
                   type="button"
@@ -419,6 +471,34 @@ export default function SubjectBar(props: SubjectBarProps) {
                   <ChevronLeft className="h-5 w-5" />
                 </button>
               )}
+            </div>
+
+            {/* Row 2: Filters */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <MarkFilterDropdown
+                options={categoryOptions}
+                selected={selectedCategory}
+                onChange={setSelectedCategory}
+                placeholder="Category"
+                widthClass="w-48"
+                align="left"
+              />
+              <MarkFilterDropdown
+                options={markOptions}
+                selected={selectedMark}
+                onChange={setSelectedMark}
+                placeholder="Marks"
+                widthClass="w-28"
+                align="left"
+              />
+              <MarkFilterDropdown
+                options={["All", "1", "2", "3", "4", "5"]}
+                selected={selectedLevel}
+                onChange={setSelectedLevel}
+                placeholder="Level"
+                widthClass="w-28"
+                align="right"
+              />
             </div>
           </>
         )}
@@ -438,9 +518,23 @@ export default function SubjectBar(props: SubjectBarProps) {
         ) : (
           panelData.chapters.map((chapter) => {
             const isOpen = chapter.id === openChapterId;
-            const isChapterCompleted =
+            const chapterQuizzes = rawData?.quizzes
+              ? rawData.quizzes.filter(
+                (q) =>
+                  String(q.chapter_id) === String(chapter.id) &&
+                  (!q.mode || q.mode.toLowerCase() === mode.toLowerCase()),
+              )
+              : [];
+
+            const questionsCompleted =
               chapter.topics.length > 0 &&
               chapter.topics.every((topic) => completedSet.has(topic.id));
+
+            const quizzesCompleted =
+              chapterQuizzes.length === 0 ||
+              chapterQuizzes.every((quiz) => completedQuizzes.includes(quiz.id));
+
+            const isChapterCompleted = questionsCompleted && quizzesCompleted;
             return (
               <motion.div key={chapter.id}>
                 <SubjectChapterRow
@@ -492,6 +586,7 @@ export default function SubjectBar(props: SubjectBarProps) {
                             activeQuizId={selectedQuizId}
                             mode={mode}
                             onQuizSelect={onQuizSelect}
+                            completedQuizzes={completedQuizzes}
                           />
                         )}
                       </motion.div>

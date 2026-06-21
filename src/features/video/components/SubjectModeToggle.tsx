@@ -9,7 +9,7 @@ interface SubjectModeToggleProps {
 }
 
 export default function SubjectModeToggle({ mode, onChange }: SubjectModeToggleProps) {
-  const options: QuestionMode[] = ["Bookback", "Interior"];
+  const options: QuestionMode[] = ["book-back", "interior"];
 
   return (
     <div className="relative mb-5 flex w-full max-w-sm rounded-full border border-zinc-700/50 bg-[#060810]/80 p-1.5 shadow-[inset_0_2px_15px_rgba(0,0,0,0.6)] backdrop-blur-md">
@@ -55,14 +55,14 @@ export default function SubjectModeToggle({ mode, onChange }: SubjectModeToggleP
             )}
 
             <motion.span
-              className="relative z-10 tracking-wide"
+              className="relative z-10 tracking-wide capitalize"
               animate={{
                 scale: isActive ? 1.05 : 1,
                 textShadow: isActive ? "0px 0px 8px rgba(255,255,255,0.6)" : "0px 0px 0px rgba(255,255,255,0)",
               }}
               transition={{ duration: 0.3 }}
             >
-              {option}
+              {option === "book-back" ? "Bookback" : "Interior"}
             </motion.span>
           </motion.button>
         );

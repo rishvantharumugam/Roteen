@@ -114,3 +114,11 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+html, body {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+  display: none !important;
+}

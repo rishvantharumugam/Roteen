@@ -9,9 +9,18 @@ interface MarkFilterDropdownProps {
   selected: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  widthClass?: string;
+  align?: "left" | "right";
 }
 
-export default function MarkFilterDropdown({ options, selected, onChange, placeholder = "All Marks" }: MarkFilterDropdownProps) {
+export default function MarkFilterDropdown({
+  options,
+  selected,
+  onChange,
+  placeholder = "All Marks",
+  widthClass,
+  align = "right",
+}: MarkFilterDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +70,7 @@ export default function MarkFilterDropdown({ options, selected, onChange, placeh
             animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -10, scale: 0.95, filter: "blur(4px)" }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="absolute right-0 mt-2 w-36 overflow-hidden rounded-2xl border border-white/10 bg-[#090c15]/90 p-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(124,58,237,0.15)] backdrop-blur-xl"
+            className={`absolute ${align === "left" ? "left-0" : "right-0"} mt-2 ${widthClass || "w-36"} overflow-hidden rounded-2xl border border-white/10 bg-[#090c15]/90 p-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(124,58,237,0.15)] backdrop-blur-xl`}
           >
             {/* Soft neon border gradient via pseudo-element wrapper */}
             <div className="pointer-events-none absolute inset-0 rounded-2xl border border-transparent bg-gradient-to-br from-purple-500/30 to-violet-500/30 [mask-composite:exclude] [mask-image:linear-gradient(#fff_0_0),linear-gradient(#fff_0_0)] [-webkit-mask-clip:content-box,border-box]" />
@@ -86,7 +95,7 @@ export default function MarkFilterDropdown({ options, selected, onChange, placeh
                     {/* Selected state background and glow */}
                     {isSelected && (
                       <motion.div
-                        layoutId="selectedMarkBackground"
+                        layoutId={`${placeholder.replace(/\s+/g, "")}Background`}
                         className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-purple-600/80 to-violet-600/80 shadow-[0_0_15px_rgba(124,58,237,0.5)]"
                         initial={false}
                         transition={{ type: "spring", stiffness: 300, damping: 25 }}

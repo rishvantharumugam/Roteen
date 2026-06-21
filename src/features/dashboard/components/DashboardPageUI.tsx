@@ -13,27 +13,46 @@ import {
 } from "@/features/dashboard/services/DashboardPageService";
 
 async function fetchDashboardClientData() {
-  const { data, error } = await supabase
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
+  const userId = user?.id;
+
+  let userStandard: string | null = null;
+  if (userId) {
+    const { data: userRow } = await supabase
+      .from("users")
+      .select("standard")
+      .eq("id", userId)
+      .single();
+    userStandard = userRow?.standard ?? null;
+  }
+
+  let subjectsQuery = supabase
     .from("subjects")
     .select("id, standard, subject_name, chapters(id, name)")
     .order("created_at", { ascending: true });
+
+  if (userStandard) {
+    subjectsQuery = subjectsQuery.eq("standard", userStandard);
+  }
+
+  const { data, error } = await subjectsQuery;
 
   if (error) {
     throw new Error(error.message);
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-  const userId = user?.id;
-  
   let progressData: CourseProgressItem[] = [];
   if (userId) {
     progressData = await fetchUserCoursesProgress(supabase, userId);
   }
 
   const subjects = (data as DashboardSubjectRecord[]) ?? [];
+  const subjectsWithCounts = await withQuestionCounts(supabase, subjects);
+
   return {
-    ongoingCourses: processDashboardMetrics(subjects),
-    initialExploreSubjects: subjects,
+    ongoingCourses: processDashboardMetrics(subjectsWithCounts),
+    initialExploreSubjects: subjectsWithCounts,
     progressData,
   };
 }

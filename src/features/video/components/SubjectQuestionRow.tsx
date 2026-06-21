@@ -28,7 +28,7 @@ const SubjectQuestionRow = memo(function SubjectQuestionRow({
     >
       {/* Active line indicator removed per request */}
 
-      <span className={`relative z-10 pr-2 text-xs font-medium transition-colors duration-300 ${active ? "text-white" : "text-zinc-400 group-hover:text-zinc-200"}`}>
+      <span className={`relative z-10 pr-2 text-xs font-medium flex-1 min-w-0 transition-colors duration-300 ${active ? "text-white" : "text-zinc-400 group-hover:text-zinc-200"}`}>
         {title}
       </span>
 
