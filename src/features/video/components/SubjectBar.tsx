@@ -57,6 +57,233 @@ function formatSubjectName(value: string) {
     .join(" ");
 }
 
+interface ExtendedTopic extends Topic {
+  dbCategory?: string;
+}
+
+function parseMathExercise(title: string, dbCategory: string) {
+  if (title.includes("_")) {
+    const parts = title.split("_");
+    const beforeStr = parts[0].trim(); // e.g. "Exercise-1.1"
+    const afterStr = parts[1].trim();  // e.g. "Q1"
+    
+    const exMatch = beforeStr.match(/(\d+(?:\.\d+)?)/);
+    const exerciseNumber = exMatch ? exMatch[1] : "1.1";
+    
+    const qMatch = afterStr.match(/(\d+)/);
+    const questionNumber = qMatch ? parseInt(qMatch[1], 10) : 0;
+    
+    return {
+      exerciseNumber,
+      questionNumber,
+      displayName: afterStr.startsWith("Q") ? afterStr : `Q${afterStr}`,
+    };
+  }
+
+  const pattern = /^(?:Exercise|Example)[- ]?(\d+(?:\.\d+)?)(?:_Q(\d+))?$/i;
+  let match = title.match(pattern);
+  if (!match && dbCategory) {
+    match = dbCategory.match(pattern);
+  }
+  
+  if (match) {
+    return {
+      exerciseNumber: match[1],
+      questionNumber: match[2] ? parseInt(match[2], 10) : 0,
+      displayName: match[2] ? `Q${match[2]}` : title,
+    };
+  }
+
+  const qMatch = title.match(/Q?(\d+)$/i);
+  const exMatch = title.match(/(?:Exercise|Example)[- ]?(\d+(?:\.\d+)?)/i) || dbCategory.match(/(?:Exercise|Example)[- ]?(\d+(?:\.\d+)?)/i);
+  
+  if (exMatch) {
+    return {
+      exerciseNumber: exMatch[1],
+      questionNumber: qMatch ? parseInt(qMatch[1], 10) : 0,
+      displayName: qMatch ? `Q${qMatch[1]}` : title,
+    };
+  }
+
+  return null;
+}
+
+function compareExerciseNumbers(aStr: string, bStr: string): number {
+  const aParts = aStr.split(".").map((num) => parseInt(num, 10) || 0);
+  const bParts = bStr.split(".").map((num) => parseInt(num, 10) || 0);
+
+  for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+    const aPart = aParts[i] ?? 0;
+    const bPart = bParts[i] ?? 0;
+    if (aPart !== bPart) {
+      return aPart - bPart;
+    }
+  }
+  return 0;
+}
+
+function sortMathExerciseTopics(topics: ExtendedTopic[]) {
+  return [...topics].sort((a, b) => {
+    const aParsed = parseMathExercise(a.title, a.dbCategory || "");
+    const bParsed = parseMathExercise(b.title, b.dbCategory || "");
+
+    if (aParsed && bParsed) {
+      const exComp = compareExerciseNumbers(aParsed.exerciseNumber, bParsed.exerciseNumber);
+      if (exComp !== 0) {
+        return exComp;
+      }
+      return aParsed.questionNumber - bParsed.questionNumber;
+    }
+
+    if (aParsed) return -1;
+    if (bParsed) return 1;
+
+    return a.id.localeCompare(b.id);
+  });
+}
+
+interface SubExerciseGroupProps {
+  chapterId: string;
+  name: string;
+  topics: {
+    id: string;
+    title: string;
+    mark?: string;
+    qNum: number;
+    displayName: string;
+  }[];
+  selectedQuestionId: string | null;
+  completedSet: Set<string>;
+  handleQuestionPress: (questionId: string) => void;
+  isAnyQuestionActive: boolean;
+}
+
+function SubExerciseGroup({
+  chapterId,
+  name,
+  topics,
+  selectedQuestionId,
+  completedSet,
+  handleQuestionPress,
+  isAnyQuestionActive,
+}: SubExerciseGroupProps) {
+  const [isOpen, setIsOpen] = useState(true);
+
+  const isCompleted = topics.every((t) => completedSet.has(t.id));
+  const hasActive = topics.some((t) => t.id === selectedQuestionId);
+
+  useEffect(() => {
+    if (hasActive) {
+      setIsOpen(true);
+    }
+  }, [hasActive]);
+
+  return (
+    <div className="flex flex-col gap-1.5 relative pl-4 mt-1">
+      {/* Connector branch line from Exercise to Sub-Exercise header */}
+      <span
+        aria-hidden="true"
+        className={`pointer-events-none absolute left-0 top-3.5 h-3.5 w-3.5 rounded-bl-md border-b border-l transition-all duration-300 ${hasActive
+            ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+            : "border-zinc-700/60"
+          }`}
+      />
+
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full text-left pl-0 pr-1 py-1 text-xs font-semibold text-zinc-300 hover:text-white transition-colors group/sub-exercise"
+      >
+        <div className="flex items-center gap-1.5">
+          <motion.div
+            animate={{ rotate: isOpen ? 90 : 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className={`transition-colors duration-300 ${hasActive
+                ? "text-purple-400"
+                : "text-zinc-500 group-hover/sub-exercise:text-zinc-300"
+              }`}
+          >
+            <ChevronRight className="h-3 w-3" />
+          </motion.div>
+          <span
+            className={`tracking-wide transition-all duration-300 ${hasActive
+                ? "text-white font-bold drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
+                : "text-zinc-300 group-hover/sub-exercise:text-white"
+              }`}
+          >
+            {name}
+          </span>
+          <span
+            className={`text-[10px] px-1.5 py-0.5 rounded transition-colors duration-300 shrink-0 ${hasActive
+                ? "bg-purple-950/40 border border-purple-500/20 text-purple-300"
+                : "bg-zinc-800/80 text-zinc-400 font-normal"
+              }`}
+          >
+            {topics.length}
+          </span>
+        </div>
+
+        {isCompleted ? (
+          <div className="relative z-10 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-purple-500 text-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.4)] bg-purple-500/10 mr-1 transition-all duration-300">
+            <svg
+              className="h-2.5 w-2.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+        ) : (
+          <span className="h-4 w-4 shrink-0 mr-1" />
+        )}
+      </button>
+
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div
+              className={`relative ml-1.5 border-l pl-4 flex flex-col gap-1.5 pb-2 pt-1 transition-colors duration-300 ${hasActive ? "border-purple-500/40" : "border-zinc-800/80"
+                }`}
+            >
+              {topics.map((topic) => {
+                const isActiveQuestion = selectedQuestionId === topic.id;
+                return (
+                  <div key={topic.id} className="group/question relative pl-4">
+                    <span
+                      aria-hidden="true"
+                      className={`pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-bl-md border-b border-l transition-colors duration-200 ease-in-out ${isActiveQuestion
+                          ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+                          : "border-zinc-700/60"
+                        }`}
+                    />
+                    <SubjectQuestionRow
+                      topicId={topic.id}
+                      title={topic.displayName}
+                      active={isActiveQuestion}
+                      completed={completedSet.has(topic.id)}
+                      onClick={handleQuestionPress}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function SubjectBar(props: SubjectBarProps) {
   const {
     subjectFilter,
@@ -330,7 +557,9 @@ export default function SubjectBar(props: SubjectBarProps) {
     });
 
     let syntheticChapterCount = chaptersMap.size;
-    const chapterCategories = new Map<string, Map<string, Topic[]>>();
+    const chapterCategories = new Map<string, Map<string, ExtendedTopic[]>>();
+
+    const isMath = rawData.subject.toLowerCase().includes("math");
 
     questions.forEach((row) => {
       const rawChapterId = row.chapter_id;
@@ -355,10 +584,14 @@ export default function SubjectBar(props: SubjectBarProps) {
         }
       }
 
-      const categoryName = row.category ? String(row.category).trim() : "Other";
+      let categoryName = row.category ? String(row.category).trim() : "Other";
+      if (isMath && /^exercise/i.test(categoryName)) {
+        categoryName = "Exercise";
+      }
+
       let catMap = chapterCategories.get(chapter.id);
       if (!catMap) {
-        catMap = new Map<string, Topic[]>();
+        catMap = new Map<string, ExtendedTopic[]>();
         chapterCategories.set(chapter.id, catMap);
       }
 
@@ -372,6 +605,7 @@ export default function SubjectBar(props: SubjectBarProps) {
         id: String(row.id),
         title: String(row.question_name),
         mark: String((row as any).question_marks ?? (row as any).questions_marks ?? (row as any).mark ?? (row as any).marks ?? (row as any).questions_sections ?? ""),
+        dbCategory: row.category ? String(row.category).trim() : "",
       });
     });
 
@@ -385,7 +619,8 @@ export default function SubjectBar(props: SubjectBarProps) {
       "Detail",
       "Numerical Problem",
       "Hot Questions",
-      "Exercise"
+      "Exercise",
+      "Example"
     ];
 
     const chaptersWithQuestions: GroupedChapter[] = [];
@@ -399,7 +634,9 @@ export default function SubjectBar(props: SubjectBarProps) {
       mainCategories.forEach((catName) => {
         const topics = catMap ? (catMap.get(catName) || []) : [];
         if (topics.length > 0) {
-          const sortedTopics = [...topics].sort((a, b) => a.id.localeCompare(b.id));
+          const sortedTopics = (isMath && catName === "Exercise")
+            ? sortMathExerciseTopics(topics)
+            : [...topics].sort((a, b) => a.id.localeCompare(b.id));
 
           categoriesList.push({
             name: catName,
@@ -654,8 +891,8 @@ export default function SubjectBar(props: SubjectBarProps) {
                                 <span
                                   aria-hidden="true"
                                   className={`pointer-events-none absolute left-0 top-3 h-3 w-3 rounded-bl-md border-b border-l transition-all duration-300 ${isAnyQuestionActive
-                                      ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
-                                      : "border-zinc-700/60"
+                                    ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+                                    : "border-zinc-700/60"
                                     }`}
                                 />
 
@@ -670,21 +907,21 @@ export default function SubjectBar(props: SubjectBarProps) {
                                       animate={{ rotate: isCategoryOpen ? 90 : 0 }}
                                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
                                       className={`transition-colors duration-300 ${isAnyQuestionActive
-                                          ? "text-purple-400"
-                                          : "text-zinc-500 group-hover/category:text-zinc-300"
+                                        ? "text-purple-400"
+                                        : "text-zinc-500 group-hover/category:text-zinc-300"
                                         }`}
                                     >
                                       <ChevronRight className="h-3 w-3" />
                                     </motion.div>
                                     <span className={`tracking-wide transition-all duration-300 ${isAnyQuestionActive
-                                        ? "text-white font-bold drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
-                                        : "text-zinc-300 group-hover/category:text-white"
+                                      ? "text-white font-bold drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
+                                      : "text-zinc-300 group-hover/category:text-white"
                                       }`}>
                                       {categoryName}
                                     </span>
                                     <span className={`text-[10px] px-1.5 py-0.5 rounded transition-colors duration-300 shrink-0 ${isAnyQuestionActive
-                                        ? "bg-purple-950/40 border border-purple-500/20 text-purple-300"
-                                        : "bg-zinc-800/80 text-zinc-400 font-normal"
+                                      ? "bg-purple-950/40 border border-purple-500/20 text-purple-300"
+                                      : "bg-zinc-800/80 text-zinc-400 font-normal"
                                       }`}>
                                       {category.topics.length}
                                     </span>
@@ -713,31 +950,88 @@ export default function SubjectBar(props: SubjectBarProps) {
                                     >
                                       {/* Container with a left vertical border representing the '│' line */}
                                       <div className={`relative ml-1.5 border-l pl-4 flex flex-col gap-1.5 pb-2 pt-1 transition-colors duration-300 ${isAnyQuestionActive
-                                          ? "border-purple-500/40"
-                                          : "border-zinc-800/80"
+                                        ? "border-purple-500/40"
+                                        : "border-zinc-800/80"
                                         }`}>
-                                        {category.topics.map((topic) => {
-                                          const isActiveQuestion = selectedQuestionId === topic.id;
-                                          return (
-                                            <div key={topic.id} className="group/question relative pl-4">
-                                              {/* L-connector line from the Category's vertical line to the Question */}
-                                              <span
-                                                aria-hidden="true"
-                                                className={`pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-bl-md border-b border-l transition-colors duration-200 ease-in-out ${isActiveQuestion
+                                        {(() => {
+                                          const isMath = rawData?.subject.toLowerCase().includes("math");
+                                          const isExerciseCategory = isMath && categoryName === "Exercise";
+
+                                          if (isExerciseCategory) {
+                                            const groups = new Map<string, {
+                                              name: string;
+                                              exNum: string;
+                                              topics: { id: string; title: string; mark?: string; qNum: number; displayName: string; }[];
+                                            }>();
+
+                                            category.topics.forEach((topic) => {
+                                              const extTopic = topic as ExtendedTopic;
+                                              const parsed = parseMathExercise(extTopic.title, extTopic.dbCategory || "");
+                                              const exName = parsed ? `Exercise ${parsed.exerciseNumber}` : "Exercise 1.1";
+                                              const exNum = parsed ? parsed.exerciseNumber : "1.1";
+                                              const qNum = parsed ? parsed.questionNumber : 0;
+                                              const displayName = parsed ? parsed.displayName : extTopic.title;
+
+                                              let g = groups.get(exName);
+                                              if (!g) {
+                                                g = { name: exName, exNum, topics: [] };
+                                                groups.set(exName, g);
+                                              }
+                                              g.topics.push({
+                                                id: extTopic.id,
+                                                title: extTopic.title,
+                                                mark: extTopic.mark,
+                                                qNum,
+                                                displayName,
+                                              });
+                                            });
+
+                                            const sortedGroups = Array.from(groups.values()).sort((a, b) => compareExerciseNumbers(a.exNum, b.exNum));
+
+                                            sortedGroups.forEach((g) => {
+                                              g.topics.sort((a, b) => a.qNum - b.qNum);
+                                            });
+
+                                            return sortedGroups.map((group) => {
+                                              const hasActiveQuestion = group.topics.some((t) => t.id === selectedQuestionId);
+                                              return (
+                                                <SubExerciseGroup
+                                                  key={group.name}
+                                                  chapterId={chapter.id}
+                                                  name={group.name}
+                                                  topics={group.topics}
+                                                  selectedQuestionId={selectedQuestionId}
+                                                  completedSet={completedSet}
+                                                  handleQuestionPress={handleQuestionPress}
+                                                  isAnyQuestionActive={hasActiveQuestion}
+                                                />
+                                              );
+                                            });
+                                          }
+
+                                          return category.topics.map((topic) => {
+                                            const isActiveQuestion = selectedQuestionId === topic.id;
+                                            return (
+                                              <div key={topic.id} className="group/question relative pl-4">
+                                                {/* L-connector line from the Category's vertical line to the Question */}
+                                                <span
+                                                  aria-hidden="true"
+                                                  className={`pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-bl-md border-b border-l transition-colors duration-200 ease-in-out ${isActiveQuestion
                                                     ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
                                                     : "border-zinc-700/60"
-                                                  }`}
-                                              />
-                                              <SubjectQuestionRow
-                                                topicId={topic.id}
-                                                title={topic.title}
-                                                active={isActiveQuestion}
-                                                completed={completedSet.has(topic.id)}
-                                                onClick={handleQuestionPress}
-                                              />
-                                            </div>
-                                          );
-                                        })}
+                                                    }`}
+                                                />
+                                                <SubjectQuestionRow
+                                                  topicId={topic.id}
+                                                  title={topic.title}
+                                                  active={isActiveQuestion}
+                                                  completed={completedSet.has(topic.id)}
+                                                  onClick={handleQuestionPress}
+                                                />
+                                              </div>
+                                            );
+                                          });
+                                        })()}
                                       </div>
                                     </motion.div>
                                   )}
