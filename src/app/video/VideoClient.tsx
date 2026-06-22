@@ -10,6 +10,8 @@ import {
 import { prefetchSubjectPanelData, type VideoSubjectFilter } from "@/features/video/services/videoSubjectService";
 import { getVideoResponse } from "@/features/video/actions/video";
 import { RevisionController } from "@/features/revision/actions/revisionController";
+import { NoteController } from "@/features/notes/actions/notesController";
+import { type Note } from "@/features/notes/components/notesStore";
 import {
   handleChapterSelect,
   handleMarkComplete,
@@ -187,6 +189,7 @@ export default function VideoClient() {
     questionId: null,
     content: "",
   });
+  const notesCacheRef = useRef<Map<string, string>>(new Map());
   const chapterQuizCacheRef = useRef<Map<string, ChapterQuizRecord | null>>(new Map());
   const quizStateCacheRef = useRef<Map<string, {
     progress: QuizProgressRecord,
@@ -312,6 +315,31 @@ export default function VideoClient() {
 
     void fetchStandard();
     return () => { cancelled = true; };
+  }, [user?.id]);
+
+  // Prefetch all user notes to enable instant notes switching
+  useEffect(() => {
+    if (!user?.id) return;
+
+    let cancelled = false;
+    const prefetchNotes = async () => {
+      try {
+        const notes = await NoteController.fetchNotes();
+        if (cancelled) return;
+        notes.forEach((note) => {
+          if (note.questionId) {
+            notesCacheRef.current.set(note.questionId, note.description);
+          }
+        });
+      } catch (err) {
+        console.warn("Failed to prefetch notes:", err);
+      }
+    };
+
+    void prefetchNotes();
+    return () => {
+      cancelled = true;
+    };
   }, [user?.id]);
 
   useEffect(() => {
@@ -706,6 +734,16 @@ export default function VideoClient() {
     // Set the questionId immediately to prevent overlapping focus-triggered calls
     lastLoadedNoteRef.current = { questionId: selectedQuestionId, content: lastLoadedNoteRef.current.content };
 
+    // Check memory cache first
+    const cachedContent = notesCacheRef.current.get(selectedQuestionId);
+    if (cachedContent !== undefined) {
+      onNotesChange(cachedContent);
+      lastLoadedNoteRef.current = { questionId: selectedQuestionId, content: cachedContent };
+      setIsNoteLoading(false);
+      setNoteSaveStatus("idle");
+      return;
+    }
+
     onNotesChange("");
     setIsNoteLoading(true);
     setNoteSaveStatus("idle");
@@ -714,6 +752,7 @@ export default function VideoClient() {
       try {
         const content = await loadVideoQuestionNote(selectedQuestionId, selectedSubjectId);
         if (cancelled) return;
+        notesCacheRef.current.set(selectedQuestionId, content);
         onNotesChange(content);
         lastLoadedNoteRef.current = { questionId: selectedQuestionId, content };
       } catch (error) {
@@ -760,6 +799,7 @@ export default function VideoClient() {
         setNoteSaveStatus("saving");
         await persistVideoQuestionNote(selectedQuestionId, selectedSubjectId, questionTitle, state.notes);
         lastLoadedNoteRef.current = { questionId: selectedQuestionId, content: state.notes };
+        notesCacheRef.current.set(selectedQuestionId, state.notes);
         setNoteSaveStatus("saved");
       } catch (error) {
         setNoteSaveStatus("error");

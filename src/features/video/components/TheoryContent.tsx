@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from '@/lib/supabase/client';
 import { type QuestionMode } from "@/features/video/services/video";
 
 interface TheoryContentProps {
@@ -36,12 +35,12 @@ export default function TheoryContent({
 
     const fetchTheory = async () => {
       if (questionId === null) {
-         if (mounted) {
-           setContent("");
-           setError(null);
-           setLoading(false);
-         }
-         return;
+        if (mounted) {
+          setContent("");
+          setError(null);
+          setLoading(false);
+        }
+        return;
       }
 
       setLoading(true);
@@ -52,31 +51,25 @@ export default function TheoryContent({
         let text = markdownCache.get(cacheKey);
 
         if (!text) {
-          const targetAnswerType = type === "quick_revision"
-            ? (language === "English" ? "Eng quick_recall" : "Tam quick_recall")
-            : (language === "English" ? "Eng answer" : "Tam answer");
+          const params = new URLSearchParams({
+            questionId,
+            mode,
+            language,
+            type,
+          });
+          const response = await fetch(`/api/admin-notes/content?${params.toString()}`);
 
-          const { data, error: dbError } = await supabase
-            .from("admin_notes")
-            .select("id, question_id, note_url, answer_type, path, Mode_type")
-            .eq("question_id", questionId)
-            .eq("answer_type", targetAnswerType)
-            .eq("Mode_type", mode)
-            .maybeSingle();
-
-          if (dbError) throw dbError;
-
-          if (!data) {
-            const noMessage = type === "quick_revision" ? "No Quick Revision Available" : "No Theory Available";
-            throw new Error(noMessage);
-          }
-
-          const rawUrl = data.note_url.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/");
-          const response = await fetch(rawUrl);
           if (!response.ok) {
-            throw new Error("Failed to load content");
+            throw new Error("No notes available");
           }
-          text = await response.text();
+
+          const payload = await response.json() as { content?: string };
+          text = payload.content ?? "";
+
+          if (!text.trim()) {
+            throw new Error("No notes available");
+          }
+
           markdownCache.set(cacheKey, text);
         }
 
@@ -85,7 +78,7 @@ export default function TheoryContent({
           setContentVersion((previous) => previous + 1);
         }
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Failed to load content";
+        const message = err instanceof Error ? err.message : "No notes available";
         if (mounted) {
           setContent("");
           setError(message);

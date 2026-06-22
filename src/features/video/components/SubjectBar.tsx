@@ -392,7 +392,7 @@ export default function SubjectBar(props: SubjectBarProps) {
 
     chaptersMap.forEach((chapter) => {
       const catMap = chapterCategories.get(chapter.id);
-      
+
       const categoriesList: GroupedCategory[] = [];
       const flatTopics: Topic[] = [];
 
@@ -603,7 +603,7 @@ export default function SubjectBar(props: SubjectBarProps) {
               chapterQuizzes.every((quiz) => completedQuizzes.includes(quiz.id));
 
             const isChapterCompleted = questionsCompleted && quizzesCompleted;
-            
+
             const categories = chapter.categories || [];
 
             return (
@@ -653,11 +653,10 @@ export default function SubjectBar(props: SubjectBarProps) {
                                 {/* Connector branch line from Chapter to Category header */}
                                 <span
                                   aria-hidden="true"
-                                  className={`pointer-events-none absolute left-0 top-3 h-3 w-3 rounded-bl-md border-b border-l transition-all duration-300 ${
-                                    isAnyQuestionActive
+                                  className={`pointer-events-none absolute left-0 top-3 h-3 w-3 rounded-bl-md border-b border-l transition-all duration-300 ${isAnyQuestionActive
                                       ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
                                       : "border-zinc-700/60"
-                                  }`}
+                                    }`}
                                 />
 
                                 {/* Category Header Button */}
@@ -670,26 +669,23 @@ export default function SubjectBar(props: SubjectBarProps) {
                                     <motion.div
                                       animate={{ rotate: isCategoryOpen ? 90 : 0 }}
                                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                      className={`transition-colors duration-300 ${
-                                        isAnyQuestionActive
+                                      className={`transition-colors duration-300 ${isAnyQuestionActive
                                           ? "text-purple-400"
                                           : "text-zinc-500 group-hover/category:text-zinc-300"
-                                      }`}
+                                        }`}
                                     >
                                       <ChevronRight className="h-3 w-3" />
                                     </motion.div>
-                                    <span className={`tracking-wide transition-all duration-300 ${
-                                      isAnyQuestionActive
+                                    <span className={`tracking-wide transition-all duration-300 ${isAnyQuestionActive
                                         ? "text-white font-bold drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
                                         : "text-zinc-300 group-hover/category:text-white"
-                                    }`}>
+                                      }`}>
                                       {categoryName}
                                     </span>
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded transition-colors duration-300 shrink-0 ${
-                                      isAnyQuestionActive
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded transition-colors duration-300 shrink-0 ${isAnyQuestionActive
                                         ? "bg-purple-950/40 border border-purple-500/20 text-purple-300"
                                         : "bg-zinc-800/80 text-zinc-400 font-normal"
-                                    }`}>
+                                      }`}>
                                       {category.topics.length}
                                     </span>
                                   </div>
@@ -716,11 +712,10 @@ export default function SubjectBar(props: SubjectBarProps) {
                                       className="overflow-hidden"
                                     >
                                       {/* Container with a left vertical border representing the '│' line */}
-                                      <div className={`relative ml-1.5 border-l pl-4 flex flex-col gap-1.5 pb-2 pt-1 transition-colors duration-300 ${
-                                        isAnyQuestionActive
+                                      <div className={`relative ml-1.5 border-l pl-4 flex flex-col gap-1.5 pb-2 pt-1 transition-colors duration-300 ${isAnyQuestionActive
                                           ? "border-purple-500/40"
                                           : "border-zinc-800/80"
-                                      }`}>
+                                        }`}>
                                         {category.topics.map((topic) => {
                                           const isActiveQuestion = selectedQuestionId === topic.id;
                                           return (
@@ -728,11 +723,10 @@ export default function SubjectBar(props: SubjectBarProps) {
                                               {/* L-connector line from the Category's vertical line to the Question */}
                                               <span
                                                 aria-hidden="true"
-                                                className={`pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-bl-md border-b border-l transition-colors duration-200 ease-in-out ${
-                                                  isActiveQuestion
+                                                className={`pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-bl-md border-b border-l transition-colors duration-200 ease-in-out ${isActiveQuestion
                                                     ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
                                                     : "border-zinc-700/60"
-                                                }`}
+                                                  }`}
                                               />
                                               <SubjectQuestionRow
                                                 topicId={topic.id}

@@ -763,9 +763,6 @@ export default function VideoPageUI({
 
                       {state.activeCenterTab === "notes" ? (
                         <div className="min-h-0 flex-1 flex flex-col overflow-hidden p-4 lg:p-6">
-                          {noteLoading ? (
-                            <div className="mb-2 text-xs text-zinc-500">Loading your note...</div>
-                          ) : null}
                           <RichTextEditor value={state.notes} onChange={onNotesChange} />
                         </div>
                       ) : (
