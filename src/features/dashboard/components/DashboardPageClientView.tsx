@@ -191,27 +191,44 @@ export function DashboardPageClientView({
 
       <div className={`mx-auto max-w-[1560px] px-4 pt-3 pb-8 lg:px-6 lg:pt-4 lg:pb-10 transition-all duration-300 ${showLoginOverlay ? "filter blur-md pointer-events-none select-none" : ""}`}>
         {/* Ongoing Courses */}
-        {ongoingVideos.length > 0 && (
-          <RevealBlock delayMs={80}>
-            <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-[22px] font-bold tracking-tight text-white sm:text-[24px]">Ongoing Courses</h2>
-                <p className="text-[14px] font-medium text-gray-500">
-                  Continue watching where you left off
-                </p>
-              </div>
+        <RevealBlock delayMs={80}>
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <h2 className="text-[22px] font-bold tracking-tight text-white sm:text-[24px]">Ongoing Courses</h2>
+              <p className="text-[14px] font-medium text-gray-500">
+                Continue watching where you left off
+              </p>
             </div>
+          </div>
 
-            <div className="group relative w-full mb-4">
-              <div className="no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative z-10 flex snap-x snap-mandatory items-stretch gap-5 overflow-x-auto overflow-y-hidden pt-4 pb-3 -mt-4 [&>*]:snap-start [&>*]:shrink-0 [&>*]:w-[85vw] sm:[&>*]:w-[280px] xl:[&>*]:w-[calc(20%-16px)]" ref={videoScrollRef}>
-                {ongoingVideos.map((video) => (
+          <div className="group relative w-full mb-4">
+            <div className="no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative z-10 flex snap-x snap-mandatory items-stretch gap-5 overflow-x-auto overflow-y-hidden pt-4 pb-3 -mt-4 [&>*]:snap-start [&>*]:shrink-0 [&>*]:w-[85vw] sm:[&>*]:w-[280px] xl:[&>*]:w-[calc(20%-16px)]" ref={videoScrollRef}>
+              {ongoingVideos.length > 0 ? (
+                ongoingVideos.map((video) => (
                   <OngoingVideoCard 
                     key={video.id} 
                     video={video} 
                     onClick={() => handleResumeVideo(video)} 
                   />
-                ))}
-              </div>
+                ))
+              ) : (
+                <OngoingVideoCard
+                  video={{
+                    id: "static-placeholder",
+                    title: "Explore Your First Course",
+                    timeRemaining: "Start learning a subject below!",
+                    progressPercent: 0,
+                    icon: <Atom size={120} />,
+                    bgGradient: "linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)",
+                    lastUpdated: "Get Started",
+                  }}
+                  onClick={() => {
+                    exploreScrollRef.current?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                />
+              )}
+            </div>
+            {ongoingVideos.length > 1 && (
               <button
                 type="button"
                 className="absolute right-0 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-black/40 text-white opacity-0 shadow-xl backdrop-blur-md transition-colors hover:bg-black/60 group-hover:opacity-100"
@@ -219,9 +236,9 @@ export function DashboardPageClientView({
               >
                 <ChevronRight size={24} />
               </button>
-            </div>
-          </RevealBlock>
-        )}
+            )}
+          </div>
+        </RevealBlock>
 
         {/* Today's Learning Section */}
         <RevealBlock delayMs={120}>

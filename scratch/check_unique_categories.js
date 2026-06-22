@@ -1,3 +1,5 @@
+
+
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
@@ -29,19 +31,19 @@ async function run() {
     .select('questions_sections')
     .not('questions_sections', 'is', null)
     .limit(300);
-    
+
   if (error) {
     console.error(error);
     return;
   }
-  
+
   const uniqueVals = new Set();
   questions.forEach(q => {
     if (q.questions_sections) {
       uniqueVals.add(q.questions_sections.trim());
     }
   });
-  
+
   console.log("Unique questions_sections (sample of 300 non-null):", Array.from(uniqueVals));
 }
 

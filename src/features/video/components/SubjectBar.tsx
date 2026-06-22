@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
-import { type Chapter, type QuestionMode } from "@/features/video/services/video";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { type Chapter, type Topic, type QuestionMode } from "@/features/video/services/video";
 import {
   fetchSubjectPanelData,
   getSubjectPanelCacheKey,
@@ -18,6 +18,15 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import SubjectQuizSection from "@/features/video/components/SubjectQuizSection";
 import { useAuth } from "@/providers/AuthProvider";
 import { supabase } from "@/lib/supabase/client";
+
+export interface GroupedCategory {
+  name: string;
+  topics: Topic[];
+}
+
+export interface GroupedChapter extends Chapter {
+  categories: GroupedCategory[];
+}
 
 interface SubjectBarProps {
   subjectFilter?: VideoSubjectFilter;
@@ -67,19 +76,6 @@ export default function SubjectBar(props: SubjectBarProps) {
     onCollapse,
   } = props;
 
-  const categoryOptions = [
-    "All",
-    "Short Answer",
-    "Detail Answer",
-    "Answer in Detail",
-    "Brief Answer",
-    "Answer Briefly",
-    "Very Short Answer",
-    "Detail",
-    "Numerical Problem",
-    "Hot Questions",
-    "Exercise"
-  ];
   const markOptions = ["All", "2M", "3M", "5M", "7M", "10M"];
   const cacheKey = getSubjectPanelCacheKey(subjectFilter ?? {});
   const persistKey = `roteen_subjectbar_state_${cacheKey}`;
@@ -89,9 +85,9 @@ export default function SubjectBar(props: SubjectBarProps) {
   const [error, setError] = useState<string | null>(null);
   const [openChapterId, setOpenChapterId] = useState<string | null>(activeChapterId);
 
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedMark, setSelectedMark] = useState<string>("All");
   const [selectedLevel, setSelectedLevel] = useState<string>("All");
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
 
   const { user } = useAuth();
   const [completedQuizzes, setCompletedQuizzes] = useState<string[]>([]);
@@ -136,11 +132,31 @@ export default function SubjectBar(props: SubjectBarProps) {
         const parsed = JSON.parse(saved);
         if (typeof parsed.selectedMark === "string") setSelectedMark(parsed.selectedMark);
         if (typeof parsed.selectedLevel === "string") setSelectedLevel(parsed.selectedLevel);
-        if (typeof parsed.selectedCategory === "string") setSelectedCategory(parsed.selectedCategory);
       }
     } catch { }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [persistKey]);
+
+  // Automatically open chapter and category when active question changes
+  useEffect(() => {
+    if (selectedQuestionId && rawData) {
+      const question = rawData.questions.find((q) => String(q.id) === String(selectedQuestionId));
+      if (question) {
+        if (question.chapter_id) {
+          setOpenChapterId(String(question.chapter_id));
+        }
+        const categoryName = question.category ? String(question.category).trim() : "Other";
+        const categoryKey = `${question.chapter_id}:${categoryName}`;
+        setOpenCategories((prev) => {
+          if (prev[categoryKey]) return prev;
+          return {
+            ...prev,
+            [categoryKey]: true,
+          };
+        });
+      }
+    }
+  }, [selectedQuestionId, rawData]);
 
   const normalizeMode = (value: unknown): string => {
     const normalized = String(value ?? "").trim().toLowerCase();
@@ -174,12 +190,12 @@ export default function SubjectBar(props: SubjectBarProps) {
     }
   }, [cacheKey, onSubjectResolved]);
 
-  // Persist mode + mark + level + category whenever they change
+  // Persist mode + mark + level whenever they change
   useEffect(() => {
     try {
-      localStorage.setItem(persistKey, JSON.stringify({ selectedMark, selectedLevel, selectedCategory }));
+      localStorage.setItem(persistKey, JSON.stringify({ selectedMark, selectedLevel }));
     } catch { }
-  }, [selectedMark, selectedLevel, selectedCategory, persistKey]);
+  }, [selectedMark, selectedLevel, persistKey]);
 
   useEffect(() => {
     let mounted = true;
@@ -239,10 +255,10 @@ export default function SubjectBar(props: SubjectBarProps) {
 
   const panelData = useMemo(() => {
     if (!rawData) {
-      return { subjectId: "", subject: "Mathematics", totalQuestions: 0, chapters: [] as Chapter[] };
+      return { subjectId: "", subject: "Mathematics", totalQuestions: 0, chapters: [] as GroupedChapter[] };
     }
 
-    const chaptersMap = new Map<string, Chapter>();
+    const chaptersMap = new Map<string, GroupedChapter>();
 
     rawData.chapters.forEach((row, index) => {
       const chapterNo = row.chapter_no || index + 1;
@@ -252,6 +268,7 @@ export default function SubjectBar(props: SubjectBarProps) {
         title: String(row.name || ""),
         completion: 0,
         topics: [],
+        categories: [],
       });
     });
 
@@ -279,25 +296,14 @@ export default function SubjectBar(props: SubjectBarProps) {
       }
 
       const rowStandard = normalizeStandard(row.standard);
-      // Only apply standard filter when we have a known subject standard
       if (subjectStandard && rowStandard && !standardAlias.has(rowStandard)) {
         return false;
       }
 
-      // In playlist mode, we show all playlist questions regardless of mode/mark toggles.
       if (!playlistQuestionIds || playlistQuestionIds.length === 0) {
         const rowMode = normalizeMode(row.mode);
-        // If mode is missing in DB row, keep it visible instead of dropping it.
         if (rowMode && rowMode !== requestedMode) {
           return false;
-        }
-
-        if (selectedCategory !== "All") {
-          const rowCategory = String((row as any).category ?? "").trim().toLowerCase();
-          const reqCategory = selectedCategory.trim().toLowerCase();
-          if (rowCategory !== reqCategory) {
-            return false;
-          }
         }
 
         if (selectedMark !== "All") {
@@ -324,14 +330,13 @@ export default function SubjectBar(props: SubjectBarProps) {
     });
 
     let syntheticChapterCount = chaptersMap.size;
+    const chapterCategories = new Map<string, Map<string, Topic[]>>();
 
     questions.forEach((row) => {
       const rawChapterId = row.chapter_id;
       const chapterId = String(rawChapterId ?? "").trim();
       let chapter = chapterId ? chaptersMap.get(chapterId) : undefined;
 
-      // If chapter rows are missing or mismatched, synthesize a fallback chapter
-      // so valid questions are still visible/selectable in the UI.
       if (!chapter) {
         const fallbackId = chapterId || `unassigned-${String(row.id)}`;
         chapter = chaptersMap.get(fallbackId);
@@ -344,21 +349,76 @@ export default function SubjectBar(props: SubjectBarProps) {
             title: "Unassigned Chapter",
             completion: 0,
             topics: [],
+            categories: [],
           };
           chaptersMap.set(fallbackId, chapter);
         }
       }
 
-      chapter.topics.push({
+      const categoryName = row.category ? String(row.category).trim() : "Other";
+      let catMap = chapterCategories.get(chapter.id);
+      if (!catMap) {
+        catMap = new Map<string, Topic[]>();
+        chapterCategories.set(chapter.id, catMap);
+      }
+
+      let categoryTopics = catMap.get(categoryName);
+      if (!categoryTopics) {
+        categoryTopics = [];
+        catMap.set(categoryName, categoryTopics);
+      }
+
+      categoryTopics.push({
         id: String(row.id),
         title: String(row.question_name),
         mark: String((row as any).question_marks ?? (row as any).questions_marks ?? (row as any).mark ?? (row as any).marks ?? (row as any).questions_sections ?? ""),
       });
     });
 
-    const chaptersWithQuestions = Array.from(chaptersMap.values()).filter(
-      (chapter) => chapter.topics.length > 0,
-    );
+    const mainCategories = [
+      "Short Answer",
+      "Detail Answer",
+      "Answer in Detail",
+      "Brief Answer",
+      "Answer Briefly",
+      "Very Short Answer",
+      "Detail",
+      "Numerical Problem",
+      "Hot Questions",
+      "Exercise"
+    ];
+
+    const chaptersWithQuestions: GroupedChapter[] = [];
+
+    chaptersMap.forEach((chapter) => {
+      const catMap = chapterCategories.get(chapter.id);
+      
+      const categoriesList: GroupedCategory[] = [];
+      const flatTopics: Topic[] = [];
+
+      mainCategories.forEach((catName) => {
+        const topics = catMap ? (catMap.get(catName) || []) : [];
+        if (topics.length > 0) {
+          const sortedTopics = [...topics].sort((a, b) => a.id.localeCompare(b.id));
+
+          categoriesList.push({
+            name: catName,
+            topics: sortedTopics,
+          });
+
+          flatTopics.push(...sortedTopics);
+        }
+      });
+
+
+      if (flatTopics.length === 0) {
+        return;
+      }
+
+      chapter.topics = flatTopics;
+      chapter.categories = categoriesList;
+      chaptersWithQuestions.push(chapter);
+    });
 
     return {
       subjectId: rawData.subjectId,
@@ -366,7 +426,7 @@ export default function SubjectBar(props: SubjectBarProps) {
       totalQuestions: questions.length,
       chapters: chaptersWithQuestions,
     };
-  }, [playlistQuestionIds, rawData, mode, selectedMark, selectedLevel, selectedCategory, subjectFilter?.standard]);
+  }, [playlistQuestionIds, rawData, mode, selectedMark, selectedLevel, subjectFilter?.standard]);
 
   useEffect(() => {
     if (panelData.chapters.length > 0) {
@@ -451,60 +511,68 @@ export default function SubjectBar(props: SubjectBarProps) {
       {!isPlaylistMode && <SubjectModeToggle mode={mode} onChange={onModeChange} />}
 
       <motion.div className="flex flex-col gap-2.5 border-b border-zinc-800 pb-3">
-        {!isPlaylistMode && (
-          <>
-            {/* Row 1: Header title, Counter and Minimize button */}
-            <div className="flex items-center justify-between w-full">
+        {!isPlaylistMode ? (
+          <div className="flex items-center justify-between gap-2 w-full">
+            {/* Left: Title & Counter */}
+            <div className="flex items-center gap-2 min-w-0">
               <h2 className={`font-semibold text-white flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isLongSubject ? "text-sm" : "text-base"}`}>
-                <span title={formatSubjectName(panelData.subject)}>
+                <span title={formatSubjectName(panelData.subject)} className="truncate max-w-[120px] sm:max-w-none">
                   {formatSubjectName(panelData.subject)}
                 </span>
                 <span className="text-xs font-normal text-zinc-400 shrink-0">{chapterCounter}</span>
               </h2>
-              {onCollapse && (
-                <button
-                  type="button"
-                  onClick={onCollapse}
-                  className="hidden lg:flex items-center justify-center p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-                  title="Minimize Subject Panel"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-              )}
             </div>
 
-            {/* Row 2: Filters */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <MarkFilterDropdown
-                options={categoryOptions}
-                selected={selectedCategory}
-                onChange={setSelectedCategory}
-                placeholder="Category"
-                widthClass="w-48"
-                align="left"
-              />
+            {/* Right: Filters and Collapse */}
+            <div className="flex items-center gap-1.5 shrink-0">
               <MarkFilterDropdown
                 options={markOptions}
                 selected={selectedMark}
                 onChange={setSelectedMark}
                 placeholder="Marks"
-                widthClass="w-28"
-                align="left"
+                widthClass="w-24"
+                align="right"
               />
               <MarkFilterDropdown
                 options={["All", "1", "2", "3", "4", "5"]}
                 selected={selectedLevel}
                 onChange={setSelectedLevel}
                 placeholder="Level"
-                widthClass="w-28"
+                widthClass="w-24"
                 align="right"
               />
+              {onCollapse && (
+                <button
+                  type="button"
+                  onClick={onCollapse}
+                  className="hidden lg:flex items-center justify-center p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors shrink-0"
+                  title="Minimize Subject Panel"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+              )}
             </div>
-          </>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between w-full">
+            <h2 className={`font-semibold text-white flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isLongSubject ? "text-sm" : "text-base"}`}>
+              <span>Playlist Mode</span>
+            </h2>
+            {onCollapse && (
+              <button
+                type="button"
+                onClick={onCollapse}
+                className="hidden lg:flex items-center justify-center p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                title="Minimize Subject Panel"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+            )}
+          </div>
         )}
       </motion.div>
 
-      <motion.div className="mt-3 max-h-full lg:max-h-[calc(100vh-150px)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1 custom-scrollbar">
+      <motion.div className="mt-3 max-h-full lg:max-h-[calc(100vh-150px)] min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1 no-scrollbar">
         {loading ? (
           <div className="flex flex-col gap-3 overflow-hidden px-2 pt-2">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -535,6 +603,9 @@ export default function SubjectBar(props: SubjectBarProps) {
               chapterQuizzes.every((quiz) => completedQuizzes.includes(quiz.id));
 
             const isChapterCompleted = questionsCompleted && quizzesCompleted;
+            
+            const categories = chapter.categories || [];
+
             return (
               <motion.div key={chapter.id}>
                 <SubjectChapterRow
@@ -553,29 +624,131 @@ export default function SubjectBar(props: SubjectBarProps) {
                       transition={{ duration: 0.3, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
-                      <motion.div className="mt-2 ml-8 flex flex-col gap-2 pb-3 pr-1">
-                        {chapter.topics.length === 0 ? (
+                      <motion.div className="mt-2 ml-8 flex flex-col gap-3 pb-3 pr-1">
+                        {categories.length === 0 ? (
                           <p className="text-xs text-zinc-500">No questions available</p>
                         ) : (
-                          chapter.topics.map((topic) => {
-                            const isActiveQuestion = selectedQuestionId === topic.id;
+                          categories.map((category) => {
+                            const categoryName = category.name;
+                            const categoryKey = `${chapter.id}:${categoryName}`;
+                            const isCategoryOpen = openCategories[categoryKey] !== false;
+
+                            const toggleCategory = () => {
+                              setOpenCategories((prev) => ({
+                                ...prev,
+                                [categoryKey]: prev[categoryKey] === false,
+                              }));
+                            };
+
+                            const isCategoryCompleted = category.topics.every((topic) =>
+                              completedSet.has(topic.id)
+                            );
+
+                            const isAnyQuestionActive = category.topics.some((topic) =>
+                              topic.id === selectedQuestionId
+                            );
+
                             return (
-                              <motion.div key={topic.id} className="group/question relative pl-4">
+                              <div key={categoryName} className="flex flex-col gap-1.5 relative pl-4">
+                                {/* Connector branch line from Chapter to Category header */}
                                 <span
                                   aria-hidden="true"
-                                  className={`pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-bl-md border-b border-l transition-colors duration-200 ease-in-out ${isActiveQuestion
-                                    ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
-                                    : "border-zinc-700"
-                                    }`}
+                                  className={`pointer-events-none absolute left-0 top-3 h-3 w-3 rounded-bl-md border-b border-l transition-all duration-300 ${
+                                    isAnyQuestionActive
+                                      ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+                                      : "border-zinc-700/60"
+                                  }`}
                                 />
-                                <SubjectQuestionRow
-                                  topicId={topic.id}
-                                  title={topic.title}
-                                  active={isActiveQuestion}
-                                  completed={completedSet.has(topic.id)}
-                                  onClick={handleQuestionPress}
-                                />
-                              </motion.div>
+
+                                {/* Category Header Button */}
+                                <button
+                                  type="button"
+                                  onClick={toggleCategory}
+                                  className="flex items-center justify-between w-full text-left pl-0 pr-1 py-1 text-xs font-semibold text-zinc-300 hover:text-white transition-colors group/category"
+                                >
+                                  <div className="flex items-center gap-1.5">
+                                    <motion.div
+                                      animate={{ rotate: isCategoryOpen ? 90 : 0 }}
+                                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                      className={`transition-colors duration-300 ${
+                                        isAnyQuestionActive
+                                          ? "text-purple-400"
+                                          : "text-zinc-500 group-hover/category:text-zinc-300"
+                                      }`}
+                                    >
+                                      <ChevronRight className="h-3 w-3" />
+                                    </motion.div>
+                                    <span className={`tracking-wide transition-all duration-300 ${
+                                      isAnyQuestionActive
+                                        ? "text-white font-bold drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
+                                        : "text-zinc-300 group-hover/category:text-white"
+                                    }`}>
+                                      {categoryName}
+                                    </span>
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded transition-colors duration-300 shrink-0 ${
+                                      isAnyQuestionActive
+                                        ? "bg-purple-950/40 border border-purple-500/20 text-purple-300"
+                                        : "bg-zinc-800/80 text-zinc-400 font-normal"
+                                    }`}>
+                                      {category.topics.length}
+                                    </span>
+                                  </div>
+
+                                  {isCategoryCompleted ? (
+                                    <div className="relative z-10 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-purple-500 text-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.4)] bg-purple-500/10 mr-1 transition-all duration-300">
+                                      <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                    </div>
+                                  ) : (
+                                    <span className="h-4 w-4 shrink-0 mr-1" />
+                                  )}
+                                </button>
+
+                                {/* Category Questions (Collapsible) */}
+                                <AnimatePresence initial={false}>
+                                  {isCategoryOpen && (
+                                    <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: "auto", opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      transition={{ duration: 0.25, ease: "easeInOut" }}
+                                      className="overflow-hidden"
+                                    >
+                                      {/* Container with a left vertical border representing the '│' line */}
+                                      <div className={`relative ml-1.5 border-l pl-4 flex flex-col gap-1.5 pb-2 pt-1 transition-colors duration-300 ${
+                                        isAnyQuestionActive
+                                          ? "border-purple-500/40"
+                                          : "border-zinc-800/80"
+                                      }`}>
+                                        {category.topics.map((topic) => {
+                                          const isActiveQuestion = selectedQuestionId === topic.id;
+                                          return (
+                                            <div key={topic.id} className="group/question relative pl-4">
+                                              {/* L-connector line from the Category's vertical line to the Question */}
+                                              <span
+                                                aria-hidden="true"
+                                                className={`pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-bl-md border-b border-l transition-colors duration-200 ease-in-out ${
+                                                  isActiveQuestion
+                                                    ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+                                                    : "border-zinc-700/60"
+                                                }`}
+                                              />
+                                              <SubjectQuestionRow
+                                                topicId={topic.id}
+                                                title={topic.title}
+                                                active={isActiveQuestion}
+                                                completed={completedSet.has(topic.id)}
+                                                onClick={handleQuestionPress}
+                                              />
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
                             );
                           })
                         )}

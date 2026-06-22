@@ -1,18 +1,24 @@
 import { supabase } from '@/services/supabaseClient';
 
-export interface SupabasePYQ {
-  id: string | number;
-  standard: string | number;
-  subject_id: string | number;
-  year: string | number;
-  category: string;
-  image_url: string | null;
+export interface SupabaseQuestionPaper {
+  id: string;
+  subject_id: string;
+  chapter_id: string;
+  year: string; // "YYYY-MM-DD"
+  file_url: string | null;
 }
 
 export interface SupabaseSubject {
-  id: string | number;
-  standard: string | number;
+  id: string;
+  standard: string;
   subject_name: string;
+}
+
+export interface SupabaseChapter {
+  id: string;
+  subject_id: string;
+  name: string;
+  chapter_no: number;
 }
 
 export const PYQService = {
@@ -30,49 +36,32 @@ export const PYQService = {
     }
   },
 
-  async fetchPYQs(): Promise<SupabasePYQ[]> {
+  async fetchChapters(): Promise<SupabaseChapter[]> {
     try {
       const { data, error } = await supabase
-        .from('previous_year_questions')
-        .select('id, standard, subject_id, year, category, image_url');
+        .from('chapters')
+        .select('id, subject_id, name, chapter_no')
+        .order('chapter_no', { ascending: true });
 
       if (error) throw error;
-      return (data || []) as SupabasePYQ[];
+      return (data || []) as SupabaseChapter[];
     } catch (error) {
-      console.error('Failed to fetch PYQs in PYQService:', error);
+      console.error('Failed to fetch chapters in PYQService:', error);
       return [];
     }
   },
 
-  /** Returns distinct years from the previous_year_questions table, sorted descending (newest first).
-   *  If `standard` is provided, only rows matching that standard are considered.
-   *  NOTE: the `standard` column is int4 in Supabase — ilike / text operators must NOT be used. */
-  async fetchDistinctYears(standard?: string): Promise<string[]> {
+  async fetchQuestionPapers(): Promise<SupabaseQuestionPaper[]> {
     try {
-      let query = supabase
-        .from('previous_year_questions')
-        .select('year');
+      const { data, error } = await supabase
+        .from('question_paper')
+        .select('id, subject_id, chapter_id, year, file_url');
 
-      if (standard) {
-        // Extract the numeric portion of the standard (e.g. "Class 10" → 10, "10th" → 10)
-        const numeric = parseInt(standard.replace(/\D/g, ''), 10);
-        if (!isNaN(numeric)) {
-          // standard is an int4 column — use .eq() with a number, never ilike
-          query = query.eq('standard', numeric);
-        }
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
-
-      // Deduplicate and sort descending (newest first)
-      const years = [...new Set((data || []).map((row: any) => String(row.year)))];
-      years.sort((a, b) => Number(b) - Number(a));
-      return years;
+      return (data || []) as SupabaseQuestionPaper[];
     } catch (error) {
-      console.error('Failed to fetch distinct years in PYQService:', error);
+      console.error('Failed to fetch question papers in PYQService:', error);
       return [];
     }
   }
 };
-

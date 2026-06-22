@@ -16,12 +16,11 @@ import {
   Calendar,
   FileCheck,
   BookOpenCheck,
-  Layers,
   ArrowLeft,
   ChevronRight
 } from "lucide-react";
 import { ProfileService } from "@/features/profile/services/profile.service";
-import { PYQService, SupabasePYQ, SupabaseSubject } from "@/features/profile/services/pyq.service";
+import { PYQService, SupabaseQuestionPaper, SupabaseSubject, SupabaseChapter } from "@/features/profile/services/pyq.service";
 
 interface PYQItem {
   id: string;
@@ -31,193 +30,23 @@ interface PYQItem {
   isPinned: boolean;
 }
 
-interface QuestionDetail {
-  number: number;
-  text: string;
-  solution: string;
-  marking: string;
-}
-
-interface SectionDetail {
-  title: string;
-  questions: QuestionDetail[];
-}
-
-interface PaperData {
-  id: string;
-  name: string;
-  title: string;
-  description: string;
-  image_url?: string;
-  sections: SectionDetail[];
-}
-
-interface GroupedPapers {
-  category: "BOARD_EXAM_PAPER" | "BAORD_SAMPLE_PAPER";
-  label: string;
-  papers: {
-    id: string;
-    subjectName: string;
-    image_url?: string;
-  }[];
-}
-
-// Static dataset for PYQ question papers & solutions
-const PAPERS_DATA: Record<string, PaperData[]> = {
-  "2026": [
-    {
-      id: "2026-math-board",
-      name: "Mathematics Board Paper",
-      title: "2026 Mathematics Board Paper",
-      description: "Official CBSE Class 10 Mathematics board exam paper.",
-      sections: []
-    },
-    {
-      id: "2026-physics-board",
-      name: "Physics Board Paper",
-      title: "2026 Physics Board Paper",
-      description: "Official CBSE Class 10 Physics board exam paper.",
-      sections: []
-    },
-    {
-      id: "2026-social-board",
-      name: "Social Science Board Paper",
-      title: "2026 Social Science Board Paper",
-      description: "Official CBSE Class 10 Social Science board exam paper.",
-      sections: []
-    },
-    {
-      id: "2026-math-sample",
-      name: "Mathematics Board Sample Paper",
-      title: "2026 Mathematics Board Sample Paper",
-      description: "Official CBSE Class 10 Mathematics board sample paper.",
-      sections: []
-    },
-    {
-      id: "2026-physics-sample",
-      name: "Physics Board Sample Paper",
-      title: "2026 Physics Board Sample Paper",
-      description: "Official CBSE Class 10 Physics board sample paper.",
-      sections: []
-    },
-    {
-      id: "2026-social-sample",
-      name: "Social Science Board Sample Paper",
-      title: "2026 Social Science Board Sample Paper",
-      description: "Official CBSE Class 10 Social Science board sample paper.",
-      sections: []
-    }
-  ],
-  "2025": [
-    {
-      id: "2025-math-board",
-      name: "Mathematics Board Paper",
-      title: "2025 Mathematics Board Paper",
-      description: "Official CBSE Class 10 Mathematics board exam paper.",
-      sections: []
-    },
-    {
-      id: "2025-physics-board",
-      name: "Physics Board Paper",
-      title: "2025 Physics Board Paper",
-      description: "Official CBSE Class 10 Physics board exam paper.",
-      sections: []
-    },
-    {
-      id: "2025-social-board",
-      name: "Social Science Board Paper",
-      title: "2025 Social Science Board Paper",
-      description: "Official CBSE Class 10 Social Science board exam paper.",
-      sections: []
-    },
-    {
-      id: "2025-math-sample",
-      name: "Mathematics Board Sample Paper",
-      title: "2025 Mathematics Board Sample Paper",
-      description: "Official CBSE Class 10 Mathematics board sample paper.",
-      sections: []
-    },
-    {
-      id: "2025-physics-sample",
-      name: "Physics Board Sample Paper",
-      title: "2025 Physics Board Sample Paper",
-      description: "Official CBSE Class 10 Physics board sample paper.",
-      sections: []
-    },
-    {
-      id: "2025-social-sample",
-      name: "Social Science Board Sample Paper",
-      title: "2025 Social Science Board Sample Paper",
-      description: "Official CBSE Class 10 Social Science board sample paper.",
-      sections: []
-    }
-  ]
-};
-
-// Generates fallback mock papers for other years (2024, 2023, 2022) to keep UI fully populated
-function getMockPapers(year: string): PaperData[] {
-  return [
-    {
-      id: `${year}-math-board`,
-      name: "Mathematics Board Paper",
-      title: `${year} Mathematics Board Paper`,
-      description: `Official board exam question paper for Class 10 Mathematics from the year ${year}.`,
-      sections: []
-    },
-    {
-      id: `${year}-physics-board`,
-      name: "Physics Board Paper",
-      title: `${year} Physics Board Paper`,
-      description: `Official board exam question paper for Class 10 Physics from the year ${year}.`,
-      sections: []
-    },
-    {
-      id: `${year}-social-board`,
-      name: "Social Science Board Paper",
-      title: `${year} Social Science Board Paper`,
-      description: `Official board exam question paper for Class 10 Social Science from the year ${year}.`,
-      sections: []
-    },
-    {
-      id: `${year}-math-sample`,
-      name: "Mathematics Board Sample Paper",
-      title: `${year} Mathematics Board Sample Paper`,
-      description: `Official board exam question paper for Class 10 Mathematics from the year ${year}.`,
-      sections: []
-    },
-    {
-      id: `${year}-physics-sample`,
-      name: "Physics Board Sample Paper",
-      title: `${year} Physics Board Sample Paper`,
-      description: `Official board exam question paper for Class 10 Physics from the year ${year}.`,
-      sections: []
-    },
-    {
-      id: `${year}-social-sample`,
-      name: "Social Science Board Sample Paper",
-      title: `${year} Social Science Board Sample Paper`,
-      description: `Official board exam question paper for Class 10 Social Science from the year ${year}.`,
-      sections: []
-    }
-  ];
-}
-
 export function PYQPageClient() {
   const [searchQuery, setSearchQuery] = useState("");
   
   // Navigation states
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
-  const [selectedPaperId, setSelectedPaperId] = useState<string>("");
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [activeMobileTab, setActiveMobileTab] = useState<"subject" | "content">("subject");
-  const [expandedCategory, setExpandedCategory] = useState<"BOARD_EXAM_PAPER" | "BAORD_SAMPLE_PAPER" | null>(null);
+  const [openSubjects, setOpenSubjects] = useState<Record<string, boolean>>({});
 
   // Dynamic Supabase states
   const [userStandard, setUserStandard] = useState<string>("10");
-  const [dbPapers, setDbPapers] = useState<PaperData[]>([]);
+  const [dbQuestionPapers, setDbQuestionPapers] = useState<SupabaseQuestionPaper[]>([]);
   const [subjects, setSubjects] = useState<SupabaseSubject[]>([]);
+  const [chapters, setChapters] = useState<SupabaseChapter[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Years fetched dynamically from Supabase
+  // Years derived dynamically from Supabase
   const [pyqs, setPyqs] = useState<PYQItem[]>([]);
 
   // Icon palette for year cards (cycles)
@@ -240,66 +69,40 @@ export function PYQPageClient() {
           console.warn("Profile fetch failed, defaulting standard to 10:", profileErr);
         }
 
-        // 2. Fetch subjects + ALL PYQs in parallel (no standard filter — we filter client-side)
-        const [fetchedSubjects, fetchedPyqs] = await Promise.all([
+        // 2. Fetch subjects + chapters + question papers in parallel
+        const [fetchedSubjects, fetchedChapters, fetchedPapers] = await Promise.all([
           PYQService.fetchSubjects(),
-          PYQService.fetchPYQs(),
+          PYQService.fetchChapters(),
+          PYQService.fetchQuestionPapers(),
         ]);
 
-        setSubjects(fetchedSubjects);
+        const numericStd = parseInt(cleanStd, 10);
+        // Standard filter based on subjects
+        const subjectsForStd = isNaN(numericStd)
+          ? fetchedSubjects
+          : fetchedSubjects.filter((s) => Number(s.standard) === numericStd);
+        const subjectIds = new Set(subjectsForStd.map((s) => String(s.id)));
 
-        console.log("[PYQ] fetchedPyqs:", fetchedPyqs.length, "rows", fetchedPyqs);
+        // Question papers matching standard
+        const papersForStd = fetchedPapers.filter((p) => subjectIds.has(String(p.subject_id)));
 
-        // 3. Derive distinct years directly from the fetched rows (no extra DB call needed)
-        const allYears = [...new Set(fetchedPyqs.map(r => String(r.year)))]
+        // 3. Derive distinct years dynamically (YYYY from YYYY-MM-DD)
+        const allYears = [...new Set(papersForStd.map((p) => p.year ? p.year.split("-")[0] : ""))]
           .filter(Boolean)
           .sort((a, b) => Number(b) - Number(a)); // newest first
-
-        console.log("[PYQ] distinct years:", allYears);
 
         const dynamicPyqs: PYQItem[] = allYears.map((year, idx) => ({
           id: `pyq-${year}`,
           title: year,
-          papersCount: 0, // updated in pyqListWithCounts
+          papersCount: 0, // computed dynamically in pyqListWithCounts
           icon: YEAR_ICONS[idx % YEAR_ICONS.length],
           isPinned: idx === 0, // newest pinned by default
         }));
+
         setPyqs(dynamicPyqs);
-
-        // 4. Filter PYQs matching the user's standard (standard is int4 in Supabase)
-        const numericStd = parseInt(cleanStd, 10);
-        const matchedPyqs = isNaN(numericStd)
-          ? fetchedPyqs // show everything if no valid standard
-          : fetchedPyqs.filter(row => Number(row.standard) === numericStd);
-
-        console.log("[PYQ] matched pyqs for std", numericStd, ":", matchedPyqs.length);
-
-        // 5. Map DB PYQs to PaperData
-        const mappedPapers: PaperData[] = matchedPyqs.map(row => {
-          const foundSub = fetchedSubjects.find(s => String(s.id) === String(row.subject_id));
-          let subjectName = "";
-          if (foundSub) {
-            subjectName = foundSub.subject_name;
-          } else {
-            const s = String(row.subject_id);
-            subjectName = isNaN(Number(s)) ? s.charAt(0).toUpperCase() + s.slice(1) : "General";
-          }
-
-          const isSample = String(row.category).toUpperCase().includes("SAMPLE");
-          const paperName = isSample ? `${subjectName} Board Sample Paper` : `${subjectName} Board Paper`;
-
-          return {
-            id: String(row.id),
-            name: paperName,
-            title: `${row.year} ${paperName}`,
-            description: `Official ${paperName} for standard ${row.standard}.`,
-            image_url: row.image_url || undefined,
-            sections: []
-          };
-        });
-
-        console.log("[PYQ] mapped papers:", mappedPapers.length);
-        setDbPapers(mappedPapers);
+        setSubjects(subjectsForStd);
+        setChapters(fetchedChapters);
+        setDbQuestionPapers(papersForStd);
       } catch (error) {
         console.error("Failed to load dynamic PYQ data from Supabase:", error);
       } finally {
@@ -320,10 +123,10 @@ export function PYQPageClient() {
 
   const pyqListWithCounts = useMemo(() => {
     return pyqs.map((item) => {
-      const count = dbPapers.filter((p) => p.title.startsWith(item.title) || p.id.includes(item.title)).length;
+      const count = dbQuestionPapers.filter((p) => p.year && p.year.startsWith(item.title)).length;
       return { ...item, papersCount: count };
     });
-  }, [pyqs, dbPapers]);
+  }, [pyqs, dbQuestionPapers]);
 
   const filteredYears = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -340,114 +143,92 @@ export function PYQPageClient() {
     });
   }, [pyqListWithCounts, searchQuery]);
 
-  // Grouped list of papers for the selected year (Board Paper vs Sample Paper with inner subjects)
-  const groupedPapersList = useMemo<GroupedPapers[]>(() => {
+  // Grouped list of subjects and chapters for the selected year
+  const yearSubjectsAndChapters = useMemo(() => {
     if (!selectedYear) return [];
 
-    // Filter DB papers for the selected year
-    const dbYearPapers = dbPapers.filter((p) => {
-      return p.title.startsWith(selectedYear) || p.id.includes(selectedYear);
+    const yearPapers = dbQuestionPapers.filter(
+      (p) => p.year && p.year.startsWith(selectedYear)
+    );
+
+    const activeSubjects = subjects.filter((s) =>
+      yearPapers.some((p) => String(p.subject_id) === String(s.id))
+    );
+
+    const result = activeSubjects.map((subject) => {
+      const subjectPapers = yearPapers.filter((p) => String(p.subject_id) === String(subject.id));
+      const subjectChapters = chapters.filter((c) =>
+        subjectPapers.some((p) => String(p.chapter_id) === String(c.id))
+      );
+
+      const sortedChapters = [...subjectChapters].sort((a, b) => a.chapter_no - b.chapter_no);
+
+      return {
+        subjectId: String(subject.id),
+        subjectName: subject.subject_name,
+        chapters: sortedChapters.map((c) => {
+          const paper = subjectPapers.find((p) => String(p.chapter_id) === String(c.id));
+          return {
+            id: c.id,
+            name: c.name,
+            chapterNo: c.chapter_no,
+            fileUrl: paper?.file_url || null,
+          };
+        }),
+      };
     });
 
-    const examPapers: GroupedPapers["papers"] = [];
-    const samplePapers: GroupedPapers["papers"] = [];
+    return result.sort((a, b) => a.subjectName.localeCompare(b.subjectName));
+  }, [selectedYear, dbQuestionPapers, subjects, chapters]);
 
-    if (dbYearPapers.length > 0) {
-      dbYearPapers.forEach((p) => {
-        let subjectName = p.name.replace("Board Paper", "").replace("Board Sample Paper", "").trim();
-        if (!subjectName) subjectName = "General";
+  // Active chapter metadata for display
+  const activeChapterData = useMemo(() => {
+    if (!selectedChapterId) return null;
+    
+    const chap = chapters.find(c => String(c.id) === String(selectedChapterId));
+    if (!chap) return null;
 
-        const isSample = p.name.includes("Sample");
-        const item = {
-          id: p.id,
-          subjectName: subjectName,
-          image_url: p.image_url
-        };
+    const subj = subjects.find(s => String(s.id) === String(chap.subject_id));
 
-        if (isSample) {
-          samplePapers.push(item);
-        } else {
-          examPapers.push(item);
-        }
-      });
-    } else {
-      // Fallback to static mockup data if database table has absolutely no records for this year
-      const staticPapers = PAPERS_DATA[selectedYear] || getMockPapers(selectedYear);
-      staticPapers.forEach((p) => {
-        const isSample = p.name.includes("Sample");
-        let subjectName = p.name.replace("Board Paper", "").replace("Board Sample Paper", "").trim();
-        if (!subjectName) subjectName = "Mathematics";
+    const paper = dbQuestionPapers.find(
+      p => p.year && p.year.startsWith(selectedYear || "") && 
+      String(p.subject_id) === String(chap.subject_id) && 
+      String(p.chapter_id) === String(chap.id)
+    );
 
-        const item = {
-          id: p.id,
-          subjectName: subjectName,
-          image_url: p.image_url
-        };
+    return {
+      chapterName: chap.name,
+      chapterNo: chap.chapter_no,
+      subjectName: subj?.subject_name || "",
+      fileUrl: paper?.file_url || null,
+    };
+  }, [selectedChapterId, selectedYear, chapters, subjects, dbQuestionPapers]);
 
-        if (isSample) {
-          samplePapers.push(item);
-        } else {
-          examPapers.push(item);
-        }
-      });
-    }
-
-    return [
-      {
-        category: "BOARD_EXAM_PAPER",
-        label: "Board Paper",
-        papers: examPapers
-      },
-      {
-        category: "BAORD_SAMPLE_PAPER",
-        label: "Board Sample Paper",
-        papers: samplePapers
-      }
-    ];
-  }, [selectedYear, dbPapers]);
-
-  // List of papers for the selected year
-  const papersList = useMemo<PaperData[]>(() => {
-    if (!selectedYear) return [];
-    // Prioritize DB papers for this year
-    const yearPapers = dbPapers.filter((p) => p.title.startsWith(selectedYear) || p.id.includes(selectedYear));
-    if (yearPapers.length > 0) {
-      return yearPapers;
-    }
-    return PAPERS_DATA[selectedYear] || getMockPapers(selectedYear);
-  }, [selectedYear, dbPapers]);
-
-  // Retrieve matching active paper details
-  const activePaper = useMemo<PaperData | null>(() => {
-    if (!selectedPaperId || papersList.length === 0) return null;
-    return papersList.find((p) => p.id === selectedPaperId) || null;
-  }, [papersList, selectedPaperId]);
-
-  // Load initial navigation states from URL search params on mount
+  // Load initial navigation states from URL params on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const yearParam = params.get("year");
-      const paperIdParam = params.get("paper");
+      const chapterParam = params.get("chapter");
       
       if (yearParam) {
         setSelectedYear(yearParam);
       }
-      if (paperIdParam) {
-        setSelectedPaperId(paperIdParam);
+      if (chapterParam) {
+        setSelectedChapterId(chapterParam);
       }
     }
   }, []);
 
-  // Listen to popstate event to handle browser back/forward buttons
+  // Listen to popstate event
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const yearParam = params.get("year");
-      const paperIdParam = params.get("paper");
+      const chapterParam = params.get("chapter");
       
       setSelectedYear(yearParam);
-      setSelectedPaperId(paperIdParam || "");
+      setSelectedChapterId(chapterParam);
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -456,42 +237,53 @@ export function PYQPageClient() {
     };
   }, []);
 
-  // Auto-expand the accordion category containing the selected paper
+  // Auto-expand the active subject accordion
   useEffect(() => {
-    if (selectedPaperId && papersList.length > 0) {
-      const activeP = papersList.find((p) => p.id === selectedPaperId);
-      if (activeP) {
-        const isSample = activeP.name.includes("Sample");
-        setExpandedCategory(isSample ? "BAORD_SAMPLE_PAPER" : "BOARD_EXAM_PAPER");
+    if (selectedChapterId && chapters.length > 0) {
+      const chap = chapters.find((c) => String(c.id) === String(selectedChapterId));
+      if (chap) {
+        setOpenSubjects((prev) => ({
+          ...prev,
+          [String(chap.subject_id)]: true,
+        }));
       }
     }
-  }, [selectedPaperId, papersList]);
+  }, [selectedChapterId, chapters]);
 
-  // Handle year card click/tap
+  // Handle year click
   const handleYearClick = (yearTitle: string) => {
     setSelectedYear(yearTitle);
-    setSelectedPaperId(""); // Start with no active paper, prompting the user to select a subject
+    setSelectedChapterId(null);
     
-    // Sync to URL
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       url.searchParams.set("year", yearTitle);
-      url.searchParams.delete("paper");
+      url.searchParams.delete("chapter");
       window.history.pushState({}, "", url.toString());
     }
     
-    const yearPapers = dbPapers.filter((p) => p.title.startsWith(yearTitle) || p.id.includes(yearTitle));
-    if (yearPapers.length > 0) {
-      const isSample = yearPapers[0].name.includes("Sample");
-      setExpandedCategory(isSample ? "BAORD_SAMPLE_PAPER" : "BOARD_EXAM_PAPER");
-    } else {
-      const list = PAPERS_DATA[yearTitle] || getMockPapers(yearTitle);
-      if (list.length > 0) {
-        const isSample = list[0].name.includes("Sample");
-        setExpandedCategory(isSample ? "BAORD_SAMPLE_PAPER" : "BOARD_EXAM_PAPER");
-      }
-    }
+    // Auto-expand all subjects for this year by default
+    const papersForYear = dbQuestionPapers.filter(
+      (p) => p.year && p.year.startsWith(yearTitle)
+    );
+    const initialOpen: Record<string, boolean> = {};
+    papersForYear.forEach((p) => {
+      initialOpen[String(p.subject_id)] = true;
+    });
+    setOpenSubjects(initialOpen);
+
     setActiveMobileTab("subject");
+  };
+
+  const handleChapterClick = (chapterId: string) => {
+    setSelectedChapterId(chapterId);
+    setActiveMobileTab("content");
+
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("chapter", chapterId);
+      window.history.pushState({}, "", url.toString());
+    }
   };
 
   // Split View Layout (Year Selected)
@@ -500,7 +292,7 @@ export function PYQPageClient() {
       <div className="bg-black text-zinc-200 min-h-screen text-white font-sans flex flex-col h-screen overflow-hidden">
         <DashboardHeader activeLabel="PYQs" />
 
-        {/* Mobile Tab Switcher matching /video page style */}
+        {/* Mobile Tab Switcher */}
         <div className="flex border-b border-zinc-800 bg-[#0c0c0e] lg:hidden shrink-0">
           <button
             type="button"
@@ -532,7 +324,7 @@ export function PYQPageClient() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          {/* LEFT: Papers List Panel (Replaced Subject tabs and Outline) */}
+          {/* LEFT: Accordion Tree List Panel */}
           <div
             className={`transition-all duration-300 ease-in-out flex h-full min-h-0 shrink-0 w-full lg:w-[380px] lg:shrink-0 lg:pr-4 ${
               activeMobileTab === "subject" ? "flex" : "hidden lg:flex"
@@ -540,130 +332,116 @@ export function PYQPageClient() {
           >
             <aside className="flex h-full w-full min-w-0 shrink flex-col rounded-2xl border border-zinc-800/80 bg-[#121212] p-4 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
               {/* Back to Grid header */}
-              <div className="flex items-center justify-between mb-4 border-b border-zinc-800 pb-3.5">
-                <h2 className="text-xl font-bold text-white tracking-tight">
+              <div className="flex items-center mb-4 border-b border-zinc-800 pb-3.5">
+                <h2 className="text-xl font-bold text-white tracking-tight truncate">
                   {selectedYear} PYQs
                 </h2>
               </div>
 
               {/* Available Question Papers */}
-              <div className="mt-2 min-h-0 flex-1 overflow-y-auto pr-1 custom-scrollbar">
+              <div className="mt-2 min-h-0 flex-1 overflow-y-auto pr-1 custom-scrollbar no-scrollbar">
                 <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">
-                  Available Papers
+                  Subjects & Chapters
                 </p>
-                <div className="flex flex-col gap-3">
-                  {groupedPapersList.map((group) => {
-                    const isExpanded = expandedCategory === group.category;
-                    return (
-                      <div key={group.category} className="flex flex-col">
-                        {/* Category Header Button */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setExpandedCategory(isExpanded ? null : group.category);
-                          }}
-                          className="group relative flex w-full items-center justify-between py-3 pl-3 pr-2 text-left transition-all duration-300 cursor-pointer bg-transparent border-transparent select-none rounded-xl"
-                        >
-                          {/* Active Left Indicator Bar */}
-                          {isExpanded && (
-                            <div 
-                              className="absolute left-[-16px] bottom-1/4 top-1/4 w-1 rounded-r-full bg-purple-500 shadow-[0_0_12px_rgba(168,85,247,0.8)]"
-                            />
-                          )}
+                
+                {yearSubjectsAndChapters.length === 0 ? (
+                  <p className="text-xs text-zinc-500">No subjects available</p>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {yearSubjectsAndChapters.map((subject) => {
+                      const isExpanded = openSubjects[subject.subjectId] !== false;
+                      const toggleSubject = () => {
+                        setOpenSubjects((prev) => ({
+                          ...prev,
+                          [subject.subjectId]: prev[subject.subjectId] === false,
+                        }));
+                      };
 
-                          <div className="flex items-center gap-3 pl-1">
-                            {/* Icon Container */}
-                            <div className={`mt-0.5 transition-colors duration-300 ${
-                              isExpanded ? "text-purple-400" : "text-zinc-500 group-hover:text-purple-400/70"
-                            }`}>
-                              <BookOpen size={20} className="w-5 h-5" />
-                            </div>
+                      return (
+                        <div key={subject.subjectId} className="flex flex-col gap-1.5 relative pl-4">
+                          {/* L-connector line from top to Subject header */}
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute left-0 top-3 h-3 w-3 rounded-bl-md border-b border-l border-zinc-700/60"
+                          />
 
-                            {/* Text Stack */}
-                            <div className="flex flex-col">
-                              <span className="text-xs font-bold text-white uppercase tracking-wider">
-                                {group.category === "BOARD_EXAM_PAPER" ? "BOARD EXAM PAPER" : "SAMPLE BOARD EXAM PAPER"}
+                          {/* Subject Accordion Header */}
+                          <button
+                            type="button"
+                            onClick={toggleSubject}
+                            className="flex items-center justify-between w-full text-left pl-0 pr-1 py-1 text-xs font-semibold text-zinc-300 hover:text-white transition-colors group/subject"
+                          >
+                            <div className="flex items-center gap-1.5">
+                              <motion.div
+                                animate={{ rotate: isExpanded ? 90 : 0 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                className="text-zinc-500 group-hover/subject:text-zinc-300"
+                              >
+                                <ChevronRight className="h-3 w-3" />
+                              </motion.div>
+                              <span className="tracking-wide text-zinc-200 group-hover/subject:text-white transition-colors">{subject.subjectName}</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800/80 text-zinc-450 font-normal shrink-0">
+                                {subject.chapters.length}
                               </span>
                             </div>
-                          </div>
+                          </button>
 
-                          <motion.div
-                            animate={{ rotate: isExpanded ? 90 : 0 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                            className={`transition-colors ${
-                              isExpanded ? "text-purple-400" : "text-zinc-600 group-hover:text-zinc-450"
-                            }`}
-                          >
-                            <ChevronRight size={16} />
-                          </motion.div>
-                        </button>
-
-                        {/* Subject Items List under this Category */}
-                        <AnimatePresence>
-                          {isExpanded && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: "auto" }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="flex flex-col pl-6 ml-6 mt-1.5 gap-2 overflow-hidden"
-                            >
-                              {group.papers.length > 0 ? (
-                                group.papers.map((paper, index) => {
-                                  const isActive = selectedPaperId === paper.id;
-                                  return (
-                                    <div key={paper.id} className="relative flex items-center w-full min-h-[36px] py-0.5">
-                                      {/* Curved connector branch */}
-                                      <span
-                                        aria-hidden="true"
-                                        className={`pointer-events-none absolute left-[-24px] top-[-8px] h-[26px] w-6 rounded-bl-lg border-l border-b transition-all duration-300 ease-in-out ${
-                                          isActive
-                                            ? "border-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
-                                            : "border-zinc-800/80"
-                                        }`}
-                                      />
-                                      
-                                      <motion.button
-                                        type="button"
-                                        onClick={() => {
-                                          setSelectedPaperId(paper.id);
-                                          setActiveMobileTab("content");
-
-                                          // Sync to URL
-                                          if (typeof window !== "undefined") {
-                                            const url = new URL(window.location.href);
-                                            url.searchParams.set("paper", paper.id);
-                                            window.history.pushState({}, "", url.toString());
-                                          }
-                                        }}
-                                        whileHover={{ x: 5 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className={`flex items-center justify-between py-1.5 pl-2 pr-1 text-sm font-semibold text-left transition-colors duration-300 cursor-pointer w-full bg-transparent border-transparent ${
-                                          isActive
-                                            ? "text-white font-bold drop-shadow-md"
-                                            : "text-zinc-400 hover:text-zinc-200"
-                                        }`}
-                                      >
-                                        <span>{paper.subjectName}</span>
-                                      </motion.button>
-                                    </div>
-                                  );
-                                })
-                              ) : (
-                                <p className="text-xs text-zinc-600 py-1 pl-2">No papers available</p>
-                              )}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    );
-                  })}
-                </div>
+                          {/* Chapters list under the Subject */}
+                          <AnimatePresence initial={false}>
+                            {isExpanded && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.25, ease: "easeInOut" }}
+                                className="overflow-hidden"
+                              >
+                                {/* Left vertical border connector line */}
+                                <div className="relative ml-1.5 border-l border-zinc-800/80 pl-4 flex flex-col gap-1.5 pb-2 pt-1">
+                                  {subject.chapters.map((chapter) => {
+                                    const isActive = selectedChapterId === chapter.id;
+                                    return (
+                                      <div key={chapter.id} className="group/chapter relative pl-4">
+                                        {/* L-connector line to the Chapter item */}
+                                        <span
+                                          aria-hidden="true"
+                                          className={`pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-bl-md border-b border-l transition-colors duration-200 ease-in-out ${
+                                            isActive
+                                              ? "border-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+                                              : "border-zinc-700/60"
+                                          }`}
+                                        />
+                                        
+                                        <motion.button
+                                          type="button"
+                                          onClick={() => handleChapterClick(chapter.id)}
+                                          whileHover={{ x: 5 }}
+                                          whileTap={{ scale: 0.98 }}
+                                          className={`flex items-center justify-between py-1.5 pl-2 pr-1 text-xs font-semibold text-left transition-colors duration-300 cursor-pointer w-full bg-transparent border-transparent ${
+                                            isActive
+                                              ? "text-white font-bold drop-shadow-md"
+                                              : "text-zinc-400 hover:text-zinc-200"
+                                          }`}
+                                        >
+                                          <span>Chapter {chapter.chapterNo}: {chapter.name}</span>
+                                        </motion.button>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </aside>
           </div>
 
-          {/* RIGHT: Another Panel (Displaying Full Question Paper Details) */}
+          {/* RIGHT: Document Preview Panel */}
           <div
             className={`transition-all duration-300 ease-in-out flex-1 min-w-0 h-full min-h-0 ${
               activeMobileTab === "content" ? "flex" : "hidden lg:flex"
@@ -671,33 +449,82 @@ export function PYQPageClient() {
           >
             <aside className="rounded-2xl border border-zinc-800/90 bg-[#121212] shadow-[0_18px_36px_rgba(0,0,0,0.42)] h-full w-full min-w-0 flex shrink flex-col overflow-hidden">
               
-              {/* Header bar matching the styling */}
+              {/* Header bar */}
               <div className="flex w-full shrink-0 items-center justify-between border-b border-zinc-800 px-6 py-4">
                 <h3 className="text-sm font-semibold text-zinc-200">
-                  {activePaper ? activePaper.title : "Question Paper View"}
+                  {activeChapterData ? `${activeChapterData.subjectName} - Chapter ${activeChapterData.chapterNo}` : "Question Paper View"}
                 </h3>
               </div>
 
               {/* Panel content scroll area */}
-              <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center text-center text-zinc-500">
-                {!activePaper ? (
-                  <>
+              <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-6 flex flex-col">
+                {!activeChapterData ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center text-zinc-500">
                     <BookOpen size={36} className="mb-3 opacity-30 text-purple-400" />
-                    <p className="text-sm font-medium">Select a Subject for Question Paper</p>
-                  </>
-                ) : activePaper.image_url ? (
-                  <div className="flex flex-col items-center justify-center w-full h-full p-4 bg-zinc-950/20 rounded-xl border border-zinc-800/50">
-                    <img
-                      src={activePaper.image_url}
-                      alt={activePaper.title}
-                      className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
-                    />
+                    <p className="text-sm font-medium">Select a Chapter to view Question Paper</p>
+                  </div>
+                ) : activeChapterData.fileUrl ? (
+                  <div className="flex-1 flex flex-col gap-5 min-h-0">
+                    {/* Header Details */}
+                    <div className="flex flex-col items-start gap-1 text-left shrink-0">
+                      <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">
+                        {activeChapterData.subjectName}
+                      </span>
+                      <h4 className="text-lg font-bold text-white leading-tight">
+                        Chapter {activeChapterData.chapterNo}: {activeChapterData.chapterName}
+                      </h4>
+                    </div>
+
+                    {/* Preview Area */}
+                    {activeChapterData.fileUrl.toLowerCase().endsWith(".pdf") ? (
+                      <div className="flex-1 rounded-xl overflow-hidden border border-zinc-800/80 bg-zinc-950 flex flex-col min-h-[300px]">
+                        <iframe
+                          src={activeChapterData.fileUrl}
+                          className="w-full h-full border-none flex-1"
+                          title="PDF Preview"
+                        />
+                      </div>
+                    ) : activeChapterData.fileUrl.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)/) ? (
+                      <div className="flex-1 rounded-xl overflow-hidden border border-zinc-800/80 bg-zinc-950 flex items-center justify-center p-3 min-h-[300px]">
+                        <img
+                          src={activeChapterData.fileUrl}
+                          alt={activeChapterData.chapterName}
+                          className="max-w-full max-h-[60vh] object-contain rounded-lg shadow-md"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex-1 rounded-xl border border-dashed border-zinc-800 bg-zinc-950/20 flex flex-col items-center justify-center p-8 text-zinc-500 min-h-[200px]">
+                        <FileText size={48} className="mb-3 opacity-30 text-purple-400" />
+                        <p className="text-sm font-medium">Document preview not supported for this file format.</p>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-4 mt-auto pt-2 shrink-0">
+                      <a
+                        href={activeChapterData.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#a855f7] px-5 py-3 text-sm font-bold text-white shadow-[0_0_15px_rgba(124,58,237,0.4)] transition hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                      >
+                        <BookOpen size={16} />
+                        <span>Open Document</span>
+                      </a>
+                      <a
+                        href={activeChapterData.fileUrl}
+                        download
+                        className="flex items-center justify-center gap-2 rounded-xl border border-zinc-800 hover:border-zinc-700 bg-zinc-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-zinc-800 active:scale-[0.98] cursor-pointer"
+                      >
+                        <Download size={16} />
+                        <span>Download</span>
+                      </a>
+                    </div>
                   </div>
                 ) : (
-                  <>
+                  <div className="flex-1 flex flex-col items-center justify-center text-center text-zinc-500">
                     <FileText size={36} className="mb-3 opacity-30 text-purple-400" />
-                    <p className="text-sm font-medium">Question paper content is currently empty.</p>
-                  </>
+                    <p className="text-sm font-medium">Question paper file is currently empty/not uploaded yet.</p>
+                  </div>
                 )}
               </div>
 
@@ -766,16 +593,16 @@ export function PYQPageClient() {
                 const IconComponent = pyq.icon;
                 return (
                   <motion.div
-                    key={pyq.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="group flex h-full min-h-[220px] w-full max-w-[240px] cursor-pointer flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-[#121212] transition-all duration-300 hover:-translate-y-1 hover:border-violet-500/30 hover:shadow-[0_8px_30px_rgba(139,92,246,0.1)]"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleYearClick(pyq.title)}
+                     key={pyq.id}
+                     layout
+                     initial={{ opacity: 0, scale: 0.95 }}
+                     animate={{ opacity: 1, scale: 1 }}
+                     exit={{ opacity: 0, scale: 0.95 }}
+                     transition={{ duration: 0.2 }}
+                     className="group flex h-full min-h-[220px] w-full max-w-[240px] cursor-pointer flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-[#121212] transition-all duration-300 hover:-translate-y-1 hover:border-violet-500/30 hover:shadow-[0_8px_30px_rgba(139,92,246,0.1)]"
+                     role="button"
+                     tabIndex={0}
+                     onClick={() => handleYearClick(pyq.title)}
                   >
                     {/* Top Header: Dot & Pin */}
                     <div className="flex items-center justify-between p-4 pb-0">
