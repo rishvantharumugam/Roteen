@@ -9,12 +9,15 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from '@/lib/supabase/client';
+import { AuthModal } from "@/features/auth/components/AuthModal";
 
 type AuthContextValue = {
   isLoading: boolean;
   session: Session | null;
   user: User | null;
   signOut: () => Promise<{ error: Error | null }>;
+  openLoginModal: (nextRoute?: string | null) => void;
+  openSignUpModal: (nextRoute?: string | null) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -33,6 +36,28 @@ export function AuthProvider({
   const [session, setSession] = useState<Session | null>(initialSession);
   const [user, setUser] = useState<User | null>(initialUser);
   const [isLoading, setIsLoading] = useState(!initialUser);
+
+  const [authModalState, setAuthModalState] = useState<{
+    isOpen: boolean;
+    mode: "signIn" | "signUp";
+    nextRoute: string | null;
+  }>({
+    isOpen: false,
+    mode: "signIn",
+    nextRoute: null,
+  });
+
+  const openLoginModal = (nextRoute: string | null = null) => {
+    setAuthModalState({ isOpen: true, mode: "signIn", nextRoute });
+  };
+
+  const openSignUpModal = (nextRoute: string | null = null) => {
+    setAuthModalState({ isOpen: true, mode: "signUp", nextRoute });
+  };
+
+  const closeAuthModal = () => {
+    setAuthModalState((prev) => ({ ...prev, isOpen: false }));
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -205,9 +230,18 @@ export function AuthProvider({
         session,
         user,
         signOut,
+        openLoginModal,
+        openSignUpModal,
       }}
     >
       {children}
+      {authModalState.isOpen && (
+        <AuthModal
+          mode={authModalState.mode}
+          nextRoute={authModalState.nextRoute}
+          onClose={closeAuthModal}
+        />
+      )}
     </AuthContext.Provider>
   );
 }

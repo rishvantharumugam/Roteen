@@ -12,13 +12,39 @@ import { navigateToVideoPlaylist } from '@/features/video/constants/videoSubject
 import { setVideoPlaylistContext } from '@/features/video/components/videoPlaylistStore';
 import { queryKeys } from '@/lib/queryKeys';
 import { supabase } from '@/lib/supabase/client';
+import { useAuth } from '@/providers/AuthProvider';
 
 const initialDraft: NewPlaylistDraft = {
   title: '',
 };
 
+const guestMockPlaylists: Playlist[] = [
+  {
+    id: 'mock-playlist-1',
+    title: 'Mechanics Revision',
+    videoCount: 5,
+    isPinned: true,
+    date: '23/06/2026',
+  },
+  {
+    id: 'mock-playlist-2',
+    title: 'Chemical Bonding Summary',
+    videoCount: 3,
+    isPinned: false,
+    date: '22/06/2026',
+  },
+  {
+    id: 'mock-playlist-3',
+    title: 'Calculus MCQ Prep',
+    videoCount: 8,
+    isPinned: false,
+    date: '21/06/2026',
+  },
+];
+
 export const RevisionNavigation = () => {
   const router = useRouter();
+  const { user, openLoginModal } = useAuth();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,18 +55,24 @@ export const RevisionNavigation = () => {
     queryFn: () => RevisionController.getPlaylists(),
     staleTime: 60_000,
     gcTime: 15 * 60_000,
+    enabled: !!user,
   });
 
-  const playlists = useMemo(() => playlistsQuery.data ?? [], [playlistsQuery.data]);
+  const playlists = useMemo(() => {
+    if (!user) return guestMockPlaylists;
+    return playlistsQuery.data ?? [];
+  }, [playlistsQuery.data, user]);
 
   useEffect(() => {
+    if (!user) return;
     if (!playlistsQuery.error) {
       return;
     }
     toast.error('Failed to load playlists');
-  }, [playlistsQuery.error]);
+  }, [playlistsQuery.error, user]);
 
   useEffect(() => {
+    if (!user) return;
     const revisionChannel = supabase
       .channel('revision-realtime-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'quickrevision_lists' }, () => {
@@ -54,7 +86,7 @@ export const RevisionNavigation = () => {
     return () => {
       void supabase.removeChannel(revisionChannel);
     };
-  }, [queryClient]);
+  }, [queryClient, user]);
 
   const updatePlaylistsCache = (updater: (current: Playlist[]) => Playlist[]) => {
     queryClient.setQueryData<Playlist[]>(queryKeys.revisionPlaylists, (current) => updater(current ?? []));
@@ -109,6 +141,10 @@ export const RevisionNavigation = () => {
   };
 
   const handleAddPlaylist = () => {
+    if (!user) {
+      openLoginModal('/revision');
+      return;
+    }
     setDraft(initialDraft);
     setIsModalOpen(true);
   };
@@ -147,11 +183,19 @@ export const RevisionNavigation = () => {
   };
 
   const handleDeletePlaylist = async (id: string) => {
+    if (!user) {
+      openLoginModal('/revision');
+      return;
+    }
     updatePlaylistsCache((current) => current.filter((item) => item.id !== id));
     await deletePlaylistMutation.mutateAsync(id);
   };
 
   const handleTogglePin = async (id: string) => {
+    if (!user) {
+      openLoginModal('/revision');
+      return;
+    }
     const playlist = playlists.find((item) => item.id === id);
     if (!playlist) return;
 
@@ -162,6 +206,10 @@ export const RevisionNavigation = () => {
   };
 
   const handleOpenPlaylist = async (playlistId: string) => {
+    if (!user) {
+      openLoginModal('/revision');
+      return;
+    }
     try {
       const context = await RevisionController.getPlaylistLaunchContext(playlistId);
       if (!context.questionIds.length) {

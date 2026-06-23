@@ -9,6 +9,7 @@ import { NoteController } from '@/features/notes/actions/notesController';
 import { NoteService } from '@/features/notes/services/notesService';
 import { NotesPageUI } from '@/features/notes/components/NotesPageUI';
 import { Note, NewNoteDraft } from '@/features/notes/components/notesStore';
+import { useAuth } from '@/providers/AuthProvider';
 
 const DRAFT_STORAGE_KEY = 'note-editor-draft-v1';
 
@@ -20,7 +21,41 @@ const initialDraft: NewNoteDraft = {
   textColor: '#C7D2FE',
 };
 
+const guestMockNotes: Note[] = [
+  {
+    id: 'mock-note-1',
+    subject: 'Kinematics Formulas',
+    description: '<p>Key equations of motion under constant acceleration, definitions of displacement, velocity, and relative velocity.</p>',
+    date: 'June 23, 2026',
+    isPinned: true,
+    accentColor: '#38BDF8',
+    textColor: '#E0F2FE',
+    questionId: null,
+  },
+  {
+    id: 'mock-note-2',
+    subject: 'Organic Chemistry Roadmap',
+    description: '<p>Summarizing conversion reactions of alcohols, phenols, and ethers with mechanisms of nucleophilic substitution.</p>',
+    date: 'June 22, 2026',
+    isPinned: false,
+    accentColor: '#FACC15',
+    textColor: '#FEF9C3',
+    questionId: null,
+  },
+  {
+    id: 'mock-note-3',
+    subject: 'Calculus Theorems',
+    description: '<p>Fundamental Theorem of Calculus, Rolle\'s Theorem, Mean Value Theorem, and applications of derivatives.</p>',
+    date: 'June 21, 2026',
+    isPinned: false,
+    accentColor: '#4ADE80',
+    textColor: '#DCFCE7',
+    questionId: null,
+  },
+];
+
 export const NotesNavigation = () => {
+  const { user, openLoginModal } = useAuth();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -38,16 +73,19 @@ export const NotesNavigation = () => {
     gcTime: 30 * 60_000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    enabled: !!user,
   });
 
   useEffect(() => {
+    if (!user) return;
     if (!notesQuery.error) {
       return;
     }
     toast.error('Failed to load notes');
-  }, [notesQuery.error]);
+  }, [notesQuery.error, user]);
 
   useEffect(() => {
+    if (!user) return;
     const notesChannel = supabase
       .channel('notes-realtime-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notes' }, () => {
@@ -61,7 +99,7 @@ export const NotesNavigation = () => {
     return () => {
       void supabase.removeChannel(notesChannel);
     };
-  }, [queryClient]);
+  }, [queryClient, user]);
 
   const resetEditorState = () => {
     setIsEditorOpen(false);
@@ -71,7 +109,10 @@ export const NotesNavigation = () => {
     setDraft(initialDraft);
   };
 
-  const notes = useMemo(() => notesQuery.data ?? [], [notesQuery.data]);
+  const notes = useMemo(() => {
+    if (!user) return guestMockNotes;
+    return notesQuery.data ?? [];
+  }, [notesQuery.data, user]);
 
   const updateNotesCache = (updater: (current: Note[]) => Note[]) => {
     queryClient.setQueryData<Note[]>(queryKeys.notes, (current) => updater(current ?? []));
@@ -165,6 +206,10 @@ export const NotesNavigation = () => {
   };
 
   const handleTogglePin = async (id: string) => {
+    if (!user) {
+      openLoginModal('/notes');
+      return;
+    }
     const note = notes.find((n) => n.id === id);
     if (!note) return;
 
@@ -173,6 +218,10 @@ export const NotesNavigation = () => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!user) {
+      openLoginModal('/notes');
+      return;
+    }
     updateNotesCache((current) => NoteService.deleteNote(current, id));
     if (previewNoteId === id) {
       setIsPreviewOpen(false);
@@ -182,6 +231,10 @@ export const NotesNavigation = () => {
   };
 
   const handleOpenEditor = () => {
+    if (!user) {
+      openLoginModal('/notes');
+      return;
+    }
     setMode('create');
     setEditingNoteId(null);
     setIsTitleLocked(false);
@@ -200,6 +253,10 @@ export const NotesNavigation = () => {
   };
 
   const handleEditNote = (id: string) => {
+    if (!user) {
+      openLoginModal('/notes');
+      return;
+    }
     const note = notes.find((item) => item.id === id);
     if (!note) return;
     setMode('edit');
@@ -216,6 +273,10 @@ export const NotesNavigation = () => {
   };
 
   const handleViewNote = (id: string) => {
+    if (!user) {
+      openLoginModal('/notes');
+      return;
+    }
     setPreviewNoteId(id);
     setIsPreviewOpen(true);
   };

@@ -12,9 +12,11 @@ import { Leaf, Atom, Pi, FlaskConical, Code2 } from "lucide-react";
 export const ExploreCourseCard = memo(function ExploreCourseCard({
   card,
   animationDelayMs = 0,
+  onClick,
 }: {
   card: ExploreSubjectCard;
   animationDelayMs?: number;
+  onClick?: () => void;
 }) {
   const router = useRouter();
 
@@ -42,6 +44,10 @@ export const ExploreCourseCard = memo(function ExploreCourseCard({
   }
 
   const handleOpenSubject = () => {
+    if (onClick) {
+      onClick();
+      return;
+    }
     navigateToVideoSubject(router, {
       subjectId: card.id,
       subjectTitle: card.title,

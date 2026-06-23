@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfileController } from "@/features/profile/actions/profile.controller";
 import { EmptyState } from "@/features/profile/components/EmptyState";
@@ -15,9 +16,33 @@ import { UpdateProfileSection } from "@/features/profile/components/UpdateProfil
 import { EditProfileModal } from "@/features/profile/components/EditProfileModal";
 
 export function ProfileStore() {
-  const { user } = useAuth();
-  const { profile, isLoading, error, refreshProfile } = useProfileController(user?.id);
+  const { user, isLoading: isAuthLoading, openLoginModal } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      router.replace("/dashboard");
+      openLoginModal("/profile");
+    }
+  }, [user, isAuthLoading, router, openLoginModal]);
+
+  const { profile, isLoading: isProfileLoading, error, refreshProfile } = useProfileController(user?.id);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  if (isAuthLoading || !user) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-black text-white">
+        <div className="flex flex-col items-center gap-3">
+          <svg className="animate-spin h-8 w-8 text-violet-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" strokeDasharray="30" strokeDashoffset="0" strokeLinecap="round" />
+          </svg>
+          <p className="text-[14px] text-zinc-400 font-medium">Checking session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isLoading = isProfileLoading;
 
   return (
     <ProfileContainer>

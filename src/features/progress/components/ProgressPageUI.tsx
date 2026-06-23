@@ -4,14 +4,37 @@ import React, { useState, useEffect } from "react";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
 import { useAuth } from "@/providers/AuthProvider";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { appRoutes } from "@/constants/AppRoutes";
 import { ClipboardCheck, HelpCircle, BarChart3, Calendar, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { ProfileService } from "@/features/profile/services/profile.service";
 
 export function ProgressPageUI() {
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, isLoading: isAuthLoading, openLoginModal } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      router.replace("/dashboard");
+      openLoginModal("/progress");
+    }
+  }, [user, isAuthLoading, router, openLoginModal]);
+
   const [hoveredSubject, setHoveredSubject] = useState<string | null>(null);
+
+  if (isAuthLoading || !user) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-black text-white">
+        <div className="flex flex-col items-center gap-3">
+          <svg className="animate-spin h-8 w-8 text-violet-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" strokeDasharray="30" strokeDashoffset="0" strokeLinecap="round" />
+          </svg>
+          <p className="text-[14px] text-zinc-400 font-medium">Checking session...</p>
+        </div>
+      </div>
+    );
+  }
   const [hoveredQuestionSubject, setHoveredQuestionSubject] = useState<string | null>(null);
   const [subjectsList, setSubjectsList] = useState<{ id: string; name: string }[]>([]);
   const [dbQuizCount, setDbQuizCount] = useState<number | null>(null);

@@ -17,7 +17,7 @@ import { titleToSubjectSlug, prefetchSubjectPanelData } from "@/features/video/s
 import { setSelectedVideoSubject } from "@/features/video/components/videoSubjectStore";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { prefetchVideoSubjectRoute } from "@/features/video/constants/videoSubjectNavigation";
+import { prefetchVideoSubjectRoute, navigateToVideoSubject, buildVideoSubjectHref } from "@/features/video/constants/videoSubjectNavigation";
 import { useStudyTimerStore } from "@/features/dashboard/store/studyTimerStore";
 
 type DashboardPageClientViewProps = {
@@ -32,7 +32,7 @@ export function DashboardPageClientView({
   progressData = [],
 }: DashboardPageClientViewProps) {
   const router = useRouter();
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, isLoading: isAuthLoading, openLoginModal } = useAuth();
   const { exploreSubjects, isSearching, searchTerm, setSearchTerm } =
     useDashboardPageController(initialExploreSubjects);
 
@@ -108,6 +108,21 @@ export function DashboardPageClientView({
   }, []);
 
   const handleResumeVideo = useCallback((video: OngoingVideo) => {
+    if (!user) {
+      const subjectSlug = titleToSubjectSlug(video.subjectTitle || "");
+      const params = new URLSearchParams();
+      params.set("subject", subjectSlug);
+      params.set("subjectId", video.subjectId || "");
+      if (video.subjectStandard?.trim()) {
+        params.set("standard", video.subjectStandard.trim());
+      }
+      if (video.questionId) {
+        params.set("questionId", video.questionId);
+      }
+      openLoginModal(`/video?${params.toString()}`);
+      return;
+    }
+
     if (!video.questionId || !video.subjectId || !video.subjectTitle) return;
 
     const subjectSlug = titleToSubjectSlug(video.subjectTitle);
@@ -183,7 +198,7 @@ export function DashboardPageClientView({
       </div>
     );
   }
-  const showLoginOverlay = !isAuthLoading && !user && !isLoggingOut;
+  const showLoginOverlay = false;
 
   return (
     <main className={`bg-black text-zinc-200 min-h-screen dark h-screen ${showLoginOverlay ? "overflow-hidden" : "overflow-y-auto"} overflow-x-hidden no-scrollbar text-slate-100 relative`}>
@@ -443,6 +458,10 @@ export function DashboardPageClientView({
                       <button
                         type="button"
                         onClick={() => {
+                          if (!user) {
+                            openLoginModal("/dashboard");
+                            return;
+                          }
                           setGoalMinutesInput(String(Math.round(displayGoal / 60)));
                           setIsEditModalOpen(true);
                         }}
@@ -492,13 +511,28 @@ export function DashboardPageClientView({
           <div className="group relative w-full">
             {exploreSubjects.length > 0 ? (
               <div className="no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative z-10 flex snap-x snap-mandatory items-stretch gap-5 overflow-x-auto overflow-y-hidden pt-4 pb-3 -mt-4 [&>*]:snap-start [&>*]:shrink-0 [&>*]:w-[85vw] sm:[&>*]:w-[280px] xl:[&>*]:w-[calc(20%-16px)]" ref={exploreScrollRef}>
-                {exploreSubjects.map((subject, index) => (
-                  <ExploreCourseCard
-                    key={`${subject.id}-${searchTerm || "all"}`}
-                    card={mapSubjectToExploreCard(subject, index)}
-                    animationDelayMs={index * 50}
-                  />
-                ))}
+                {exploreSubjects.map((subject, index) => {
+                  const card = mapSubjectToExploreCard(subject, index);
+                  return (
+                    <ExploreCourseCard
+                      key={`${subject.id}-${searchTerm || "all"}`}
+                      card={card}
+                      animationDelayMs={index * 50}
+                      onClick={
+                        !user
+                          ? () => {
+                              const href = buildVideoSubjectHref({
+                                subjectId: card.id,
+                                subjectTitle: card.title,
+                                subjectStandard: card.standard,
+                              });
+                              openLoginModal(href);
+                            }
+                          : undefined
+                      }
+                    />
+                  );
+                })}
               </div>
             ) : (
               <div className="w-full rounded-2xl border border-dashed border-zinc-800 bg-[#121212] px-6 py-10 text-center text-gray-500">

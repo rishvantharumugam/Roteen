@@ -18,6 +18,7 @@ import {
 import { EmptyState } from "@/features/tutorial/components/EmptyState";
 import { SkeletonLoader } from "@/features/tutorial/components/SkeletonLoader";
 import { TutorialPage } from "@/features/tutorial/components/TutorialPage";
+import { ArrowLeft, Video } from "lucide-react";
 
 export function TutorialStore() {
   const router = useRouter();
@@ -154,8 +155,13 @@ export function TutorialStore() {
   if (!pageData || !selectedLesson || !continueLesson || !activeChapter) {
     return (
       <EmptyState
-        title="No tutorials found"
-        message="Add published records to the tutorial_videos table in Supabase."
+        title="Tutorial Videos will be Available Soon"
+        message=""
+        icon={<Video className="mx-auto h-12 w-12 text-[#7C3AED]" />}
+        actionLabel="Back"
+        actionIcon={<ArrowLeft className="h-4 w-4" />}
+        actionVariant="brand"
+        onAction={() => router.back()}
       />
     );
   }

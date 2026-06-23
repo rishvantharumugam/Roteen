@@ -7,6 +7,7 @@ import type { SessionRecord } from "@/features/session/components/sessionStore";
 import { motion } from "framer-motion";
 import { CalendarDays, Clock3, Users, HelpCircle, XCircle, CheckCircle, Play, ChevronRight, Trash2, X, Info, GraduationCap, ArrowRight } from "lucide-react";
 import { useSharedNow } from "@/lib/sharedNow";
+import { useAuth } from "@/providers/AuthProvider";
 import {
   formatSessionDate,
   formatSessionStartTime,
@@ -193,6 +194,7 @@ export function SessionDataTable({
   onUnenroll,
   getSessionDetailHref,
 }: SessionDataTableProps) {
+  const { user, openLoginModal } = useAuth();
   const [selectedSession, setSelectedSession] = useState<SessionRecord | null>(null);
   const [confirmEnrollSession, setConfirmEnrollSession] = useState<SessionRecord | null>(null);
   const [confirmUnenrollSession, setConfirmUnenrollSession] = useState<SessionRecord | null>(null);
@@ -358,7 +360,13 @@ export function SessionDataTable({
                 <button
                   aria-label={`Open ${session.title ?? "session"} details`}
                   className="relative mb-3 h-[130px] w-full overflow-hidden rounded-lg bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/70 block"
-                  onClick={() => setSelectedSession(session)}
+                  onClick={() => {
+                    if (!user) {
+                      openLoginModal(detailHref);
+                      return;
+                    }
+                    setSelectedSession(session);
+                  }}
                   type="button"
                 >
                   {thumbnailUrl ? (
@@ -419,7 +427,13 @@ export function SessionDataTable({
                       {status === "LIVE" ? (
                         <button 
                           className="w-full rounded-lg bg-[#5b3ea8] hover:bg-[#4a328f] py-2.5 text-[13px] font-bold text-white transition shadow-lg block" 
-                          onClick={() => setSelectedSession(session)}
+                          onClick={() => {
+                            if (!user) {
+                              openLoginModal(detailHref);
+                              return;
+                            }
+                            setSelectedSession(session);
+                          }}
                           type="button"
                         >
                           Join Now
@@ -428,6 +442,12 @@ export function SessionDataTable({
                         <div className="grid grid-cols-2 gap-2 w-full">
                           <button
                             className="flex items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-transparent py-2.5 text-[12px] font-semibold text-white hover:bg-white/5 transition"
+                            onClick={() => {
+                              if (!user) {
+                                openLoginModal(detailHref);
+                                return;
+                              }
+                            }}
                             type="button"
                           >
                             <HelpCircle size={15} /> Ask
@@ -435,7 +455,13 @@ export function SessionDataTable({
                           <button
                             className="flex items-center justify-center gap-1.5 rounded-lg border border-red-500/30 bg-transparent py-2.5 text-[12px] font-semibold text-red-500 hover:bg-red-500/10 transition"
                             disabled={unenrollingSessionId === session.id}
-                            onClick={() => setConfirmUnenrollSession(session)}
+                            onClick={() => {
+                              if (!user) {
+                                openLoginModal(detailHref);
+                                return;
+                              }
+                              setConfirmUnenrollSession(session);
+                            }}
                             type="button"
                           >
                             <XCircle size={15} /> {unenrollingSessionId === session.id ? "Canceling..." : "Unenroll Now"}
@@ -462,12 +488,30 @@ export function SessionDataTable({
                       <div className="flex items-center justify-center w-full rounded-lg border border-white/10 bg-transparent py-2 mb-2">
                         <span className="text-[12px] text-emerald-400 font-bold">Session has Started</span>
                       </div>
-                      <Link className="flex items-center justify-center w-full rounded-lg bg-[#5b3ea8] hover:bg-[#4a328f] py-2.5 text-[13px] font-bold text-white transition shadow-lg" href={detailHref}>
+                      <Link 
+                        className="flex items-center justify-center w-full rounded-lg bg-[#5b3ea8] hover:bg-[#4a328f] py-2.5 text-[13px] font-bold text-white transition shadow-lg" 
+                        href={!user ? "#" : detailHref}
+                        onClick={(e) => {
+                          if (!user) {
+                            e.preventDefault();
+                            openLoginModal(detailHref);
+                          }
+                        }}
+                      >
                         {action.label}
                       </Link>
                     </>
                   ) : (
-                    <Link className="flex items-center justify-center w-full rounded-lg bg-[#5b3ea8] hover:bg-[#4a328f] py-2.5 text-[13px] font-bold text-white transition shadow-lg" href={detailHref}>
+                    <Link 
+                      className="flex items-center justify-center w-full rounded-lg bg-[#5b3ea8] hover:bg-[#4a328f] py-2.5 text-[13px] font-bold text-white transition shadow-lg" 
+                      href={!user ? "#" : detailHref}
+                      onClick={(e) => {
+                        if (!user) {
+                          e.preventDefault();
+                          openLoginModal(detailHref);
+                        }
+                      }}
+                    >
                       {action.label}
                     </Link>
                   )}
@@ -529,7 +573,13 @@ export function SessionDataTable({
                   <button
                     aria-label={`Open ${session.title ?? "session"} details`}
                     className="relative mb-3 h-[130px] w-full overflow-hidden rounded-lg bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/70 block"
-                    onClick={() => setSelectedSession(session)}
+                    onClick={() => {
+                      if (!user) {
+                        openLoginModal(getSessionDetailHref(session.id));
+                        return;
+                      }
+                      setSelectedSession(session);
+                    }}
                     type="button"
                   >
                     {session.thumbnail_url || session.thumb_url ? (
@@ -557,7 +607,16 @@ export function SessionDataTable({
                   </div>
                   
                   <div className="mt-auto pt-3 flex flex-col gap-2 w-full">
-                    <Link className="flex items-center justify-center gap-2 w-full rounded-lg bg-[#5b3ea8] hover:bg-[#4a328f] py-2.5 text-[13px] font-bold text-white transition shadow-lg" href={getSessionDetailHref(session.id)}>
+                    <Link 
+                      className="flex items-center justify-center gap-2 w-full rounded-lg bg-[#5b3ea8] hover:bg-[#4a328f] py-2.5 text-[13px] font-bold text-white transition shadow-lg" 
+                      href={!user ? "#" : getSessionDetailHref(session.id)}
+                      onClick={(e) => {
+                        if (!user) {
+                          e.preventDefault();
+                          openLoginModal(getSessionDetailHref(session.id));
+                        }
+                      }}
+                    >
                       <Play size={15} fill="currentColor" /> View Replay
                     </Link>
                   </div>

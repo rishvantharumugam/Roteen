@@ -55,7 +55,7 @@ import { useAuth } from "@/providers/AuthProvider";
 export function FeedbackStore() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user, openLoginModal } = useAuth();
   const [pageData, setPageData] = useState<FeedbackPageData | null>(null);
   const [input, setInput] = useState<FeedbackFormInput>(defaultFeedbackInput);
 
@@ -142,6 +142,10 @@ export function FeedbackStore() {
   }
 
   async function handleSubmit() {
+    if (!user) {
+      openLoginModal("/feedback");
+      return;
+    }
     setIsSubmitting(true);
     setFieldErrors(undefined);
     setSuccessMessage("");

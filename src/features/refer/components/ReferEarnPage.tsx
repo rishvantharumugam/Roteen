@@ -1,7 +1,7 @@
 "use client";
 
-// Refreshed to trigger Next.js compilation and flush cached amounts
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Check,
   ChevronRight,
@@ -304,7 +304,15 @@ export function BadgeSeal({ tier, size = "md", achieved = true }: { tier: string
   );
 }
 export function ReferEarnPage() {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading, openLoginModal } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      router.replace("/dashboard");
+      openLoginModal("/refer");
+    }
+  }, [user, isAuthLoading, router, openLoginModal]);
   const [referralCount, setReferralCount] = useState<number>(0);
   const [referralCode, setReferralCode] = useState<string>(fallbackReferralCode);
   const [referredPeopleList, setReferredPeopleList] = useState<Array<{
@@ -458,6 +466,19 @@ export function ReferEarnPage() {
       await handleCopyLink();
     }
   };
+
+  if (isAuthLoading || !user) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-black text-white">
+        <div className="flex flex-col items-center gap-3">
+          <svg className="animate-spin h-8 w-8 text-violet-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" strokeDasharray="30" strokeDashoffset="0" strokeLinecap="round" />
+          </svg>
+          <p className="text-[14px] text-zinc-400 font-medium">Checking session...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isMounted) {
     return <div className="min-h-screen bg-black" />;

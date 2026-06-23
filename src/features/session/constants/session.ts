@@ -13,6 +13,7 @@ import { applyRouteThemeClass } from "@/lib/RouteThemeScope";
 import { queryKeys } from "@/lib/queryKeys";
 import { supabase } from '@/lib/supabase/client';
 import type { SessionRouteLink, SessionDashboardState, SessionRecord } from "@/features/session/components/sessionStore";
+import { useAuth } from "@/providers/AuthProvider";
 
 export const SESSION_ROUTE = "/session";
 
@@ -70,6 +71,7 @@ type RecordsWithEnrollments = {
 };
 
 export function useSessionPageNavigation() {
+  const { user, openLoginModal } = useAuth();
   const queryClient = useQueryClient();
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -108,10 +110,11 @@ export function useSessionPageNavigation() {
     staleTime: 30_000,
     gcTime: 15 * 60_000,
     refetchInterval: 30_000,
-    enabled: sessionsAllQuery.isSuccess,
+    enabled: sessionsAllQuery.isSuccess && !!user,
   });
 
   useEffect(() => {
+    if (!user) return;
     const sessionChannel = supabase
       .channel("sessions-realtime-sync")
       .on("postgres_changes", { event: "*", schema: "public", table: "sessions" }, () => {
@@ -126,7 +129,7 @@ export function useSessionPageNavigation() {
     return () => {
       void supabase.removeChannel(sessionChannel);
     };
-  }, [queryClient]);
+  }, [queryClient, user]);
 
   const enrollMutation = useMutation({
     mutationFn: async (sessionId: string) => enrollSession(sessionId),
@@ -162,6 +165,10 @@ export function useSessionPageNavigation() {
   });
 
   const handleEnroll = useCallback(async (session: SessionRecord) => {
+    if (!user) {
+      openLoginModal(getSessionDetailRoute(session.id));
+      return;
+    }
     try {
       await enrollMutation.mutateAsync(session.id);
       setSuccessMessage(`${session.title ?? "Session"} enrolled successfully. Join Now is ready.`);
@@ -172,7 +179,7 @@ export function useSessionPageNavigation() {
     } catch (error) {
       console.error(error);
     }
-  }, [enrollMutation]);
+  }, [enrollMutation, user, openLoginModal]);
 
   const unenrollMutation = useMutation({
     mutationFn: async (sessionId: string) => {
@@ -211,6 +218,10 @@ export function useSessionPageNavigation() {
   });
 
   const handleUnenroll = useCallback(async (session: SessionRecord) => {
+    if (!user) {
+      openLoginModal(getSessionDetailRoute(session.id));
+      return;
+    }
     try {
       await unenrollMutation.mutateAsync(session.id);
       setSuccessMessage(`${session.title ?? "Session"} enrollment cancelled.`);
@@ -221,7 +232,7 @@ export function useSessionPageNavigation() {
     } catch (error) {
       console.error(error);
     }
-  }, [unenrollMutation]);
+  }, [unenrollMutation, user, openLoginModal]);
 
   const state = useMemo(
     () => ({

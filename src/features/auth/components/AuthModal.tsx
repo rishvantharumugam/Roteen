@@ -1399,7 +1399,7 @@ export function AuthModal({
     setFlowExpiresAt(null);
     clearAuthFlowDraft();
     setWasSignInSuccess(true);
-    setPendingRoute(data?.route ?? appRoutes.home);
+    setPendingRoute(nextRoute || data?.route || appRoutes.home);
     triggerSuccess();
   }
 
@@ -1416,7 +1416,9 @@ export function AuthModal({
 
       setIsSubmitting(true);
 
-      const redirectTo = `${getSiteUrl()}${appRoutes.authCallback}`;
+      const redirectTo = nextRoute
+        ? `${getSiteUrl()}${appRoutes.authCallback}?next=${encodeURIComponent(nextRoute)}`
+        : `${getSiteUrl()}${appRoutes.authCallback}`;
       const { error } = await sendEmailVerificationOtp(signUpEmail, redirectTo);
 
       if (error) {
@@ -1459,7 +1461,7 @@ export function AuthModal({
         clearAuthFlowDraft();
         setLoginMethod("otp");
         setWasSignInSuccess(true);
-        setPendingRoute(data.route);
+        setPendingRoute(nextRoute || data.route);
         triggerSuccess();
         return;
       }
@@ -1525,7 +1527,7 @@ export function AuthModal({
       clearAuthFlowDraft();
       setLoginMethod("otp");
       setWasSignInSuccess(false);
-      setPendingRoute(data?.route ?? appRoutes.home);
+      setPendingRoute(nextRoute || data?.route || appRoutes.home);
       triggerSuccess();
     } catch (err: unknown) {
       console.error("Error during profile completion:", err);
@@ -1540,7 +1542,9 @@ export function AuthModal({
     setErrorMessage("");
     setSuccessMessage("");
 
-    const redirectTo = `${getSiteUrl()}${appRoutes.authCallback}`;
+    const redirectTo = nextRoute
+      ? `${getSiteUrl()}${appRoutes.authCallback}?next=${encodeURIComponent(nextRoute)}`
+      : `${getSiteUrl()}${appRoutes.authCallback}`;
     const { error, popupWindow, redirected } = await signInWithGoogle(redirectTo);
 
     if (error) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { resolveVideoPageHeading } from "@/features/video/actions/videoSubjectController";
 import {
   hasActiveVideoSubjectFilter,
@@ -153,8 +153,31 @@ export default function VideoClient() {
   );
   const isSubjectFiltered = hasActiveVideoSubjectFilter(subjectFilter);
 
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, isLoading: isAuthLoading, openLoginModal } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      const currentUrl = `/video${window.location.search}`;
+      router.replace("/dashboard");
+      openLoginModal(currentUrl);
+    }
+  }, [user, isAuthLoading, router, openLoginModal]);
+
   const { data, state: initialState } = useMemo(() => getVideoResponse(), []);
+
+  if (isAuthLoading || !user) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-black text-white">
+        <div className="flex flex-col items-center gap-3">
+          <svg className="animate-spin h-8 w-8 text-violet-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" strokeDasharray="30" strokeDashoffset="0" strokeLinecap="round" />
+          </svg>
+          <p className="text-[14px] text-zinc-400 font-medium">Checking session...</p>
+        </div>
+      </div>
+    );
+  }
   const [state, setState] = useState<VideoState>(initialState);
   const [resolvedSubject, setResolvedSubject] = useState<{
     id: string;

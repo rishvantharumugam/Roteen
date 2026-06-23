@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { ProfileService } from "@/features/profile/services/profile.service";
 import { PYQService, SupabaseQuestionPaper, SupabaseSubject, SupabaseChapter } from "@/features/profile/services/pyq.service";
+import { useAuth } from "@/providers/AuthProvider";
 
 interface PYQItem {
   id: string;
@@ -31,6 +32,7 @@ interface PYQItem {
 }
 
 export function PYQPageClient() {
+  const { user, isLoading: isAuthLoading, openLoginModal } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   
   // Navigation states
@@ -60,13 +62,15 @@ export function PYQPageClient() {
         // 1. Fetch user profile standard (best-effort, don't block if it fails)
         let rawStandard = "10";
         let cleanStd = "10";
-        try {
-          const profile = await ProfileService.getProfile();
-          rawStandard = profile?.standard || "10";
-          cleanStd = rawStandard.replace(/\D/g, "") || "10";
-          setUserStandard(rawStandard);
-        } catch (profileErr) {
-          console.warn("Profile fetch failed, defaulting standard to 10:", profileErr);
+        if (user) {
+          try {
+            const profile = await ProfileService.getProfile();
+            rawStandard = profile?.standard || "10";
+            cleanStd = rawStandard.replace(/\D/g, "") || "10";
+            setUserStandard(rawStandard);
+          } catch (profileErr) {
+            console.warn("Profile fetch failed, defaulting standard to 10:", profileErr);
+          }
         }
 
         // 2. Fetch subjects + chapters + question papers in parallel
@@ -111,9 +115,13 @@ export function PYQPageClient() {
     }
     loadSupabaseData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   const handleTogglePin = (id: string) => {
+    if (!user) {
+      openLoginModal(`/pyq`);
+      return;
+    }
     setPyqs((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, isPinned: !item.isPinned } : item
@@ -206,23 +214,43 @@ export function PYQPageClient() {
 
   // Load initial navigation states from URL params on mount
   useEffect(() => {
+    if (isAuthLoading) return;
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const yearParam = params.get("year");
       const chapterParam = params.get("chapter");
       
-      if (yearParam) {
-        setSelectedYear(yearParam);
-      }
-      if (chapterParam) {
-        setSelectedChapterId(chapterParam);
+      if (yearParam || chapterParam) {
+        if (!user) {
+          // Clear params
+          const cleanUrl = new URL(window.location.href);
+          cleanUrl.searchParams.delete("year");
+          cleanUrl.searchParams.delete("chapter");
+          window.history.replaceState({}, "", cleanUrl.toString());
+          
+          setSelectedYear(null);
+          setSelectedChapterId(null);
+          
+          const nextParams = new URLSearchParams();
+          if (yearParam) nextParams.set("year", yearParam);
+          if (chapterParam) nextParams.set("chapter", chapterParam);
+          openLoginModal(`/pyq?${nextParams.toString()}`);
+        } else {
+          if (yearParam) {
+            setSelectedYear(yearParam);
+          }
+          if (chapterParam) {
+            setSelectedChapterId(chapterParam);
+          }
+        }
       }
     }
-  }, []);
+  }, [user, isAuthLoading, openLoginModal]);
 
   // Listen to popstate event
   useEffect(() => {
     const handlePopState = () => {
+      if (!user) return;
       const params = new URLSearchParams(window.location.search);
       const yearParam = params.get("year");
       const chapterParam = params.get("chapter");
@@ -235,7 +263,7 @@ export function PYQPageClient() {
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
-  }, []);
+  }, [user]);
 
   // Auto-expand the active subject accordion
   useEffect(() => {
@@ -252,6 +280,10 @@ export function PYQPageClient() {
 
   // Handle year click
   const handleYearClick = (yearTitle: string) => {
+    if (!user) {
+      openLoginModal(`/pyq?year=${yearTitle}`);
+      return;
+    }
     setSelectedYear(yearTitle);
     setSelectedChapterId(null);
     
