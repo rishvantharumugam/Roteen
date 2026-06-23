@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { type Chapter, type Topic, type QuestionMode } from "@/features/video/services/video";
@@ -867,6 +867,65 @@ export default function SubjectBar(props: SubjectBarProps) {
                         ) : (
                           categories.map((category) => {
                             const categoryName = category.name;
+                            const isMath = rawData?.subject?.toLowerCase().includes("math");
+                            const isExerciseCategory = isMath && categoryName === "Exercise";
+
+                            if (isExerciseCategory) {
+                              const groups = new Map<string, {
+                                name: string;
+                                exNum: string;
+                                topics: { id: string; title: string; mark?: string; qNum: number; displayName: string; }[];
+                              }>();
+
+                              category.topics.forEach((topic) => {
+                                const extTopic = topic as ExtendedTopic;
+                                const parsed = parseMathExercise(extTopic.title, extTopic.dbCategory || "");
+                                const exName = parsed ? `Exercise ${parsed.exerciseNumber}` : "Exercise 1.1";
+                                const exNum = parsed ? parsed.exerciseNumber : "1.1";
+                                const qNum = parsed ? parsed.questionNumber : 0;
+                                const displayName = parsed ? parsed.displayName : extTopic.title;
+
+                                let g = groups.get(exName);
+                                if (!g) {
+                                  g = { name: exName, exNum, topics: [] };
+                                  groups.set(exName, g);
+                                }
+                                g.topics.push({
+                                  id: extTopic.id,
+                                  title: extTopic.title,
+                                  mark: extTopic.mark,
+                                  qNum,
+                                  displayName,
+                                });
+                              });
+
+                              const sortedGroups = Array.from(groups.values()).sort((a, b) => compareExerciseNumbers(a.exNum, b.exNum));
+
+                              sortedGroups.forEach((g) => {
+                                g.topics.sort((a, b) => a.qNum - b.qNum);
+                              });
+
+                              return (
+                                <Fragment key={categoryName}>
+                                  {sortedGroups.map((group) => {
+                                    const hasActiveQuestion = group.topics.some((t) => t.id === selectedQuestionId);
+                                    return (
+                                      <SubExerciseGroup
+                                        key={group.name}
+                                        chapterId={chapter.id}
+                                        name={group.name}
+                                        topics={group.topics}
+                                        selectedQuestionId={selectedQuestionId}
+                                        completedSet={completedSet}
+                                        handleQuestionPress={handleQuestionPress}
+                                        isAnyQuestionActive={hasActiveQuestion}
+                                      />
+                                    );
+                                  })}
+                                </Fragment>
+                              );
+                            }
+
                             const categoryKey = `${chapter.id}:${categoryName}`;
                             const isCategoryOpen = openCategories[categoryKey] !== false;
 
@@ -953,85 +1012,28 @@ export default function SubjectBar(props: SubjectBarProps) {
                                         ? "border-purple-500/40"
                                         : "border-zinc-800/80"
                                         }`}>
-                                        {(() => {
-                                          const isMath = rawData?.subject.toLowerCase().includes("math");
-                                          const isExerciseCategory = isMath && categoryName === "Exercise";
-
-                                          if (isExerciseCategory) {
-                                            const groups = new Map<string, {
-                                              name: string;
-                                              exNum: string;
-                                              topics: { id: string; title: string; mark?: string; qNum: number; displayName: string; }[];
-                                            }>();
-
-                                            category.topics.forEach((topic) => {
-                                              const extTopic = topic as ExtendedTopic;
-                                              const parsed = parseMathExercise(extTopic.title, extTopic.dbCategory || "");
-                                              const exName = parsed ? `Exercise ${parsed.exerciseNumber}` : "Exercise 1.1";
-                                              const exNum = parsed ? parsed.exerciseNumber : "1.1";
-                                              const qNum = parsed ? parsed.questionNumber : 0;
-                                              const displayName = parsed ? parsed.displayName : extTopic.title;
-
-                                              let g = groups.get(exName);
-                                              if (!g) {
-                                                g = { name: exName, exNum, topics: [] };
-                                                groups.set(exName, g);
-                                              }
-                                              g.topics.push({
-                                                id: extTopic.id,
-                                                title: extTopic.title,
-                                                mark: extTopic.mark,
-                                                qNum,
-                                                displayName,
-                                              });
-                                            });
-
-                                            const sortedGroups = Array.from(groups.values()).sort((a, b) => compareExerciseNumbers(a.exNum, b.exNum));
-
-                                            sortedGroups.forEach((g) => {
-                                              g.topics.sort((a, b) => a.qNum - b.qNum);
-                                            });
-
-                                            return sortedGroups.map((group) => {
-                                              const hasActiveQuestion = group.topics.some((t) => t.id === selectedQuestionId);
-                                              return (
-                                                <SubExerciseGroup
-                                                  key={group.name}
-                                                  chapterId={chapter.id}
-                                                  name={group.name}
-                                                  topics={group.topics}
-                                                  selectedQuestionId={selectedQuestionId}
-                                                  completedSet={completedSet}
-                                                  handleQuestionPress={handleQuestionPress}
-                                                  isAnyQuestionActive={hasActiveQuestion}
-                                                />
-                                              );
-                                            });
-                                          }
-
-                                          return category.topics.map((topic) => {
-                                            const isActiveQuestion = selectedQuestionId === topic.id;
-                                            return (
-                                              <div key={topic.id} className="group/question relative pl-4">
-                                                {/* L-connector line from the Category's vertical line to the Question */}
-                                                <span
-                                                  aria-hidden="true"
-                                                  className={`pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-bl-md border-b border-l transition-colors duration-200 ease-in-out ${isActiveQuestion
-                                                    ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
-                                                    : "border-zinc-700/60"
-                                                    }`}
-                                                />
-                                                <SubjectQuestionRow
-                                                  topicId={topic.id}
-                                                  title={topic.title}
-                                                  active={isActiveQuestion}
-                                                  completed={completedSet.has(topic.id)}
-                                                  onClick={handleQuestionPress}
-                                                />
-                                              </div>
-                                            );
-                                          });
-                                        })()}
+                                        {category.topics.map((topic) => {
+                                          const isActiveQuestion = selectedQuestionId === topic.id;
+                                          return (
+                                            <div key={topic.id} className="group/question relative pl-4">
+                                              {/* L-connector line from the Category's vertical line to the Question */}
+                                              <span
+                                                aria-hidden="true"
+                                                className={`pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-bl-md border-b border-l transition-colors duration-200 ease-in-out ${isActiveQuestion
+                                                  ? "border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+                                                  : "border-zinc-700/60"
+                                                  }`}
+                                              />
+                                              <SubjectQuestionRow
+                                                topicId={topic.id}
+                                                title={topic.title}
+                                                active={isActiveQuestion}
+                                                completed={completedSet.has(topic.id)}
+                                                onClick={handleQuestionPress}
+                                              />
+                                            </div>
+                                          );
+                                        })}
                                       </div>
                                     </motion.div>
                                   )}

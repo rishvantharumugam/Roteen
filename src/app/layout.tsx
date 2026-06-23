@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient, getCachedAuthUser } from '@/lib/supabase/server';
 import { AuthProvider } from "@/providers/AuthProvider";
 import { ThemeSync } from "@/lib/ThemeSync";
 import { RouteThemeScope } from "@/lib/RouteThemeScope";
@@ -25,8 +25,7 @@ export default async function RootLayout({
   let user = null;
 
   if (session) {
-    const userResult = await supabase.auth.getUser();
-    user = userResult.data.user;
+    user = await getCachedAuthUser();
   }
 
   return (

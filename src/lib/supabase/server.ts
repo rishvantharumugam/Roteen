@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey =
@@ -34,3 +35,9 @@ export async function createServerSupabaseClient() {
   });
 }
 
+// Request-scoped cache for authenticated user to deduplicate calls in layout and page components
+export const getCachedAuthUser = cache(async () => {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+});

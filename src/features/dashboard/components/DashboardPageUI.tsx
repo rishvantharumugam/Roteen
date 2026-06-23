@@ -17,37 +17,35 @@ async function fetchDashboardClientData() {
   const user = session?.user ?? null;
   const userId = user?.id;
 
-  let userStandard: string | null = null;
-  if (userId) {
-    const { data: userRow } = await supabase
-      .from("users")
-      .select("standard")
-      .eq("id", userId)
-      .single();
-    userStandard = userRow?.standard ?? null;
+  // Fetch standard, progress, and all subjects in parallel to optimize client-side load time.
+  const [userRowResult, progressResult, subjectsResult] = await Promise.all([
+    userId
+      ? supabase
+          .from("users")
+          .select("standard")
+          .eq("id", userId)
+          .single()
+      : null,
+    userId ? fetchUserCoursesProgress(supabase, userId) : [],
+    supabase
+      .from("subjects")
+      .select("id, standard, subject_name, chapters(id, name)")
+      .order("created_at", { ascending: true })
+  ]);
+
+  if (subjectsResult.error) {
+    throw new Error(subjectsResult.error.message);
   }
 
-  let subjectsQuery = supabase
-    .from("subjects")
-    .select("id, standard, subject_name, chapters(id, name)")
-    .order("created_at", { ascending: true });
+  const userStandard = userRowResult?.data?.standard ?? null;
+  const progressData = progressResult;
+  let subjects = (subjectsResult.data as DashboardSubjectRecord[]) ?? [];
 
+  // Filter subjects in memory by standard
   if (userStandard) {
-    subjectsQuery = subjectsQuery.eq("standard", userStandard);
+    subjects = subjects.filter((subject) => subject.standard === userStandard);
   }
 
-  const { data, error } = await subjectsQuery;
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  let progressData: CourseProgressItem[] = [];
-  if (userId) {
-    progressData = await fetchUserCoursesProgress(supabase, userId);
-  }
-
-  const subjects = (data as DashboardSubjectRecord[]) ?? [];
   const subjectsWithCounts = await withQuestionCounts(supabase, subjects);
 
   return {
@@ -73,7 +71,9 @@ export default function DashboardPageUI({ initialExploreSubjects, progressData }
       initialExploreSubjects,
       progressData,
     } : undefined,
-    staleTime: 60_000, // Cache is fresh for 1 minute, preventing duplicate load
+    staleTime: 5 * 60 * 1000, // 5 minutes cache TTL
+    refetchOnMount: false, // Prevent refetch on mount if initialData is present
+    refetchOnWindowFocus: false, // Prevent refetch on focus
     gcTime: 15 * 60_000,
   });
 

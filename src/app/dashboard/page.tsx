@@ -1,54 +1,50 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient, getCachedAuthUser } from '@/lib/supabase/server';
 import DashboardPageUI from "@/features/dashboard/components/DashboardPageUI";
 import {
   type DashboardSubjectRecord,
-  withQuestionCounts,
   fetchUserCoursesProgress,
+  getCachedUserStandard,
+  getCachedSubjectsWithCounts,
   type CourseProgressItem,
 } from "@/features/dashboard/services/DashboardPageService";
 
 export const revalidate = 0;
 
 export default async function Page() {
+  console.log("[Dashboard Page] Started loading Page Component...");
+  const start = Date.now();
   const serverSupabase = await createServerSupabaseClient();
+  console.log(`[Dashboard Page] Client created in ${Date.now() - start}ms`);
   
-  const userResult = await serverSupabase.auth.getUser();
-  const userId = userResult.data.user?.id;
+  const userStart = Date.now();
+  const userResult = await getCachedAuthUser();
+  const userId = userResult?.id;
+  console.log(`[Dashboard Page] auth.getUser() (cached) finished in ${Date.now() - userStart}ms. userId: ${userId}`);
 
-  // Fetch user's standard from the users table
-  let userStandard: string | null = null;
-  if (userId) {
-    const { data: userRow } = await serverSupabase
-      .from("users")
-      .select("standard")
-      .eq("id", userId)
-      .single();
-    userStandard = userRow?.standard ?? null;
-  }
+  // Fetch user standard, courses progress, and cached subjects with counts in parallel.
+  console.log("[Dashboard Page] Fetching standard, progress, and subjects in parallel...");
+  const dbStart = Date.now();
+  const [userStandard, progressData, allSubjectsWithCounts] = await Promise.all([
+    userId ? getCachedUserStandard(serverSupabase, userId) : null,
+    userId ? fetchUserCoursesProgress(serverSupabase, userId) : [],
+    getCachedSubjectsWithCounts(serverSupabase)
+  ]);
+  console.log(`[Dashboard Page] Parallel db fetches (using cache) finished in ${Date.now() - dbStart}ms`);
 
-  // Build subjects query — filter by the user's standard if available
-  let subjectsQuery = serverSupabase
-    .from("subjects")
-    .select("id, standard, subject_name, chapters(id, name)")
-    .order("created_at", { ascending: true });
+  let subjects = allSubjectsWithCounts;
 
+  console.log(`[Dashboard Page] userStandard: ${userStandard}, progressData count: ${progressData.length}, subjects count: ${subjects.length}`);
+
+  // Filter subjects in memory by the user's standard if available
   if (userStandard) {
-    subjectsQuery = subjectsQuery.eq("standard", userStandard);
+    subjects = subjects.filter((subject) => subject.standard === userStandard);
   }
 
-  const [subjectsResult] = await Promise.all([subjectsQuery]);
-  
-  let progressData: CourseProgressItem[] = [];
-  if (userId) {
-    progressData = await fetchUserCoursesProgress(serverSupabase, userId);
-  }
-
-  const subjects = (subjectsResult.data as DashboardSubjectRecord[]) ?? [];
-  const subjectsWithCounts = await withQuestionCounts(serverSupabase, subjects);
+  console.log(`[Dashboard Page] Total load time: ${Date.now() - start}ms`);
 
   return (
     <DashboardPageUI
-      initialExploreSubjects={subjectsWithCounts}
+      initialExploreSubjects={subjects}
       progressData={progressData}
     />
   );

@@ -130,25 +130,26 @@ export async function withQuestionCounts(
     resolveTableName(supabaseClient, ["quizzes"]),
   ]);
 
-  // Fetch all chapter mappings in parallel
-  const [questionsResult, quizzesResult] = await Promise.all([
-    supabaseClient.from(questionTable).select("chapter_id").in("chapter_id", allChapterIds),
-    supabaseClient.from(quizTable).select("chapter_id").in("chapter_id", allChapterIds),
-  ]);
+  // Fetch chapter counts in a single query containing nested counts
+  const { data: chapterCountsData, error } = await supabaseClient
+    .from("chapters")
+    .select(`
+      id,
+      questions:${questionTable}(count),
+      quizzes:${quizTable}(count)
+    `)
+    .in("id", allChapterIds);
 
   const questionCounts = new Map<string, number>();
-  if (questionsResult.data) {
-    for (const row of questionsResult.data as any[]) {
-      const cid = String(row.chapter_id);
-      questionCounts.set(cid, (questionCounts.get(cid) || 0) + 1);
-    }
-  }
-
   const quizCounts = new Map<string, number>();
-  if (quizzesResult.data) {
-    for (const row of quizzesResult.data as any[]) {
-      const cid = String(row.chapter_id);
-      quizCounts.set(cid, (quizCounts.get(cid) || 0) + 1);
+
+  if (chapterCountsData && !error) {
+    for (const chapter of chapterCountsData as any[]) {
+      const cid = String(chapter.id);
+      const qCount = chapter.questions?.[0]?.count || 0;
+      const zCount = chapter.quizzes?.[0]?.count || 0;
+      questionCounts.set(cid, qCount);
+      quizCounts.set(cid, zCount);
     }
   }
 
@@ -216,7 +217,8 @@ export async function fetchUserCoursesProgress(
       .eq("Users_ID", userId)
       .gt("watched_seconds", 0)
       .neq("status", "Resolved")
-      .order("updated_at", { ascending: false });
+      .order("updated_at", { ascending: false })
+      .limit(10);
 
     if (error) throw error;
     if (!data) return [];
@@ -245,4 +247,64 @@ export async function fetchUserCoursesProgress(
     console.error("Failed to fetch user courses progress from Supabase:", err);
     return [];
   }
+}
+
+// Server-side memory cache for subjects and user standards
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+const subjectsCache = {
+  data: null as DashboardSubjectRecord[] | null,
+  timestamp: 0,
+};
+
+const userStandardCache = new Map<string, CacheEntry<string | null>>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+export async function getCachedUserStandard(
+  supabaseClient: SupabaseClient,
+  userId: string
+): Promise<string | null> {
+  const now = Date.now();
+  const cached = userStandardCache.get(userId);
+  if (cached && now - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+
+  const { data: userRow } = await supabaseClient
+    .from("users")
+    .select("standard")
+    .eq("id", userId)
+    .single();
+
+  const standard = userRow?.standard ?? null;
+  userStandardCache.set(userId, { data: standard, timestamp: now });
+  return standard;
+}
+
+export async function getCachedSubjectsWithCounts(
+  supabaseClient: SupabaseClient
+): Promise<DashboardSubjectRecord[]> {
+  const now = Date.now();
+  if (subjectsCache.data && now - subjectsCache.timestamp < CACHE_TTL) {
+    return subjectsCache.data;
+  }
+
+  const { data: subjectsData, error: subjectsErr } = await supabaseClient
+    .from("subjects")
+    .select("id, standard, subject_name, chapters(id, name)")
+    .order("created_at", { ascending: true });
+
+  if (subjectsErr) {
+    throw subjectsErr;
+  }
+
+  const subjects = (subjectsData as DashboardSubjectRecord[]) ?? [];
+  const subjectsWithCounts = await withQuestionCounts(supabaseClient, subjects);
+
+  subjectsCache.data = subjectsWithCounts;
+  subjectsCache.timestamp = now;
+  return subjectsWithCounts;
 }
