@@ -51,9 +51,6 @@ export function PYQPageClient() {
   // Years derived dynamically from Supabase
   const [pyqs, setPyqs] = useState<PYQItem[]>([]);
 
-  // Icon palette for year cards (cycles)
-  const YEAR_ICONS = [GraduationCap, Award, BookOpen, FileText, ClipboardList, Calendar, FileCheck, BookOpenCheck];
-
   useEffect(() => {
     async function loadSupabaseData() {
       try {
@@ -99,7 +96,7 @@ export function PYQPageClient() {
           id: `pyq-${year}`,
           title: year,
           papersCount: 0, // computed dynamically in pyqListWithCounts
-          icon: YEAR_ICONS[idx % YEAR_ICONS.length],
+          icon: BookOpen,
           isPinned: idx === 0, // newest pinned by default
         }));
 

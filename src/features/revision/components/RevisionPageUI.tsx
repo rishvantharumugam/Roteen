@@ -80,6 +80,7 @@ export const RevisionPage: React.FC<RevisionPageProps> = ({
             onOpen={onOpenPlaylist}
             onDelete={onDeletePlaylist}
             onTogglePin={onTogglePin}
+            onAddPlaylist={onAddPlaylist}
           />
         )}
       </main>

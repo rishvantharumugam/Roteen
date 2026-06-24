@@ -79,19 +79,41 @@ export const NotesPageUI: React.FC<NotesPageUIProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,240px))] gap-5 justify-start">
-            {notes.filter(note => {
-              const stripped = NoteService.stripHtml(note.description || "");
-              return stripped && stripped.trim().length > 0;
-            }).map(note => (
-              <NoteCard 
-                key={note.id} 
-                note={note} 
-                onTogglePin={onTogglePin} 
-                onDelete={onDelete} 
-                onEdit={onEdit}
-                onView={onViewNote}
-              />
-            ))}
+            {(() => {
+              const validNotes = notes.filter(note => {
+                const stripped = NoteService.stripHtml(note.description || "");
+                return stripped && stripped.trim().length > 0;
+              });
+
+              if (validNotes.length === 0) {
+                return (
+                  <div 
+                    className="w-full max-w-[240px] min-h-[220px] bg-[#121212] rounded-[18px] p-4 relative border border-zinc-800 flex flex-col h-full opacity-60 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={onOpenEditor}
+                  >
+                    <div className="flex items-start mb-4 gap-3">
+                      <div className="flex items-center gap-2.5 flex-1 pt-0.5">
+                        <div className="h-[7px] w-[7px] shrink-0 rounded-full bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.8)]" />
+                        <h3 className="text-[12px] font-bold tracking-[0.25em] text-gray-100 uppercase break-words">Sample Note</h3>
+                      </div>
+                    </div>
+                    <p className="text-[14px] text-[#94A3B8] leading-relaxed min-h-[96px] font-medium flex-1">Save Notes for Future Learning .</p>
+                    <div className="text-[11px] font-bold text-gray-400 mt-4 tracking-widest mt-auto">TODAY</div>
+                  </div>
+                );
+              }
+
+              return validNotes.map(note => (
+                <NoteCard 
+                  key={note.id} 
+                  note={note} 
+                  onTogglePin={onTogglePin} 
+                  onDelete={onDelete} 
+                  onEdit={onEdit}
+                  onView={onViewNote}
+                />
+              ));
+            })()}
           </div>
         )}
       </main>

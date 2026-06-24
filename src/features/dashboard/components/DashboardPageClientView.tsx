@@ -90,15 +90,7 @@ export function DashboardPageClientView({
 
   useEffect(() => {
     router.prefetch("/video");
-
-    exploreSubjects.forEach((subject) => {
-      prefetchVideoSubjectRoute(router, {
-        subjectId: subject.id,
-        subjectTitle: subject.subject_name?.trim() || "Subject",
-        subjectStandard: subject.standard,
-      });
-    });
-  }, [exploreSubjects, router]);
+  }, [router]);
   const exploreScrollRef = useRef<HTMLDivElement>(null);
 
   const scrollRight = useCallback((ref: React.RefObject<HTMLDivElement | null>) => {

@@ -10,28 +10,11 @@ interface PlaylistCardProps {
   onOpen: (id: string) => void;
 }
 
-const getRandomItem = (arr: string[], id: string) => {
-  const index = id.charCodeAt(0) % arr.length;
-  return arr[index];
-};
 
-const ICON_MAP: Record<string, any> = {
-  "📋": ClipboardList,
-  "💻": Laptop,
-  "⚛️": Atom,
-  "🧬": Dna,
-  "📊": BarChart3,
-  "🧠": Brain,
-  "🌍": Globe,
-  "🧪": FlaskConical,
-  "📖": BookOpen,
-  "🔀": Shuffle,
-};
 
 export const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist, onDelete, onTogglePin, onOpen }) => {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const iconString = playlist.icon || getRandomItem(ICONS, playlist.id);
-  const IconComponent = ICON_MAP[iconString] || Dna;
+  const IconComponent = BookOpen;
 
   return (
     <>
