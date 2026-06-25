@@ -19,6 +19,8 @@ const LEGACY_DARK_ROUTES = [
   "/notifications",
   "/terms",
   "/tutorial",
+  "/refer",
+  "/pyq",
 ];
 
 export function usesLegacyDarkRoute(pathname: string | null) {

@@ -5,6 +5,8 @@ import {
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
 
+export const runtime = 'edge';
+
 export const GET = handleFeedbackGetRequest;
 
 export async function POST(request: NextRequest) {

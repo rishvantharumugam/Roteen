@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 type AuthCodeErrorPageProps = {
   searchParams: Promise<{
     message?: string;

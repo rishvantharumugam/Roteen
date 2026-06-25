@@ -2,6 +2,8 @@ import { handleNotificationsGetRequest } from "@/features/notification/actions/n
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextResponse } from "next/server";
 
+export const runtime = 'edge';
+
 export async function GET() {
   const supabase = await createServerSupabaseClient();
   const {

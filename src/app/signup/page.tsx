@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { appRoutes } from "@/constants/AppRoutes";
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
+export const runtime = 'edge';
+
 type SignUpRouteProps = {
   searchParams?: Promise<{
     verified?: string;

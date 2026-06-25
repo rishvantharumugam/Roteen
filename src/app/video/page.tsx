@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import VideoClient from "./VideoClient";
 
+export const runtime = 'edge';
+
 export const metadata = {
   title: "Video - Roteen",
   description: "Watch and learn with Roteen videos",

@@ -9,6 +9,8 @@ import { ThemeSync } from "@/lib/ThemeSync";
 import { RouteThemeScope } from "@/lib/RouteThemeScope";
 import Providers from "@/app/providers";
 
+export const runtime = 'edge';
+
 export const metadata: Metadata = {
   title: "Roteen",
   description: "Question-first exam preparation platform built with a clean controller-driven architecture.",
@@ -35,7 +37,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `(() => {
   const pathname = window.location.pathname || "";
-  const darkRoutes = ["/", "/video", "/news", "/dashboard", "/bug", "/notes", "/revision", "/session", "/profile", "/progress", "/refer", "/feedback", "/notification", "/notifications", "/terms", "/tutorial"];
+  const darkRoutes = ["/", "/video", "/news", "/dashboard", "/bug", "/notes", "/revision", "/session", "/profile", "/progress", "/refer", "/feedback", "/notification", "/notifications", "/terms", "/tutorial", "/pyq"];
   const shouldUseLegacyDark = darkRoutes.some((route) => pathname === route || pathname.startsWith(route + "/"));
   document.body.classList.toggle("legacy-dark-route", shouldUseLegacyDark);
   document.documentElement.classList.toggle("dark", shouldUseLegacyDark);

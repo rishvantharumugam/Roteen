@@ -7,10 +7,21 @@ import {
   getCachedSubjectsWithCounts,
   type CourseProgressItem,
 } from "@/features/dashboard/services/DashboardPageService";
+import { Suspense } from "react";
+import Loading from "./loading";
 
 export const revalidate = 0;
+export const runtime = 'edge';
 
-export default async function Page() {
+export default function Page() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+async function DashboardContent() {
   console.log("[Dashboard Page] Started loading Page Component...");
   const start = Date.now();
   const serverSupabase = await createServerSupabaseClient();

@@ -1,5 +1,7 @@
 import { SessionVideoPage } from "@/features/session/components/SessionVideoPage";
 
+export const runtime = 'edge';
+
 type SessionVideoPageProps = {
   params: Promise<{
     id: string;

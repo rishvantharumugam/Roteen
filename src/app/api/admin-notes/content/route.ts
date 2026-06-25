@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { type QuestionMode } from "@/features/video/services/video";
 
+export const runtime = 'edge';
+
 interface AdminNoteRow {
   note_url: string | null;
   path: string | null;
